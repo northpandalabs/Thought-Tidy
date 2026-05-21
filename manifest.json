@@ -1,27 +1,28 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "BrainFix AI",
   "version": "1.3.0",
   "description": "ADHD-friendly AI writing assistant. Highlight any text, right-click, and instantly fix spelling, grammar, tone, or make it fully professional — using Claude, OpenAI, or Gemini. One click, zero friction.",
-  "browser_action": {
+  "action": {
     "default_popup": "popup/popup.html",
     "default_title": "BrainFix AI"
   },
   "background": {
-    "scripts": ["lib/prompts.js", "lib/api.js", "background.js"],
-    "persistent": false
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["lib/text.js", "content.js"],
+      "js": ["browser-polyfill.js", "lib/text.js", "content.js"],
       "css": ["content.css"]
     }
   ],
   "permissions": [
     "contextMenus",
     "storage",
-    "activeTab",
+    "activeTab"
+  ],
+  "host_permissions": [
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
     "https://generativelanguage.googleapis.com/*"

@@ -1,5 +1,5 @@
-// background.js — event wiring only
-// Logic lives in lib/prompts.js and lib/api.js (loaded first by manifest)
+// background.js — event wiring only (MV3 service worker)
+importScripts("browser-polyfill.js", "lib/prompts.js", "lib/api.js");
 
 const DYN_SEP = "dyn-sep";
 const DYN_MAX = 8;

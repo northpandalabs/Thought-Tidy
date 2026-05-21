@@ -209,8 +209,10 @@ describe("browser extension security principles", () => {
     });
 
     test("all host permissions use HTTPS, not HTTP", () => {
-      const perms = manifest.permissions || [];
-      const httpHosts = perms.filter(p => p.startsWith("http://"));
+      // MV3 splits host permissions into their own key; check both
+      const perms      = manifest.permissions      || [];
+      const hostPerms  = manifest.host_permissions || [];
+      const httpHosts  = [...perms, ...hostPerms].filter(p => p.startsWith("http://"));
       expect(httpHosts).toHaveLength(0);
     });
 

@@ -1,5 +1,7 @@
 node_modules/
 coverage/
+dist/
+browser-polyfill.js
 .DS_Store
 Thumbs.db
 *.log
