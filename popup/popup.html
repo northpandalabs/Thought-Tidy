@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>BrainFix AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <span class="logo">✦</span> BrainFix AI
+  </div>
+
+  <div class="section">
+    <label for="provider">Active Provider</label>
+    <select id="provider">
+      <option value="openai">OpenAI</option>
+      <option value="claude">Claude (Anthropic)</option>
+      <option value="gemini">Google Gemini</option>
+    </select>
+  </div>
+
+  <div class="section" id="model-section">
+    <label for="model-display">Model</label>
+    <div id="model-display" class="model-name">—</div>
+  </div>
+
+  <div class="section">
+    <label>Suggestions <span id="variants-val">1</span></label>
+    <input type="range" id="variants" min="1" max="4" value="1">
+    <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+  </div>
+
+  <div class="section key-status" id="key-status">
+    <span id="key-indicator" class="dot dot-bad"></span>
+    <span id="key-text">No API key set</span>
+  </div>
+
+  <button id="open-settings">Open Full Settings</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>

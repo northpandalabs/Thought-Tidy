@@ -1,0 +1,20 @@
+{
+  "name": "brainfixai",
+  "version": "1.3.0",
+  "description": "ADHD-friendly AI writing assistant Firefox extension",
+  "private": true,
+  "scripts": {
+    "test":          "jest",
+    "test:watch":    "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "collectCoverageFrom": ["lib/**/*.js"],
+    "coverageReporters": ["text", "lcov"]
+  }
+}

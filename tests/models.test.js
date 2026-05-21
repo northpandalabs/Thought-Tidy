@@ -1,0 +1,223 @@
+const {
+  fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels,
+  testOpenAI, testClaude, testGemini
+} = require("../lib/models");
+
+beforeEach(() => { global.fetch = jest.fn(); });
+afterEach(() => { jest.clearAllMocks(); });
+
+// ── fetchOpenAIModels ─────────────────────────────────────────────────────────
+
+describe("fetchOpenAIModels", () => {
+  const MODELS = [
+    { id: "gpt-4o",           created: 1700000004 },
+    { id: "gpt-4o-mini",      created: 1700000003 },
+    { id: "o1-mini",          created: 1700000002 },
+    { id: "text-embedding-3", created: 1700000001 }, // should be filtered out
+    { id: "whisper-1",        created: 1700000000 }, // should be filtered out
+    { id: "dall-e-3",         created: 1699999999 }, // should be filtered out
+    { id: "gpt-4o-audio",     created: 1699999998 }, // should be filtered out (audio)
+    { id: "gpt-4o-realtime",  created: 1699999997 }, // should be filtered out (realtime)
+  ];
+
+  test("throws with error message on non-ok response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false, statusText: "Unauthorized",
+      json: async () => ({ error: { message: "Invalid key" } })
+    });
+    await expect(fetchOpenAIModels("bad-key")).rejects.toThrow("Invalid key");
+  });
+
+  test("filters out embedding, whisper, dall-e, audio, and realtime models", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ data: MODELS }) });
+    const result = await fetchOpenAIModels("sk-test");
+    const ids = result.map(m => m.id);
+    expect(ids).not.toContain("text-embedding-3");
+    expect(ids).not.toContain("whisper-1");
+    expect(ids).not.toContain("dall-e-3");
+    expect(ids).not.toContain("gpt-4o-audio");
+    expect(ids).not.toContain("gpt-4o-realtime");
+  });
+
+  test("keeps gpt-4o, gpt-4o-mini, and o1-mini", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ data: MODELS }) });
+    const result = await fetchOpenAIModels("sk-test");
+    const ids = result.map(m => m.id);
+    expect(ids).toContain("gpt-4o");
+    expect(ids).toContain("gpt-4o-mini");
+    expect(ids).toContain("o1-mini");
+  });
+
+  test("sorts models by created date descending (newest first)", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ data: MODELS }) });
+    const result = await fetchOpenAIModels("sk-test");
+    expect(result[0].id).toBe("gpt-4o");
+  });
+
+  test("returns objects with id and label fields", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, json: async () => ({ data: [{ id: "gpt-4o", created: 1 }] })
+    });
+    const result = await fetchOpenAIModels("sk-test");
+    expect(result[0]).toHaveProperty("id", "gpt-4o");
+    expect(result[0]).toHaveProperty("label", "gpt-4o");
+  });
+});
+
+// ── fetchClaudeModels ─────────────────────────────────────────────────────────
+
+describe("fetchClaudeModels", () => {
+  test("throws with error message on non-ok response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false, statusText: "Unauthorized",
+      json: async () => ({ error: { message: "Invalid x-api-key" } })
+    });
+    await expect(fetchClaudeModels("bad-key")).rejects.toThrow("Invalid x-api-key");
+  });
+
+  test("returns models mapped to id and label", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          { id: "claude-haiku-4-5-20251001", display_name: "Claude Haiku 4.5" },
+          { id: "claude-sonnet-4-6",         display_name: "Claude Sonnet 4.6" }
+        ]
+      })
+    });
+    const result = await fetchClaudeModels("sk-ant-test");
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ id: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" });
+  });
+
+  test("falls back to id as label when display_name is missing", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [{ id: "claude-opus-4-7" }] })
+    });
+    const result = await fetchClaudeModels("sk-ant-test");
+    expect(result[0].label).toBe("claude-opus-4-7");
+  });
+
+  test("returns empty array when data is missing from response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+    const result = await fetchClaudeModels("sk-ant-test");
+    expect(result).toEqual([]);
+  });
+});
+
+// ── fetchGeminiModels ─────────────────────────────────────────────────────────
+
+describe("fetchGeminiModels", () => {
+  const GEMINI_MODELS = [
+    { name: "models/gemini-2.0-flash",   displayName: "Gemini 2.0 Flash",   supportedGenerationMethods: ["generateContent", "countTokens"] },
+    { name: "models/gemini-1.5-pro",     displayName: "Gemini 1.5 Pro",     supportedGenerationMethods: ["generateContent"] },
+    { name: "models/embedding-001",      displayName: "Embedding 001",       supportedGenerationMethods: ["embedContent"] }, // no generateContent
+    { name: "models/text-bison-001",     displayName: "PaLM 2",             supportedGenerationMethods: ["generateText"] }, // no generateContent
+  ];
+
+  test("throws with error message on non-ok response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false, statusText: "Bad Request",
+      json: async () => ({ error: { message: "API key not valid." } })
+    });
+    await expect(fetchGeminiModels("bad-key")).rejects.toThrow("API key not valid.");
+  });
+
+  test("filters to only models that support generateContent", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ models: GEMINI_MODELS }) });
+    const result = await fetchGeminiModels("AIza-test");
+    const ids = result.map(m => m.id);
+    expect(ids).toContain("gemini-2.0-flash");
+    expect(ids).toContain("gemini-1.5-pro");
+    expect(ids).not.toContain("embedding-001");
+    expect(ids).not.toContain("text-bison-001");
+  });
+
+  test("strips the 'models/' prefix from model IDs", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ models: GEMINI_MODELS }) });
+    const result = await fetchGeminiModels("AIza-test");
+    result.forEach(m => {
+      expect(m.id).not.toMatch(/^models\//);
+    });
+  });
+
+  test("uses displayName as label", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ models: [GEMINI_MODELS[0]] }) });
+    const result = await fetchGeminiModels("AIza-test");
+    expect(result[0].label).toBe("Gemini 2.0 Flash");
+  });
+
+  test("returns empty array when models field is missing", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+    const result = await fetchGeminiModels("AIza-test");
+    expect(result).toEqual([]);
+  });
+});
+
+// ── testOpenAI / testClaude / testGemini ──────────────────────────────────────
+
+describe("testOpenAI", () => {
+  test("returns true when model responds successfully", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    expect(await testOpenAI("sk-test", "gpt-4o-mini")).toBe(true);
+  });
+
+  test("returns false when model returns an error response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    expect(await testOpenAI("sk-test", "bad-model")).toBe(false);
+  });
+
+  test("returns false when fetch throws (network error)", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Network failure"));
+    expect(await testOpenAI("sk-test", "gpt-4o-mini")).toBe(false);
+  });
+
+  test("sends max_tokens: 5 to minimise cost", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    await testOpenAI("sk-test", "gpt-4o-mini");
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.max_tokens).toBe(5);
+  });
+});
+
+describe("testClaude", () => {
+  test("returns true when model responds successfully", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    expect(await testClaude("sk-ant-test", "claude-haiku-4-5-20251001")).toBe(true);
+  });
+
+  test("returns false on error response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    expect(await testClaude("sk-ant-test", "bad-model")).toBe(false);
+  });
+
+  test("returns false on network error", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Network failure"));
+    expect(await testClaude("sk-ant-test", "claude-haiku-4-5-20251001")).toBe(false);
+  });
+});
+
+describe("testGemini", () => {
+  test("returns true when model responds successfully", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    expect(await testGemini("AIza-test", "gemini-2.0-flash")).toBe(true);
+  });
+
+  test("returns false on error response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    expect(await testGemini("AIza-test", "bad-model")).toBe(false);
+  });
+
+  test("returns false on network error", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Network failure"));
+    expect(await testGemini("AIza-test", "gemini-2.0-flash")).toBe(false);
+  });
+
+  test("sends maxOutputTokens: 5 to minimise cost", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    await testGemini("AIza-test", "gemini-2.0-flash");
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.generationConfig.maxOutputTokens).toBe(5);
+  });
+});
