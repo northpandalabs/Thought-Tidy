@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Bailey\\\\Documents\\\\GitHub\\\\BHeck\\\\AI Enhancer\\\\BrainFix AI\" -Recurse -File)",
+      "Bash(Select-Object -First 50)"
+    ]
+  }
+}
