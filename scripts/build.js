@@ -65,9 +65,20 @@ function buildTarget(name, manifestOverrides = {}, manifestRemovals = []) {
 // ── targets ────────────────────────────────────────────────────────────────────
 
 const ALL_TARGETS = {
-  firefox: () => buildTarget("firefox", {
-    browser_specific_settings: { gecko: { id: "brainfixai@bheck" } }
-  }),
+  firefox: () => {
+    buildTarget("firefox", {
+      browser_specific_settings: { gecko: { id: "brainfixai@bheck" } },
+      // Firefox MV3 uses "scripts" array instead of "service_worker"
+      background: {
+        scripts: ["browser-polyfill.js", "lib/prompts.js", "lib/api.js", "background.js"]
+      }
+    });
+    // Remove importScripts() — not available outside a service worker context
+    const bgPath = path.join(DIST, "firefox", "background.js");
+    const bg = fs.readFileSync(bgPath, "utf8")
+      .replace(/^importScripts\([^)]*\);\n?/m, "");
+    fs.writeFileSync(bgPath, bg);
+  },
   chrome: () => buildTarget("chrome", {}, ["browser_specific_settings"]),
 };
 
