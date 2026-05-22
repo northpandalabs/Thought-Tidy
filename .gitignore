@@ -1,7 +1,11 @@
 node_modules/
 coverage/
 dist/
+desktop/dist-build/
 browser-polyfill.js
 .DS_Store
 Thumbs.db
 *.log
+
+# Claude Code local settings — contains machine-specific paths
+.claude/settings.local.json
