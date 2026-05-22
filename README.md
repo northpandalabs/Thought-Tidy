@@ -5,7 +5,7 @@
 Built for ADHD brains, fast thinkers, and anyone who knows exactly what they mean but struggles to make it look that way on screen. Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
 
 > Built by **[Bheck890](https://github.com/Bheck890)**. Open source, MIT licensed. Fork it, improve it, make it yours.  
-> If this helped you — ⭐ **[star the repo](https://github.com/Bheck890/BrainFix-AI)** and share it. That's all I ask.
+> If this helped you — ⭐ **[star the repo](https://github.com/Bheck890/Blur-to-Clear)** and share it. That's all I ask.
 
 ---
 
@@ -78,7 +78,7 @@ You can even maintain your context as a plain text file on GitHub Gist or your o
 
 They're not the same tool. Grammarly corrects as you type. This rewrites on demand.
 
-| | Grammarly | BrainFix AI |
+| | Grammarly | Blur-to-Clear |
 | --- | --- | --- |
 | Corrects as you type | ✓ | — |
 | Rewrites whole passages | limited | ✓ |
@@ -102,7 +102,7 @@ Use Grammarly for inline typo correction if you want it. Use this for everything
 3. A modal shows original vs. suggested text side by side (with word count)
 4. Click **Replace Selected** or **Copy** — done
 
-No BrainFix servers. No analytics. No accounts. Your text goes from your browser to the AI provider you chose and nowhere else. The extension is ~10 files of plain HTML/CSS/JS with a small build step to produce browser-specific packages.
+No Blur-to-Clear servers. No analytics. No accounts. Your text goes from your browser to the AI provider you chose and nowhere else. The extension is ~10 files of plain HTML/CSS/JS with a small build step to produce browser-specific packages.
 
 ---
 
@@ -181,15 +181,15 @@ Or just `npm run dist` to build for the current platform.
 
    ```bash
    # Windows PowerShell
-   Compress-Archive -Path dist/chrome/* -DestinationPath brainfixai-chrome.zip
+   Compress-Archive -Path dist/chrome/* -DestinationPath blur-to-clear-chrome.zip
 
    # macOS / Linux
-   cd dist/chrome && zip -r ../../brainfixai-chrome.zip . && cd ../..
+   cd dist/chrome && zip -r ../../blur-to-clear-chrome.zip . && cd ../..
    ```
 
 3. Go to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
 4. Sign in with a Google account — one-time $5 developer registration fee
-5. Click **New Item** → upload `brainfixai-chrome.zip`
+5. Click **New Item** → upload `blur-to-clear-chrome.zip`
 6. Fill out the store listing (name, description, screenshots, category: **Productivity**)
 7. Submit for review — Chrome reviews usually take 1–3 business days
 8. Once approved, the extension goes live at your store URL
@@ -202,14 +202,14 @@ Or just `npm run dist` to build for the current platform.
 
    ```bash
    # Windows PowerShell
-   Compress-Archive -Path dist/firefox/* -DestinationPath brainfixai-firefox.zip
+   Compress-Archive -Path dist/firefox/* -DestinationPath blur-to-clear-firefox.zip
 
    # macOS / Linux
-   cd dist/firefox && zip -r ../../brainfixai-firefox.zip . && cd ../..
+   cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
    ```
 
 3. Go to [addons.mozilla.org/developers](https://addons.mozilla.org/developers/) and sign in / create an account (free)
-4. Click **Submit a New Add-on** → **On this site** → upload `brainfixai-firefox.zip`
+4. Click **Submit a New Add-on** → **On this site** → upload `blur-to-clear-firefox.zip`
 5. Answer the source code question — since this is open source, link the GitHub repo
 6. Fill out the listing (name, description, screenshots, category: **Writing**)
 7. Submit for review — AMO reviews typically take a few days for new add-ons; faster after the first
@@ -282,11 +282,11 @@ PRs, issues, and forks are all welcome.
 
 ## FAQ
 
-**Does BrainFix AI work on Chrome and Firefox?**  
+**Does Blur-to-Clear work on Chrome and Firefox?**  
 Yes. Run `npm run build` to produce `dist/chrome/` (Manifest V3, service worker) and `dist/firefox/` (Manifest V3, background scripts array). Both are ready to load or submit to their respective stores.
 
 **Why do I need my own API key?**  
-Your writing is private. The extension talks directly from your browser to the AI provider (OpenAI, Anthropic, or Google). There are no BrainFix servers, no accounts, and nothing stored except your settings (locally, in browser storage).
+Your writing is private. The extension talks directly from your browser to the AI provider (OpenAI, Anthropic, or Google). There are no Blur-to-Clear servers, no accounts, and nothing stored except your settings (locally, in browser storage).
 
 **Which AI provider should I pick?**  
 Google Gemini has a free tier — good starting point. OpenAI gpt-4o-mini and Anthropic claude-haiku are both very cheap and fast. Claude tends to preserve voice better; GPT tends to be slightly more grammatically conservative.

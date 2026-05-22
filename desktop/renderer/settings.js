@@ -20,14 +20,14 @@ const TESTERS  = { openai: testOpenAI,        claude: testClaude,        gemini:
 // ── Wire external links (no <a href> in Electron — use btcAPI.openURL) ─────────
 function wireLinks() {
   const links = {
-    "link-github":      "https://github.com/Bheck890/BrainFix-AI",
-    "link-issues":      "https://github.com/Bheck890/BrainFix-AI/issues",
+    "link-github":      "https://github.com/Bheck890/Blur-to-Clear",
+    "link-issues":      "https://github.com/Bheck890/Blur-to-Clear/issues",
     "link-license":     "https://opensource.org/licenses/MIT",
     "link-author":      "https://github.com/Bheck890",
     "link-openai-key":  "https://platform.openai.com/api-keys",
     "link-claude-key":  "https://console.anthropic.com/settings/keys",
     "link-gemini-key":  "https://aistudio.google.com/app/apikey",
-    "link-footer-github": "https://github.com/Bheck890/BrainFix-AI"
+    "link-footer-github": "https://github.com/Bheck890/Blur-to-Clear"
   };
   for (const [id, url] of Object.entries(links)) {
     const el = document.getElementById(id);

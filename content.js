@@ -40,7 +40,7 @@ function showModal(originalText, results, loading) {
 
   // Header
   const titleSpan = document.createElement("span");
-  titleSpan.textContent = "✦ BrainFix AI";
+  titleSpan.textContent = "✦ Blur-to-Clear";
   const closeBtn = document.createElement("button");
   closeBtn.id = "aie-close";
   closeBtn.title = "Close (Esc)";
