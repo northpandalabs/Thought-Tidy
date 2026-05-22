@@ -112,8 +112,12 @@ async function doFetchAndSaveKey(provider) {
     document.getElementById("setup-wizard").style.display = "none";
     await browser.storage.local.set({
       [`${provider}Key`]:   key,
-      [`${provider}Model`]: sel.value
+      [`${provider}Model`]: sel.value,
+      provider             // auto-switch active provider to the one just configured
     });
+    const radio = document.querySelector(`input[name="provider"][value="${provider}"]`);
+    if (radio) { radio.checked = true; updateCardHighlight(); }
+    updateProviderAvailability();
   }
 }
 
@@ -229,12 +233,39 @@ async function save() {
 function getVal(id) { return document.getElementById(id)?.value ?? ""; }
 function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
 
-// ── Provider card highlight ────────────────────────────────────────────────────
+// ── Provider card highlight + availability ────────────────────────────────────
 function updateCardHighlight() {
   const selected = document.querySelector('input[name="provider"]:checked')?.value;
   document.querySelectorAll(".radio-card").forEach(card => {
     card.classList.toggle("selected", card.querySelector("input").value === selected);
   });
+}
+
+// Disable provider cards that have no API key configured.
+// Called after keys load and after a key is saved.
+function updateProviderAvailability() {
+  for (const p of ["openai", "claude", "gemini"]) {
+    const keyField = document.getElementById(`${p}Key`);
+    const card     = document.getElementById(`card-${p}`);
+    const radio    = card?.querySelector("input");
+    if (!card || !radio || !keyField) continue;
+
+    const hasKey = !!(keyField.value.trim());
+    radio.disabled    = !hasKey;
+    card.style.opacity = hasKey ? "1" : "0.45";
+    card.style.cursor  = hasKey ? "pointer" : "not-allowed";
+    card.title         = hasKey ? "" : "Enter an API key for this provider to enable it";
+
+    // If the currently selected provider loses its key, switch to first available
+    if (!hasKey && radio.checked) {
+      const firstAvailable = document.querySelector('input[name="provider"]:not(:disabled)');
+      if (firstAvailable) {
+        firstAvailable.checked = true;
+        browser.storage.local.set({ provider: firstAvailable.value });
+        updateCardHighlight();
+      }
+    }
+  }
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────────
@@ -251,7 +282,10 @@ async function init() {
   const providerVal = s.provider || "openai";
   document.querySelectorAll('input[name="provider"]').forEach(r => {
     r.checked = r.value === providerVal;
-    r.addEventListener("change", updateCardHighlight);
+    r.addEventListener("change", () => {
+      updateCardHighlight();
+      browser.storage.local.set({ provider: r.value }); // auto-save on click
+    });
   });
   updateCardHighlight();
 
@@ -276,6 +310,7 @@ async function init() {
         editBtn.style.display = "none";
         setStatus(p, "Enter new key and press Enter", "loading");
         keyField.focus();
+        updateProviderAvailability();
       });
     }
 
@@ -296,6 +331,8 @@ async function init() {
       });
     }
   }
+
+  updateProviderAvailability();
 
   // Show/hide key buttons
   document.querySelectorAll(".show-btn").forEach(btn => {

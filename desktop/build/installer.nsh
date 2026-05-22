@@ -1,57 +1,148 @@
 ; installer.nsh — Blur-to-Clear custom NSIS installer logic
 ;
-; Adds:
-;   1. Maintenance mode  — when already installed, prompt: Repair / Modify / Uninstall
-;   2. Optional feature  — "AI Quick Commands" preset pack (fake feature demo)
+; Maintenance page:
+;   Fresh install  → page is skipped (Abort in btcMaintCreate)
+;   Same version   → Repair (default) / Modify / Uninstall
+;   Newer version  → Upgrade (default) / Repair / Modify / Uninstall
 ;
-; Uses $R5-$R9 scratch registers only (no Var declarations, safe for both
-; installer and uninstaller builds which share the customHeader macro).
+; Optional feature: "AI Quick Commands" preset pack (add/remove demo)
 
-; ── customHeader: required by electron-builder even if empty ─────────────────
+; ── customHeader ─────────────────────────────────────────────────────────────
+; Guards with !ifndef BUILD_UNINSTALLER so Var/Function/Page declarations are
+; only emitted in the installer pass (electron-builder defines BUILD_UNINSTALLER
+; when compiling the uninstaller).
 
 !macro customHeader
-!macroend
+  !ifndef BUILD_UNINSTALLER
 
-; ── Maintenance mode (runs in .onInit, before any pages are shown) ────────────
+  Var BTC_INST_VER      ; display version that is currently installed
+  Var BTC_UNINST_STR    ; existing UninstallString from the registry
+  Var BTC_RB_UPDATE     ; HWND of "Upgrade" radio (empty string when same ver)
+  Var BTC_RB_REPAIR     ; HWND of "Repair" radio
+  Var BTC_RB_MODIFY     ; HWND of "Modify" radio
+  Var BTC_RB_UNINSTALL  ; HWND of "Uninstall" radio
 
-!macro customInit
-  ; $R9 = existing UninstallString (empty when not yet installed)
-  ReadRegStr $R9 HKCU \
-    "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
-    "UninstallString"
-
-  ${If} $R9 == ""
-    ReadRegStr $R9 HKLM \
+  ; ── Page: Create ───────────────────────────────────────────────
+  Function btcMaintCreate
+    ; Look for per-user install first, then per-machine
+    ReadRegStr $BTC_UNINST_STR HKCU \
       "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
       "UninstallString"
-  ${EndIf}
+    ${If} $BTC_UNINST_STR == ""
+      ReadRegStr $BTC_UNINST_STR HKLM \
+        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
+        "UninstallString"
+    ${EndIf}
 
-  ${If}     $R9 != ""
-  ${AndIfNot} ${Silent}
-    MessageBox MB_YESNOCANCEL|MB_ICONQUESTION|MB_DEFBUTTON1 \
-      "$(^Name) is already installed on this computer.$\n$\n\
-What would you like to do?$\n$\n\
-  [Yes]      Repair or Modify features$\n\
-  [No]       Uninstall $(^Name)$\n\
-  [Cancel]   Exit this installer" \
-      /SD IDYES IDYES btc_repair IDNO btc_do_uninstall
+    ; Not installed — skip this page, go straight to normal install
+    ${If} $BTC_UNINST_STR == ""
+      Abort
+    ${EndIf}
 
-    Quit          ; Cancel — close installer
+    ; Read installed version for display and comparison
+    ReadRegStr $BTC_INST_VER HKCU \
+      "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
+      "DisplayVersion"
+    ${If} $BTC_INST_VER == ""
+      ReadRegStr $BTC_INST_VER HKLM \
+        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
+        "DisplayVersion"
+    ${EndIf}
+    ${If} $BTC_INST_VER == ""
+      StrCpy $BTC_INST_VER "an earlier version"
+    ${EndIf}
 
-    btc_do_uninstall:
-      ExecWait '"$R9" /S'
+    ; Build the custom page
+    nsDialogs::Create 1018
+    Pop $0
+
+    ${NSD_CreateLabel} 0 0 100% 30u \
+      "$(^Name) $BTC_INST_VER is already installed. Choose an action:"
+    Pop $0
+
+    ${If} $BTC_INST_VER != "${VERSION}"
+      ; ── Upgrade scenario ──────────────────────────────────────
+      ${NSD_CreateRadioButton} 0 36u 100% 14u \
+        "Upgrade to ${VERSION}  —  install the latest version"
+      Pop $BTC_RB_UPDATE
+      ${NSD_SetState} $BTC_RB_UPDATE ${BST_CHECKED}
+
+      ${NSD_CreateRadioButton} 0 56u 100% 14u \
+        "Repair  —  reinstall files, keep your settings"
+      Pop $BTC_RB_REPAIR
+
+      ${NSD_CreateRadioButton} 0 74u 100% 14u \
+        "Modify  —  add or remove optional features"
+      Pop $BTC_RB_MODIFY
+
+      ${NSD_CreateRadioButton} 0 92u 100% 14u \
+        "Uninstall  —  remove $(^Name) from this computer"
+      Pop $BTC_RB_UNINSTALL
+    ${Else}
+      ; ── Same version scenario ─────────────────────────────────
+      StrCpy $BTC_RB_UPDATE ""   ; no upgrade option
+
+      ${NSD_CreateRadioButton} 0 36u 100% 14u \
+        "Repair  —  reinstall files, keep your settings"
+      Pop $BTC_RB_REPAIR
+      ${NSD_SetState} $BTC_RB_REPAIR ${BST_CHECKED}
+
+      ${NSD_CreateRadioButton} 0 54u 100% 14u \
+        "Modify  —  add or remove optional features"
+      Pop $BTC_RB_MODIFY
+
+      ${NSD_CreateRadioButton} 0 72u 100% 14u \
+        "Uninstall  —  remove $(^Name) from this computer"
+      Pop $BTC_RB_UNINSTALL
+    ${EndIf}
+
+    nsDialogs::Show
+  FunctionEnd
+
+  ; ── Page: Leave (user clicked Next) ────────────────────────────
+  Function btcMaintLeave
+    ; Upgrade selected?
+    ${If} $BTC_RB_UPDATE != ""
+      ${NSD_GetState} $BTC_RB_UPDATE $R0
+      ${If} $R0 == ${BST_CHECKED}
+        Return   ; proceed — files will be overwritten (upgrade)
+      ${EndIf}
+    ${EndIf}
+
+    ; Repair selected?
+    ${NSD_GetState} $BTC_RB_REPAIR $R0
+    ${If} $R0 == ${BST_CHECKED}
+      Return     ; proceed — files will be reinstalled (repair)
+    ${EndIf}
+
+    ; Modify selected?
+    ${NSD_GetState} $BTC_RB_MODIFY $R0
+    ${If} $R0 == ${BST_CHECKED}
+      Return     ; proceed — customInstall will prompt for features
+    ${EndIf}
+
+    ; Uninstall selected?
+    ${NSD_GetState} $BTC_RB_UNINSTALL $R0
+    ${If} $R0 == ${BST_CHECKED}
+      ExecWait '"$BTC_UNINST_STR" /S'
       Quit
+    ${EndIf}
+  FunctionEnd
 
-    btc_repair:
-      ; Fall through — runs the normal install to repair / overwrite files
-  ${EndIf}
+  ; Insert the maintenance page before the normal installer pages
+  Page Custom btcMaintCreate btcMaintLeave
+
+  !endif  ; BUILD_UNINSTALLER
+!macroend
+
+; ── customInit: nothing needed (maintenance handled by the custom page) ───────
+
+!macro customInit
 !macroend
 
 ; ── Optional feature: AI Quick Commands ──────────────────────────────────────
-;
-; $R8 = "1" if already installed, used to tailor the Yes/No prompt
-; $R7 = file handle for writing the preset JSON
-; $R6 = message box text
+; Runs after files are installed. Asks Yes/No per feature.
+; Remembers current state via registry so re-running shows the right default.
 
 !macro customInstall
   ReadRegStr $R8 HKCU "Software\${APP_ID}\Features" "QuickCommands"
