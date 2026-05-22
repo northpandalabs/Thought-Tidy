@@ -3,14 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>BrainFix AI</title>
+  <title>Blur-to-Clear</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="header">
-    <span class="logo">✦</span> BrainFix AI
+    <img src="../icons/icon.svg" class="logo-img" alt="">
+    Blur-to-Clear
   </div>
 
+  <!-- Quick-process panel -->
+  <div class="section process-section">
+    <label for="input-text">Paste or type text</label>
+    <textarea id="input-text" placeholder="Paste any text here and pick an action below…" rows="5"></textarea>
+    <div class="action-row">
+      <select id="action-select">
+        <option value="fix-spelling">✓  Fix Spelling &amp; Grammar</option>
+        <option value="professional">★  Make Professional</option>
+        <option value="improve">↑  Improve Writing</option>
+        <option value="sound-human">💬  Sound Human</option>
+        <option value="brain-dump">🧠  Brain Dump → Clear Text</option>
+        <option value="sound-like-me">👤  Sound Like Me</option>
+        <option value="formal">    Make Formal</option>
+        <option value="casual">    Make Casual</option>
+        <option value="shorten">    Shorten</option>
+        <option value="expand">    Expand</option>
+      </select>
+      <button id="process-btn">Run</button>
+    </div>
+    <div id="result-area" style="display:none">
+      <div id="result-loading" class="result-loading" style="display:none">
+        <div class="mini-spinner"></div> Processing…
+      </div>
+      <div id="result-text" class="result-text"></div>
+      <div id="result-actions" class="result-actions" style="display:none">
+        <button id="copy-result">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Provider / model status -->
   <div class="section">
     <label for="provider">Active Provider</label>
     <select id="provider">
@@ -20,8 +54,8 @@
     </select>
   </div>
 
-  <div class="section" id="model-section">
-    <label for="model-display">Model</label>
+  <div class="section">
+    <label>Model</label>
     <div id="model-display" class="model-name">—</div>
   </div>
 
@@ -39,6 +73,9 @@
   <button id="open-settings">Open Full Settings</button>
 
   <script src="../browser-polyfill.js"></script>
+  <script src="../lib/text.js"></script>
+  <script src="../lib/prompts.js"></script>
+  <script src="../lib/api.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -387,6 +387,48 @@ input[type="range"] { width: 100%; accent-color: #89b4fa; cursor: pointer; margi
 .mcp-note strong { color: #9399b2; }
 .mcp-note a { color: #89b4fa; }
 
+/* ── Setup wizard ────────────────────────────────────────────── */
+.setup-steps { display: flex; flex-direction: column; gap: 10px; }
+
+.setup-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #9399b2;
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  background: #89b4fa;
+  color: #1e1e2e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.edit-key-btn {
+  flex-shrink: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 14px;
+  border: 1px solid #f38ba8;
+  background: transparent;
+  color: #f38ba8;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+}
+.edit-key-btn:hover { background: rgba(243,139,168,0.1); }
+
 /* ── Hint ────────────────────────────────────────────────────── */
 .hint {
   font-size: 12px;
@@ -415,4 +457,17 @@ input[type="range"] { width: 100%; accent-color: #89b4fa; cursor: pointer; margi
 }
 #save-btn:hover { opacity: 0.88; }
 
-.status-ok { color: #a6e3a1; font-size: 13px; }
+.revert-btn {
+  background: transparent;
+  color: #6c7086;
+  border: 1px solid #45475a;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.revert-btn:hover { color: #cdd6f4; border-color: #6c7086; }
+
+.status-ok  { color: #a6e3a1; font-size: 13px; }
+.status-err { color: #f38ba8; font-size: 13px; }

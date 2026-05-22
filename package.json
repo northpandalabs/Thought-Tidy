@@ -1,7 +1,7 @@
 {
-  "name": "brainfixai",
-  "version": "1.3.0",
-  "description": "ADHD-friendly AI writing assistant Firefox extension",
+  "name": "blur-to-clear",
+  "version": "1.4.0",
+  "description": "ADHD-friendly AI writing assistant — Chrome and Firefox extension",
   "private": true,
   "scripts": {
     "test":          "jest",

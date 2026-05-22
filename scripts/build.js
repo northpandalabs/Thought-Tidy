@@ -17,6 +17,7 @@ const COPY_ENTRIES = [
   "lib",
   "popup",
   "options",
+  "icons",
 ];
 
 // ── helpers ────────────────────────────────────────────────────────────────────
@@ -67,7 +68,12 @@ function buildTarget(name, manifestOverrides = {}, manifestRemovals = []) {
 const ALL_TARGETS = {
   firefox: () => {
     buildTarget("firefox", {
-      browser_specific_settings: { gecko: { id: "brainfixai@bheck" } },
+      browser_specific_settings: {
+        gecko: {
+          id: "blurtoclear@bheck890",
+          data_collection_permissions: { required: ["none"], optional: [] }
+        }
+      },
       // Firefox MV3 uses "scripts" array instead of "service_worker"
       background: {
         scripts: ["browser-polyfill.js", "lib/prompts.js", "lib/api.js", "background.js"]

@@ -1,4 +1,4 @@
-// background.js — event wiring only (MV3 service worker)
+// background.js — Blur-to-Clear event wiring (MV3 service worker)
 importScripts("browser-polyfill.js", "lib/prompts.js", "lib/api.js");
 
 const DYN_SEP = "dyn-sep";
@@ -25,7 +25,7 @@ async function rebuildCustomMenu() {
 }
 
 browser.runtime.onInstalled.addListener(async () => {
-  browser.contextMenus.create({ id: "ai-root",       title: "BrainFix AI",                    contexts: ["selection"] });
+  browser.contextMenus.create({ id: "ai-root",       title: "Blur-to-Clear",                  contexts: ["selection"] });
   browser.contextMenus.create({ id: "sound-like-me", parentId: "ai-root", title: "👤  Sound Like Me",             contexts: ["selection"] });
   browser.contextMenus.create({ id: "fix-spelling",  parentId: "ai-root", title: "✓   Fix Spelling & Grammar",   contexts: ["selection"] });
   browser.contextMenus.create({ id: "professional",  parentId: "ai-root", title: "★   Make Professional",        contexts: ["selection"] });

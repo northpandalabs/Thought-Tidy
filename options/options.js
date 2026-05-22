@@ -25,9 +25,10 @@ function populateSelect(selectId, models, currentValue) {
   if (!sel || !models.length) return;
   sel.innerHTML = "";
   models.forEach(m => {
+    const tier = costTier(m.id); // from lib/models.js
     const opt = document.createElement("option");
     opt.value = m.id;
-    opt.textContent = m.label;
+    opt.textContent = `${m.label}  ${tier}`;
     sel.appendChild(opt);
   });
   sel.value = (currentValue && models.find(m => m.id === currentValue)) ? currentValue : models[0].id;
@@ -74,6 +75,28 @@ async function doFetch(provider, silent = false) {
   }
 }
 
+// Test key, populate models, and immediately persist the key + chosen model
+async function doFetchAndSaveKey(provider) {
+  const keyField = document.getElementById(`${provider}Key`);
+  const key = keyField.value.trim();
+  if (!key) return;
+
+  await doFetch(provider);
+
+  // If fetch succeeded (models populated), lock the field and save
+  const sel = document.getElementById(`${provider}Model`);
+  if (sel && sel.options.length && sel.options[0].value !== "") {
+    keyField.readOnly = true;
+    const editBtn = document.querySelector(`.edit-key-btn[data-provider="${provider}"]`);
+    if (editBtn) editBtn.style.display = "inline-flex";
+    document.getElementById("setup-wizard").style.display = "none";
+    await browser.storage.local.set({
+      [`${provider}Key`]:   key,
+      [`${provider}Model`]: sel.value
+    });
+  }
+}
+
 // uid() and escHtml() come from lib/text.js (loaded in options.html)
 
 // ── Custom Prompts ────────────────────────────────────────────────────────────
@@ -82,25 +105,50 @@ let customPrompts = [];
 
 function renderCustomPrompts() {
   const list = document.getElementById("custom-prompts-list");
+  list.textContent = "";
+
   if (!customPrompts.length) {
-    list.innerHTML = '<p class="no-prompts hint">No custom prompts yet — add one below.</p>';
+    const hint = document.createElement("p");
+    hint.className = "no-prompts hint";
+    hint.textContent = "No custom prompts yet — add one below.";
+    list.appendChild(hint);
     return;
   }
-  list.innerHTML = customPrompts.map((p, i) => `
-    <div class="cp-item" data-id="${p.id}">
-      <div class="cp-meta">
-        <span class="cp-name">${escHtml(p.name)}</span>
-        <span class="cp-order">#${i + 1} in menu</span>
-      </div>
-      <div class="cp-text">${escHtml(p.prompt.length > 100 ? p.prompt.slice(0, 100) + "…" : p.prompt)}</div>
-      <div class="cp-actions">
-        <button class="cp-btn cp-edit" data-id="${p.id}">Edit</button>
-        <button class="cp-btn cp-delete" data-id="${p.id}">Delete</button>
-        ${i > 0 ? `<button class="cp-btn cp-up" data-id="${p.id}">↑</button>` : ""}
-        ${i < customPrompts.length - 1 ? `<button class="cp-btn cp-down" data-id="${p.id}">↓</button>` : ""}
-      </div>
-    </div>
-  `).join("");
+
+  customPrompts.forEach((p, i) => {
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "cp-name";
+    nameSpan.textContent = p.name;
+    const orderSpan = document.createElement("span");
+    orderSpan.className = "cp-order";
+    orderSpan.textContent = `#${i + 1} in menu`;
+    const meta = document.createElement("div");
+    meta.className = "cp-meta";
+    meta.append(nameSpan, orderSpan);
+
+    const textDiv = document.createElement("div");
+    textDiv.className = "cp-text";
+    textDiv.textContent = p.prompt.length > 100 ? p.prompt.slice(0, 100) + "…" : p.prompt;
+
+    const mkBtn = (cls, label) => {
+      const btn = document.createElement("button");
+      btn.className = `cp-btn ${cls}`;
+      btn.dataset.id = p.id;
+      btn.textContent = label;
+      return btn;
+    };
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "cp-actions";
+    actionsDiv.append(mkBtn("cp-edit", "Edit"), mkBtn("cp-delete", "Delete"));
+    if (i > 0)                        actionsDiv.appendChild(mkBtn("cp-up",   "↑"));
+    if (i < customPrompts.length - 1) actionsDiv.appendChild(mkBtn("cp-down", "↓"));
+
+    const item = document.createElement("div");
+    item.className = "cp-item";
+    item.dataset.id = p.id;
+    item.append(meta, textDiv, actionsDiv);
+    list.appendChild(item);
+  });
 
   list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", () => {
     customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id);
@@ -152,23 +200,50 @@ async function init() {
   });
   updateCardHighlight();
 
-  // Keys — set values, then auto-fetch if key already saved
+  // Show first-run wizard if no keys saved at all
+  const hasAnyKey = s.openaiKey || s.claudeKey || s.geminiKey;
+  if (!hasAnyKey) document.getElementById("setup-wizard").style.display = "block";
+
+  // Keys — set values, lock if saved, wire edit/test flow
   const providers = ["openai", "claude", "gemini"];
   for (const p of providers) {
     const keyField = document.getElementById(`${p}Key`);
+    const editBtn  = document.querySelector(`.edit-key-btn[data-provider="${p}"]`);
     const savedKey = s[`${p}Key`] || "";
     keyField.value = savedKey;
 
-    // Auto-fetch when user leaves the key field (blur) if key is non-empty
+    if (savedKey) {
+      keyField.readOnly = true;
+      if (editBtn) editBtn.style.display = "inline-flex";
+    }
+
+    // Edit button: warn then unlock
+    if (editBtn) {
+      editBtn.addEventListener("click", () => {
+        if (!confirm(`Changing your ${p.toUpperCase()} key will re-test all models (a few API calls). Continue?`)) return;
+        keyField.readOnly = false;
+        keyField.value = "";
+        keyField.type = "password";
+        editBtn.style.display = "none";
+        setStatus(p, "Enter new key and press Enter", "loading");
+        keyField.focus();
+      });
+    }
+
+    // Press Enter in key field → test immediately
+    keyField.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); doFetchAndSaveKey(p); }
+    });
+
+    // Auto-fetch on blur if key changed
     keyField.addEventListener("blur", () => {
-      if (keyField.value.trim()) doFetch(p);
+      if (keyField.value.trim() && !keyField.readOnly) doFetchAndSaveKey(p);
     });
 
     // If we already have a saved key, auto-fetch on load to populate models
     if (savedKey) {
       const savedModel = s[`${p}Model`] || "";
-      doFetch(p).then(() => {
-        // Re-apply saved model after fetch in case it got overridden
+      doFetch(p, true).then(() => {
         if (savedModel) {
           const sel = document.getElementById(`${p}Model`);
           if (sel && [...sel.options].some(o => o.value === savedModel)) sel.value = savedModel;
@@ -251,6 +326,9 @@ async function init() {
   });
 
   document.getElementById("save-btn").addEventListener("click", save);
+  document.getElementById("revert-btn").addEventListener("click", () => {
+    if (confirm("Discard unsaved changes and reload settings?")) location.reload();
+  });
 }
 
 function updateCardHighlight() {

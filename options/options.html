@@ -2,30 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>BrainFix AI — Settings</title>
+  <title>Blur-to-Clear — Settings</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <div class="page">
 
     <div class="page-header">
-      <h1>✦ BrainFix AI</h1>
+      <h1>✦ Blur-to-Clear</h1>
       <p class="tagline">
         Built for ADHD brains, fast thinkers, and anyone who knows exactly what they mean
         but struggles to make it look that way on screen.<br>
         Highlight text → right-click → AI fixes it. <strong>Your key. Your provider. Your data. Zero subscription.</strong>
       </p>
       <div class="links-row">
-        <a href="https://github.com/BHeck/AI-Enhancer" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+        <a href="https://github.com/Bheck890/BrainFix-AI" target="_blank" rel="noopener">⭐ Star on GitHub</a>
         <span class="sep">·</span>
-        <a href="https://github.com/BHeck/AI-Enhancer/fork" target="_blank" rel="noopener">Fork it</a>
+        <a href="https://github.com/Bheck890/BrainFix-AI/fork" target="_blank" rel="noopener">Fork it</a>
         <span class="sep">·</span>
-        <a href="https://github.com/BHeck/AI-Enhancer/issues" target="_blank" rel="noopener">Report an issue</a>
+        <a href="https://github.com/Bheck890/BrainFix-AI/issues" target="_blank" rel="noopener">Report an issue</a>
         <span class="sep">·</span>
         <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>
       </div>
-      <div class="built-by">Built by <a href="https://github.com/BHeck" target="_blank" rel="noopener">BHeck</a> · Open source · No money wanted, just a ⭐ if it helped you</div>
+      <div class="built-by">Built by <a href="https://github.com/Bheck890" target="_blank" rel="noopener">Bheck890</a> · Open source · No money wanted, just a ⭐ if it helped you</div>
     </div>
+
+    <!-- First-run setup wizard (hidden once a key is saved) -->
+    <section id="setup-wizard" style="display:none">
+      <h2>👋 Welcome — let's get you set up</h2>
+      <p class="hint" style="margin-bottom:14px">
+        Pick a provider below, paste your API key, and press <strong>Enter</strong> — Blur-to-Clear will test it and save automatically.
+        You only need one key to get started.
+      </p>
+      <div class="setup-steps">
+        <div class="setup-step"><span class="step-num">1</span> Choose a provider in the <strong>Active Provider</strong> section</div>
+        <div class="setup-step"><span class="step-num">2</span> Paste your API key into that provider's key field and press <strong>Enter</strong></div>
+        <div class="setup-step"><span class="step-num">3</span> Models load automatically — click <strong>Save Settings</strong> and you're done</div>
+      </div>
+    </section>
 
     <!-- Active Provider -->
     <section>
@@ -60,8 +74,9 @@
       <div class="field">
         <label for="openaiKey">API Key</label>
         <div class="key-row">
-          <input type="password" id="openaiKey" placeholder="sk-… (paste key, models load automatically)" autocomplete="off">
+          <input type="password" id="openaiKey" placeholder="sk-… (paste key, press Enter to test)" autocomplete="off">
           <button class="show-btn" data-target="openaiKey">Show</button>
+          <button class="edit-key-btn" data-provider="openai" style="display:none">Edit</button>
         </div>
       </div>
       <div class="model-row" id="openai-model-row">
@@ -88,8 +103,9 @@
       <div class="field">
         <label for="claudeKey">API Key</label>
         <div class="key-row">
-          <input type="password" id="claudeKey" placeholder="sk-ant-… (paste key, models load automatically)" autocomplete="off">
+          <input type="password" id="claudeKey" placeholder="sk-ant-… (paste key, press Enter to test)" autocomplete="off">
           <button class="show-btn" data-target="claudeKey">Show</button>
+          <button class="edit-key-btn" data-provider="claude" style="display:none">Edit</button>
         </div>
       </div>
       <div class="model-row" id="claude-model-row">
@@ -116,8 +132,9 @@
       <div class="field">
         <label for="geminiKey">API Key</label>
         <div class="key-row">
-          <input type="password" id="geminiKey" placeholder="AIza… (paste key, models load automatically)" autocomplete="off">
+          <input type="password" id="geminiKey" placeholder="AIza… (paste key, press Enter to test)" autocomplete="off">
           <button class="show-btn" data-target="geminiKey">Show</button>
+          <button class="edit-key-btn" data-provider="gemini" style="display:none">Edit</button>
         </div>
       </div>
       <div class="model-row" id="gemini-model-row">
@@ -213,7 +230,7 @@
     <!-- Custom Prompts -->
     <section>
       <h2>My Custom Prompts</h2>
-      <p class="hint" style="margin-bottom:14px">Saved prompts appear in the right-click menu under BrainFix AI (up to 8). Use these to build your own actions — Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
+      <p class="hint" style="margin-bottom:14px">Saved prompts appear in the right-click menu under Blur-to-Clear (up to 8). Use these to build your own actions — Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
 
       <div id="custom-prompts-list"></div>
 
@@ -241,12 +258,13 @@
 
     <div class="footer">
       <button id="save-btn">Save Settings</button>
+      <button id="revert-btn" class="revert-btn">Revert Changes</button>
       <span id="save-status"></span>
     </div>
 
     <div class="page-credit">
-      ✦ BrainFix AI · Built by <a href="https://github.com/BHeck" target="_blank" rel="noopener">BHeck</a> ·
-      <a href="https://github.com/BHeck/AI-Enhancer" target="_blank" rel="noopener">⭐ Star on GitHub</a> if this helped you ·
+      ✦ Blur-to-Clear · Built by <a href="https://github.com/Bheck890" target="_blank" rel="noopener">Bheck890</a> ·
+      <a href="https://github.com/Bheck890/BrainFix-AI" target="_blank" rel="noopener">⭐ Star on GitHub</a> if this helped you ·
       MIT License · No money wanted
     </div>
 
