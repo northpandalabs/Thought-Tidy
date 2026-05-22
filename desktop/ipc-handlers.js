@@ -1,0 +1,55 @@
+// ipc-handlers.js — pure IPC handler logic, no Electron imports.
+// Accepts duck-typed store and clipboard so the functions are unit-testable.
+//
+// store    : { get(key), set(key, val), store: Object }   (electron-store shape)
+// clipboard: { readText(), writeText(text) }              (electron clipboard shape)
+
+function makeStoreGetHandler(store) {
+  return function storeGet(_, keys) {
+    if (Array.isArray(keys)) {
+      return Object.fromEntries(keys.map(k => [k, store.get(k) ?? undefined]));
+    }
+    if (keys && typeof keys === "object") {
+      // Called with a defaults object: { key: defaultValue, … }
+      return Object.fromEntries(
+        Object.entries(keys).map(([k, def]) => [k, store.get(k) ?? def])
+      );
+    }
+    return store.get(keys);
+  };
+}
+
+function makeStoreSetHandler(store) {
+  return function storeSet(_, data) {
+    for (const [k, v] of Object.entries(data)) store.set(k, v);
+  };
+}
+
+function makeClipboardReadHandler(clipboard) {
+  return () => clipboard.readText();
+}
+
+function makeClipboardWriteHandler(clipboard) {
+  return (_, text) => clipboard.writeText(text);
+}
+
+// Registers all handlers onto an ipcMain instance.
+// The callbacks for open-settings, close-popup, and open-url come
+// from main.js since they touch BrowserWindow state.
+function registerAll(ipcMain, { store, clipboard, openSettings, closePopup, openURL }) {
+  ipcMain.handle("store-get",       makeStoreGetHandler(store));
+  ipcMain.handle("store-set",       makeStoreSetHandler(store));
+  ipcMain.handle("read-clipboard",  makeClipboardReadHandler(clipboard));
+  ipcMain.handle("write-clipboard", makeClipboardWriteHandler(clipboard));
+  ipcMain.handle("open-settings",   () => openSettings());
+  ipcMain.handle("close-popup",     () => closePopup());
+  ipcMain.handle("open-url",        (_, url) => openURL(url));
+}
+
+module.exports = {
+  makeStoreGetHandler,
+  makeStoreSetHandler,
+  makeClipboardReadHandler,
+  makeClipboardWriteHandler,
+  registerAll
+};

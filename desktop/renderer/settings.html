@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blur-to-Clear — Settings</title>
+  <!-- Reuse the extension options styles — path relative to this file -->
+  <link rel="stylesheet" href="../../options/options.css">
+  <style>
+    /* Desktop-specific overrides */
+    .page-header .links-row a[href] {
+      cursor: pointer;
+    }
+    .page-header .links-row a[href]::before {
+      content: "";
+    }
+    .desktop-note {
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #6c7086;
+      margin-bottom: 16px;
+    }
+    .desktop-note strong { color: #9399b2; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="page-header">
+      <h1>⧉ Blur-to-Clear <span style="font-size:13px;font-weight:400;color:#6c7086">Desktop</span></h1>
+      <p class="tagline">
+        ADHD-friendly AI writing assistant — running as a tray app.<br>
+        Press <strong>Ctrl+Shift+Space</strong> (or Cmd+Shift+Space on Mac) anywhere to open the popup.
+      </p>
+      <div class="links-row">
+        <a id="link-github">⭐ Star on GitHub</a>
+        <span class="sep">·</span>
+        <a id="link-issues">Report an issue</a>
+        <span class="sep">·</span>
+        <a id="link-license">MIT License</a>
+      </div>
+      <div class="built-by">
+        Built by <a id="link-author">Bheck890</a> · Open source · No money wanted, just a ⭐ if it helped you
+      </div>
+    </div>
+
+    <div class="desktop-note">
+      <strong>Tray app:</strong> Settings are saved locally on your machine in
+      <code>~/.config/blur-to-clear-settings</code> (Windows: AppData\Roaming).
+      No account needed.
+    </div>
+
+    <!-- First-run wizard -->
+    <section id="setup-wizard" style="display:none">
+      <h2>👋 Welcome — let's get you set up</h2>
+      <p class="hint" style="margin-bottom:14px">
+        Pick a provider, paste your API key, and press <strong>Enter</strong> — the app tests it and saves automatically.
+      </p>
+      <div class="setup-steps">
+        <div class="setup-step"><span class="step-num">1</span> Choose a provider in <strong>Active Provider</strong></div>
+        <div class="setup-step"><span class="step-num">2</span> Paste your key and press <strong>Enter</strong> to test &amp; save</div>
+        <div class="setup-step"><span class="step-num">3</span> Press <strong>Ctrl+Shift+Space</strong> anywhere to start processing text</div>
+      </div>
+    </section>
+
+    <!-- Active Provider -->
+    <section>
+      <h2>Active Provider</h2>
+      <div class="radio-group">
+        <label class="radio-card" id="card-openai">
+          <input type="radio" name="provider" value="openai">
+          <span class="radio-title">OpenAI</span>
+          <span class="radio-sub">GPT-4o, o1, o3…</span>
+        </label>
+        <label class="radio-card" id="card-claude">
+          <input type="radio" name="provider" value="claude">
+          <span class="radio-title">Claude</span>
+          <span class="radio-sub">Haiku, Sonnet, Opus…</span>
+        </label>
+        <label class="radio-card" id="card-gemini">
+          <input type="radio" name="provider" value="gemini">
+          <span class="radio-title">Gemini</span>
+          <span class="radio-sub">2.0 Flash, 1.5 Pro…</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- OpenAI -->
+    <section>
+      <h2>OpenAI <a class="api-link" id="link-openai-key">Get API key ↗</a></h2>
+      <div class="field">
+        <label for="openaiKey">API Key</label>
+        <div class="key-row">
+          <input type="password" id="openaiKey" placeholder="sk-… (paste key, press Enter to test)" autocomplete="off">
+          <button class="show-btn" data-target="openaiKey">Show</button>
+          <button class="edit-key-btn" data-provider="openai" style="display:none">Edit</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="openaiModel">Model <span class="fetch-status" id="openai-status"></span></label>
+        <div class="model-select-row">
+          <select id="openaiModel" disabled><option value="">— paste key above to load models —</option></select>
+          <button class="fetch-btn" data-provider="openai">Refresh</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Claude -->
+    <section>
+      <h2>Claude (Anthropic) <a class="api-link" id="link-claude-key">Get API key ↗</a></h2>
+      <div class="field">
+        <label for="claudeKey">API Key</label>
+        <div class="key-row">
+          <input type="password" id="claudeKey" placeholder="sk-ant-… (paste key, press Enter to test)" autocomplete="off">
+          <button class="show-btn" data-target="claudeKey">Show</button>
+          <button class="edit-key-btn" data-provider="claude" style="display:none">Edit</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="claudeModel">Model <span class="fetch-status" id="claude-status"></span></label>
+        <div class="model-select-row">
+          <select id="claudeModel" disabled><option value="">— paste key above to load models —</option></select>
+          <button class="fetch-btn" data-provider="claude">Refresh</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gemini -->
+    <section>
+      <h2>Google Gemini <a class="api-link" id="link-gemini-key">Get API key ↗</a></h2>
+      <div class="field">
+        <label for="geminiKey">API Key</label>
+        <div class="key-row">
+          <input type="password" id="geminiKey" placeholder="AIza… (paste key, press Enter to test)" autocomplete="off">
+          <button class="show-btn" data-target="geminiKey">Show</button>
+          <button class="edit-key-btn" data-provider="gemini" style="display:none">Edit</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="geminiModel">Model <span class="fetch-status" id="gemini-status"></span></label>
+        <div class="model-select-row">
+          <select id="geminiModel" disabled><option value="">— paste key above to load models —</option></select>
+          <button class="fetch-btn" data-provider="gemini">Refresh</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Your Profile -->
+    <section id="profile-section">
+      <h2>👤 Your Profile
+        <label class="toggle-label" style="margin-left:auto">
+          <input type="checkbox" id="profileEnabled">
+          <span class="toggle-text">Inject into every prompt</span>
+        </label>
+      </h2>
+      <p class="hint profile-intro">
+        Describe yourself. When enabled, every action knows who you are — so output sounds like <em>you</em>, cleaned up.
+      </p>
+      <div class="profile-grid">
+        <div class="field">
+          <label for="profileName">Your Name</label>
+          <input type="text" id="profileName" placeholder="Bailey">
+        </div>
+        <div class="field">
+          <label for="profileRole">Your Role / Job</label>
+          <input type="text" id="profileRole" placeholder="Developer, small business owner, student…">
+        </div>
+      </div>
+      <div class="field">
+        <label for="profileStyle">Your Writing Style</label>
+        <input type="text" id="profileStyle" placeholder="Casual and direct. Short sentences. Say 'gonna'. Use em-dashes.">
+      </div>
+      <div class="field">
+        <label for="profileContext">Personal Context</label>
+        <textarea id="profileContext" rows="5" placeholder="I run a small roofing company in Texas. I write quotes, follow-up emails, and job updates to residential customers…"></textarea>
+      </div>
+    </section>
+
+    <!-- Behavior -->
+    <section>
+      <h2>Behavior</h2>
+      <div class="field">
+        <label for="variants">Suggestions per request: <strong id="variants-display">1</strong></label>
+        <input type="range" id="variants" min="1" max="4" value="1">
+        <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+        <p class="hint">Fix Spelling is always 1. Other actions generate multiple versions so you can compare.</p>
+      </div>
+    </section>
+
+    <!-- Custom Prompts -->
+    <section>
+      <h2>My Custom Prompts</h2>
+      <p class="hint" style="margin-bottom:14px">
+        Saved prompts appear in the popup action menu (up to 8).
+        Use these to build your own actions — Email Reply, Slack Message, Meeting Notes…
+      </p>
+      <div id="custom-prompts-list"></div>
+      <div class="add-prompt-form" id="add-prompt-form">
+        <h3>Add New Prompt</h3>
+        <div class="field">
+          <label for="new-prompt-name">Name (shown in popup menu)</label>
+          <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
+        </div>
+        <div class="field">
+          <label for="new-prompt-text">Instruction sent to the AI</label>
+          <textarea id="new-prompt-text" rows="4"
+            placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:"></textarea>
+        </div>
+        <div class="prompt-examples">
+          <span class="example-label">Examples:</span>
+          <button class="example-btn" data-name="Email Reply"
+            data-prompt="Rewrite as a professional, friendly email reply. Keep it concise. Return ONLY the email body:">Email Reply</button>
+          <button class="example-btn" data-name="Slack Message"
+            data-prompt="Rewrite as a clear, friendly Slack message. Keep it short. Return ONLY the message:">Slack Message</button>
+          <button class="example-btn" data-name="Bullet Points"
+            data-prompt="Extract key points as clear bullet points. Return ONLY the bullet points:">Bullet Points</button>
+        </div>
+        <button id="add-prompt-btn">Add to Menu</button>
+      </div>
+    </section>
+
+    <div class="footer">
+      <button id="save-btn">Save Settings</button>
+      <button id="revert-btn" class="revert-btn">Revert Changes</button>
+      <span id="save-status"></span>
+    </div>
+
+    <div class="page-credit">
+      ⧉ Blur-to-Clear Desktop ·
+      <a id="link-footer-github">⭐ Star on GitHub</a> if this helped you · MIT License
+    </div>
+  </div>
+
+  <script src="storage-shim.js"></script>
+  <script src="../../lib/text.js"></script>
+  <script src="../../lib/models.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>

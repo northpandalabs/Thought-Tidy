@@ -1,0 +1,50 @@
+appId: com.bheck890.blur-to-clear
+productName: Blur-to-Clear
+
+directories:
+  output: dist-build
+
+# Files included from the desktop/ folder
+files:
+  - main.js
+  - preload.js
+  - lib-node/**
+  - renderer/**
+
+# Shared source files from the parent repo copied into the package
+extraResources:
+  - from: ../lib
+    to:   lib
+  - from: ../icons
+    to:   icons
+  - from: ../options/options.css
+    to:   options/options.css
+
+# macOS
+mac:
+  category: public.app-category.productivity
+  icon: ../icons/icon.svg
+  target:
+    - target: dmg
+    - target: zip
+
+# Windows
+win:
+  icon: ../icons/icon.svg
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick:       false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
+
+# Linux
+linux:
+  category: Utility
+  icon: ../icons/icon.svg
+  target:
+    - target: AppImage
+    - target: deb

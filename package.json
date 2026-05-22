@@ -4,13 +4,19 @@
   "description": "ADHD-friendly AI writing assistant — Chrome and Firefox extension",
   "private": true,
   "scripts": {
-    "test":          "jest",
-    "test:watch":    "jest --watch",
-    "test:coverage": "jest --coverage",
-    "setup":         "node scripts/setup.js",
-    "build":         "node scripts/build.js",
-    "build:firefox": "node scripts/build.js firefox",
-    "build:chrome":  "node scripts/build.js chrome"
+    "test":           "jest",
+    "test:watch":     "jest --watch",
+    "test:coverage":  "jest --coverage",
+    "setup":          "node scripts/setup.js",
+
+    "build":          "node scripts/build.js",
+    "build:firefox":  "node scripts/build.js firefox",
+    "build:chrome":   "node scripts/build.js chrome",
+    "build:desktop":  "cd desktop && npm run dist",
+    "build:all":      "node scripts/build.js && cd desktop && npm run dist",
+
+    "desktop":        "cd desktop && npm start",
+    "desktop:dev":    "cd desktop && npm run dev"
   },
   "devDependencies": {
     "jest": "^29.7.0",
@@ -19,6 +25,7 @@
   "jest": {
     "testEnvironment": "node",
     "testMatch": ["**/tests/**/*.test.js"],
+    "testPathIgnorePatterns": ["node_modules", "desktop/"],
     "collectCoverageFrom": ["lib/**/*.js"],
     "coverageReporters": ["text", "lcov"]
   }

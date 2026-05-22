@@ -6,40 +6,77 @@ on:
       - 'v*'
 
 jobs:
-  release:
+  # ── Extensions (single Linux runner, no native deps) ───────────────────────
+  extensions:
+    name: Build extensions
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
 
-      - name: Run tests
-        run: npm test
+      - name: Zip Chrome
+        run: cd dist/chrome && zip -r ../../blur-to-clear-chrome.zip . && cd ../..
 
-      - name: Build both targets
-        run: npm run build
+      - name: Zip Firefox
+        run: cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
 
-      - name: Zip Chrome build
-        run: cd dist/chrome && zip -r ../../brainfixai-chrome.zip . && cd ../..
-
-      - name: Zip Firefox build
-        run: cd dist/firefox && zip -r ../../brainfixai-firefox.zip . && cd ../..
-
-      - name: Create GitHub Release
+      - name: Attach to Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            brainfixai-chrome.zip
-            brainfixai-firefox.zip
+            blur-to-clear-chrome.zip
+            blur-to-clear-firefox.zip
           generate_release_notes: true
+
+  # ── Desktop — one job per platform so we get native binaries ───────────────
+  desktop:
+    name: Desktop (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: blur-to-clear-windows
+            glob: "desktop/dist-build/*.exe"
+          - os: macos-latest
+            artifact: blur-to-clear-mac
+            glob: "desktop/dist-build/*.dmg"
+          - os: ubuntu-latest
+            artifact: blur-to-clear-linux
+            glob: "desktop/dist-build/*.AppImage"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install desktop deps
+        run: npm ci
+        working-directory: desktop
+
+      - name: Build desktop app
+        run: npm run dist
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.glob }}

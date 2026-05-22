@@ -1,11 +1,26 @@
-# ✦ BrainFix AI
+# Blur-to-Clear
 
-**A Chrome & Firefox extension for people who are great at getting ideas out — but not at spelling them.**
+**AI writing assistant for people who are great at getting ideas out — but not at spelling them.**
 
-Built for ADHD brains, fast thinkers, and anyone who knows exactly what they mean but struggles to make it look that way on screen. Highlight any text, right-click, and let the AI clean it up. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
+Built for ADHD brains, fast thinkers, and anyone who knows exactly what they mean but struggles to make it look that way on screen. Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
 
 > Built by **[Bheck890](https://github.com/Bheck890)**. Open source, MIT licensed. Fork it, improve it, make it yours.  
 > If this helped you — ⭐ **[star the repo](https://github.com/Bheck890/BrainFix-AI)** and share it. That's all I ask.
+
+---
+
+## Two versions — one codebase
+
+| | Browser Extension | Desktop App |
+| --- | --- | --- |
+| **Works in** | Chrome, Firefox, Edge | Windows, macOS, Linux |
+| **Trigger** | Right-click selected text | `Ctrl+Shift+Space` anywhere, system tray |
+| **Quick actions** | Right-click menu | Tray → Quick Fix (Clipboard) — silent, notifies when done |
+| **Source folder** | root (`manifest.json`, `background.js`…) | `desktop/` |
+| **Build** | `npm run build` | `cd desktop && npm run dist` |
+| **Run locally** | Load unpacked / temporary add-on | `cd desktop && npm start` |
+
+Both share the same `lib/` folder — `api.js`, `prompts.js`, `models.js`, `text.js` — zero duplication.
 
 ---
 
@@ -91,7 +106,7 @@ No BrainFix servers. No analytics. No accounts. Your text goes from your browser
 
 ---
 
-## Install locally (for testing)
+## Browser extension — install locally
 
 ### Prerequisites
 
@@ -100,31 +115,59 @@ npm install        # installs webextension-polyfill
 npm run build      # builds dist/chrome/ and dist/firefox/
 ```
 
-Or build one target at a time:
-
-```bash
-npm run build:chrome
-npm run build:firefox
-```
+Or one target at a time: `npm run build:chrome` / `npm run build:firefox`
 
 ### Chrome / Edge
 
 1. Run `npm run build:chrome` — output lands in `dist/chrome/`
-2. Open Chrome → go to `chrome://extensions`
-3. Enable **Developer mode** (top-right toggle)
-4. Click **Load unpacked**
-5. Select the `dist/chrome/` folder
-6. Click the ✦ toolbar button → **Open Full Settings** → paste your API key → **Save**
+2. Open Chrome → `chrome://extensions`
+3. Enable **Developer mode** → click **Load unpacked** → select `dist/chrome/`
+4. Click the toolbar button → **Open Full Settings** → paste your API key → **Save**
 
 ### Firefox
 
 1. Run `npm run build:firefox` — output lands in `dist/firefox/`
-2. Open Firefox → go to `about:debugging`
-3. Click **This Firefox** → **Load Temporary Add-on…**
-4. Select any file inside the `dist/firefox/` folder (e.g. `manifest.json`)
-5. Click the ✦ toolbar button → **Open Full Settings** → paste your API key → **Save**
+2. Open Firefox → `about:debugging` → **This Firefox** → **Load Temporary Add-on…**
+3. Select any file inside `dist/firefox/` (e.g. `manifest.json`)
+4. Click the toolbar button → **Open Full Settings** → paste your API key → **Save**
 
-> **Note:** Firefox temporary add-ons are removed when Firefox restarts. To make it permanent, either publish it to AMO or self-sign with [web-ext](https://github.com/mozilla/web-ext).
+> Firefox temporary add-ons are removed on restart. Publish to AMO or self-sign with [web-ext](https://github.com/mozilla/web-ext) to make it permanent.
+
+---
+
+## Desktop app — install locally
+
+The desktop app is a standalone tray application — no browser required.
+
+### Setup
+
+```bash
+cd desktop
+npm install
+```
+
+### Run in development
+
+```bash
+cd desktop
+npm start          # launches with DevTools open
+```
+
+On first launch the Settings window opens automatically. Paste one API key, press **Enter** to test it, then close Settings. From then on:
+
+- **`Ctrl+Shift+Space`** (or `Cmd+Shift+Space` on Mac) opens the popup from anywhere
+- **Right-click the tray icon** for quick clipboard actions (processes silently, notifies when done)
+
+### Build distributable installers
+
+```bash
+cd desktop
+npm run dist:win     # → dist-build/*.exe  (Windows NSIS installer)
+npm run dist:mac     # → dist-build/*.dmg  (macOS disk image)
+npm run dist:linux   # → dist-build/*.AppImage
+```
+
+Or just `npm run dist` to build for the current platform.
 
 ---
 

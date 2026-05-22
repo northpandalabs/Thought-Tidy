@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blur-to-Clear</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Drag handle / title bar (frameless window) -->
+  <div class="titlebar" id="drag-region">
+    <div class="titlebar-inner">
+      <img src="../../icons/icon.svg" class="logo-img" alt="">
+      <span class="title-text">Blur-to-Clear</span>
+      <span class="shortcut-hint">Ctrl+Shift+Space</span>
+    </div>
+    <button id="close-btn" title="Hide">✕</button>
+  </div>
+
+  <!-- Process panel -->
+  <div class="panel">
+    <label for="input-text">Text to process</label>
+    <textarea id="input-text"
+      placeholder="Paste or type text here — or press Ctrl+Shift+Space while text is in your clipboard to auto-fill…"
+      rows="7"
+      spellcheck="false"></textarea>
+
+    <div class="action-row">
+      <select id="action-select">
+        <option value="fix-spelling">✓  Fix Spelling &amp; Grammar</option>
+        <option value="professional">★  Make Professional</option>
+        <option value="improve">↑  Improve Writing</option>
+        <option value="sound-human">💬  Sound Human</option>
+        <option value="brain-dump">🧠  Brain Dump → Clear</option>
+        <option value="sound-like-me">👤  Sound Like Me</option>
+        <option value="formal">   Make Formal</option>
+        <option value="casual">   Make Casual</option>
+        <option value="shorten">   Shorten</option>
+        <option value="expand">   Expand</option>
+      </select>
+      <button id="run-btn">Run</button>
+    </div>
+
+    <!-- Result -->
+    <div id="result-area" style="display:none">
+      <div id="result-loading" class="result-loading" style="display:none">
+        <div class="spinner"></div><span>Processing…</span>
+      </div>
+      <div id="result-text" class="result-text"></div>
+      <div id="result-actions" class="result-actions" style="display:none">
+        <button id="copy-btn">Copy to Clipboard</button>
+        <button id="copy-close-btn">Copy &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span id="provider-badge" class="provider-badge"></span>
+    <button id="settings-btn">⚙ Settings</button>
+  </div>
+
+  <!-- Load lib scripts with paths relative to this file's location -->
+  <script src="storage-shim.js"></script>
+  <script src="../../lib/text.js"></script>
+  <script src="../../lib/prompts.js"></script>
+  <script src="../../lib/api.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

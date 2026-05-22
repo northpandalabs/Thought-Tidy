@@ -7,14 +7,15 @@ on:
     branches: [main]
 
 jobs:
-  test-and-build:
+  # ── Extension tests + builds ───────────────────────────────────────────────
+  extensions:
+    name: Extensions (Chrome + Firefox)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
@@ -22,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run tests (121)
         run: npm test
 
       - name: Build Chrome
@@ -34,11 +35,31 @@ jobs:
       - name: Upload Chrome build
         uses: actions/upload-artifact@v4
         with:
-          name: brainfixai-chrome
+          name: blur-to-clear-chrome
           path: dist/chrome/
 
       - name: Upload Firefox build
         uses: actions/upload-artifact@v4
         with:
-          name: brainfixai-firefox
+          name: blur-to-clear-firefox
           path: dist/firefox/
+
+  # ── Desktop tests ──────────────────────────────────────────────────────────
+  desktop-tests:
+    name: Desktop tests (55)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install desktop dependencies
+        run: npm ci
+        working-directory: desktop
+
+      - name: Run desktop tests
+        run: npm test
+        working-directory: desktop
