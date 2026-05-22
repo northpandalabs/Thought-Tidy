@@ -3,16 +3,43 @@
 <head>
   <meta charset="utf-8">
   <title>Blur-to-Clear — Settings</title>
-  <!-- Reuse the extension options styles — path relative to this file -->
-  <link rel="stylesheet" href="../../options/options.css">
+  <link rel="stylesheet" href="settings.css">
   <style>
-    /* Desktop-specific overrides */
-    .page-header .links-row a[href] {
-      cursor: pointer;
+    html, body {
+      background: #181825;
     }
-    .page-header .links-row a[href]::before {
-      content: "";
+    .page-header .links-row a[href] { cursor: pointer; }
+    .page-header .links-row a[href]::before { content: ""; }
+
+    /* Sidebar-style header strip */
+    .app-titlebar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 44px;
+      background: #11111b;
+      border-bottom: 1px solid #313244;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 18px;
+      z-index: 100;
+      -webkit-app-region: drag;
     }
+    .app-titlebar img {
+      width: 20px; height: 20px;
+      border-radius: 4px;
+      -webkit-app-region: no-drag;
+    }
+    .app-titlebar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #a6adc8;
+      -webkit-app-region: no-drag;
+    }
+
+    /* Offset page content below the fixed titlebar */
+    body { padding-top: 44px; }
+
     .desktop-note {
       background: #1e1e2e;
       border: 1px solid #313244;
@@ -23,9 +50,19 @@
       margin-bottom: 16px;
     }
     .desktop-note strong { color: #9399b2; }
+    .desktop-note code {
+      background: #181825;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
   </style>
 </head>
 <body>
+  <div class="app-titlebar">
+    <img id="titlebar-icon" src="../../icons/icon.png" onerror="this.style.display='none'" alt="">
+    <span class="app-titlebar-title">Blur-to-Clear — Settings</span>
+  </div>
   <div class="page">
 
     <div class="page-header">

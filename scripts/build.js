@@ -70,7 +70,7 @@ const ALL_TARGETS = {
     buildTarget("firefox", {
       browser_specific_settings: {
         gecko: {
-          id: "blurtoclear@bheck890",
+          id: "brainfixai@bheck",
           data_collection_permissions: { required: ["none"], optional: [] }
         }
       },

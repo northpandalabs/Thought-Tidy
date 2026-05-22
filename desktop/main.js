@@ -3,7 +3,8 @@
 
 const {
   app, BrowserWindow, Tray, Menu, globalShortcut,
-  ipcMain, clipboard, nativeImage, shell, Notification, screen
+  ipcMain, clipboard, nativeImage, shell, Notification, screen,
+  dialog
 } = require("electron");
 const path  = require("path");
 const Store = require("electron-store");
@@ -25,25 +26,6 @@ function rootPath(...parts) {
     ? path.join(process.resourcesPath, ...parts)
     : path.join(__dirname, "..", ...parts);
 }
-
-// ── IPC ────────────────────────────────────────────────────────────────────────
-
-registerAll(ipcMain, {
-  store,
-  clipboard,
-  openSettings,
-  closePopup: () => { if (popupWin) popupWin.hide(); },
-  openURL:    (url) => shell.openExternal(url)
-});
-
-ipcMain.handle("quick-action", async (_, { action, text }) => {
-  const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
-  const { callAI }                               = require("./lib-node/api");
-  const s = store.store;
-  const provider     = s.provider || "openai";
-  const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
-  return callAI(provider, s, systemPrompt, text);
-});
 
 // ── Popup window ───────────────────────────────────────────────────────────────
 
@@ -171,15 +153,14 @@ async function quickAction(action) {
 
 function createTray() {
   let icon;
-  const svgPath = rootPath("icons", "icon.svg");
+  // Windows requires PNG or ICO for tray icons — SVG is not supported
+  const pngPath = rootPath("icons", "icon.png");
 
   try {
-    icon = nativeImage.createFromPath(svgPath);
+    icon = nativeImage.createFromPath(pngPath);
     if (icon.isEmpty()) throw new Error("empty");
-    // Resize for tray (16px on most platforms, 22px on some Linux DEs)
     icon = icon.resize({ width: 22, height: 22 });
   } catch {
-    // Fallback: empty template image — the OS will show a placeholder
     icon = nativeImage.createEmpty();
   }
 
@@ -196,6 +177,23 @@ function createTray() {
 
 app.whenReady().then(() => {
   app.setName("Blur-to-Clear");
+
+  registerAll(ipcMain, {
+    store,
+    clipboard,
+    openSettings,
+    closePopup: () => { if (popupWin) popupWin.hide(); },
+    openURL:    (url) => shell.openExternal(url)
+  });
+
+  ipcMain.handle("quick-action", async (_, { action, text }) => {
+    const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
+    const { callAI }                               = require("./lib-node/api");
+    const s            = store.store;
+    const provider     = s.provider || "openai";
+    const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
+    return callAI(provider, s, systemPrompt, text);
+  });
 
   // macOS: no dock icon — pure tray app
   if (process.platform === "darwin") app.dock.hide();
@@ -215,7 +213,45 @@ app.whenReady().then(() => {
   if (!hasKey) {
     openSettings();
   }
+
+  setupAutoUpdater();
 });
+
+// ── Auto-updater ───────────────────────────────────────────────────────────────
+
+function setupAutoUpdater() {
+  if (!app.isPackaged) return; // only check for updates in production builds
+
+  const { autoUpdater } = require("electron-updater");
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("update-available", (info) => {
+    new Notification({
+      title: "Blur-to-Clear Update",
+      body:  `Version ${info.version} is downloading in the background.`
+    }).show();
+  });
+
+  autoUpdater.on("update-downloaded", () => {
+    dialog.showMessageBox({
+      type:    "info",
+      title:   "Update Ready",
+      message: "A new version has been downloaded. Restart now to apply the update?",
+      buttons: ["Restart Now", "Later"]
+    }).then(({ response }) => {
+      if (response === 0) autoUpdater.quitAndInstall();
+    });
+  });
+
+  autoUpdater.on("error", (err) => {
+    if (isDev) console.error("Auto-updater error:", err.message);
+  });
+
+  // Check on launch, then every 4 hours
+  autoUpdater.checkForUpdates();
+  setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000);
+}
 
 // Keep process alive after all windows close (tray app — stays in background)
 app.on("window-all-closed", () => {});

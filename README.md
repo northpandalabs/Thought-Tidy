@@ -169,6 +169,32 @@ npm run dist:linux   # → dist-build/*.AppImage
 
 Or just `npm run dist` to build for the current platform.
 
+### Install from the Windows installer
+
+1. Run `npm run dist:win` — output is `dist-build/Blur-to-Clear Setup 1.4.0.exe`
+2. Double-click the `.exe` → choose an install directory → click **Install**
+3. A shortcut is added to your Desktop and Start Menu
+4. The app starts in the system tray automatically
+
+To uninstall: **Settings → Apps → Blur-to-Clear → Uninstall**, or use the uninstaller in the install folder.
+
+### Auto-updates
+
+The installed app checks for updates on launch and every 4 hours. When a new version is available:
+
+1. It downloads silently in the background
+2. A notification appears: *"Version X.Y.Z downloading…"*
+3. When the download finishes, a dialog asks if you want to restart now or later
+4. On restart, the new version installs automatically
+
+**Releasing a new version:**
+
+1. Bump `version` in `desktop/package.json` and the root `manifest.json`
+2. Run `npm run release` from the `desktop/` folder — this builds the installer and uploads it to GitHub Releases
+3. Existing installs will pick up the update within 4 hours
+
+> `npm run release` requires a `GH_TOKEN` environment variable set to a GitHub personal access token with `repo` scope.
+
 ---
 
 ## Publish to extension stores
@@ -210,10 +236,12 @@ Or just `npm run dist` to build for the current platform.
 
 3. Go to [addons.mozilla.org/developers](https://addons.mozilla.org/developers/) and sign in / create an account (free)
 4. Click **Submit a New Add-on** → **On this site** → upload `blur-to-clear-firefox.zip`
-5. Answer the source code question — since this is open source, link the GitHub repo
+5. **Source code question:** Mozilla asks if you use code generators, minifiers, or bundlers. Answer **No** — the build script (`scripts/build.js`) only copies plain JS/CSS/HTML files and adjusts the manifest. No minification, no webpack, no transpilation. Reviewers can read the submitted files directly.
 6. Fill out the listing (name, description, screenshots, category: **Writing**)
 7. Submit for review — AMO reviews typically take a few days for new add-ons; faster after the first
 8. Once approved, the add-on is live on AMO and installable with one click
+
+> The add-on ID (`brainfixai@bheck` in `browser_specific_settings.gecko.id`) must match the ID registered on AMO. This is set automatically by `scripts/build.js`.
 
 ### Versioning
 
