@@ -52,21 +52,6 @@
 
   <div class="divider"></div>
 
-  <!-- Provider / model status -->
-  <div class="section">
-    <label for="provider">Active Provider</label>
-    <select id="provider">
-      <option value="openai">OpenAI</option>
-      <option value="claude">Claude (Anthropic)</option>
-      <option value="gemini">Google Gemini</option>
-    </select>
-  </div>
-
-  <div class="section">
-    <label>Model</label>
-    <div id="model-display" class="model-name">—</div>
-  </div>
-
   <div class="section">
     <label>Suggestions <span id="variants-val">1</span></label>
     <input type="range" id="variants" min="1" max="4" value="1">
@@ -75,7 +60,7 @@
 
   <div class="section key-status" id="key-status">
     <span id="key-indicator" class="dot dot-bad"></span>
-    <span id="key-text">No API key set</span>
+    <span id="key-text">No providers configured</span>
   </div>
 
   <!-- Today's Activity -->

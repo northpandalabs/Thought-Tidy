@@ -71,19 +71,23 @@ browser.storage.onChanged.addListener((changes) => {
   if (changes.customPrompts) rebuildCustomMenu();
 });
 
+const PROVIDER_STORAGE_KEYS = [
+  "configuredProviders", "geminiModels",
+  // legacy keys kept for migration shim in callAIWithFallback
+  "provider", "openaiKey", "claudeKey", "geminiKey",
+  "openaiModel", "claudeModel", "geminiModel"
+];
+
 // ── Run from popup (Process Selected Text button) ────────────────────────────
 browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== "run-from-popup") return;
   (async () => {
     const { tabId, actionVal, selectedText } = msg;
-    // Read settings from storage — never pass API keys through messages
     const settings = await browser.storage.local.get([
-      "provider", "openaiKey", "claudeKey", "geminiKey",
-      "openaiModel", "claudeModel", "geminiModel",
+      ...PROVIDER_STORAGE_KEYS,
       "customPrompts",
       "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
     ]);
-    const provider = settings.provider || "openai";
 
     let systemPrompt;
     if (actionVal.startsWith("custom-")) {
@@ -97,7 +101,9 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     browser.tabs.sendMessage(tabId, { action: "show-loading", originalText: selectedText });
     try {
-      const result = await callAI(provider, settings, systemPrompt, selectedText);
+      const { result, usedProvider, usedModel } = await callAIWithFallback(
+        settings.configuredProviders, settings.geminiModels, settings, systemPrompt, selectedText
+      );
       browser.tabs.sendMessage(tabId, { action: "show-results", originalText: selectedText, results: [result] });
 
       const today = todayDate();
@@ -105,8 +111,7 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const fresh = purgeOldLog(hl);
       fresh.push({
         timestamp: Date.now(), date: today, source: "extension",
-        action: actionVal, provider,
-        model: settings[`${provider}Model`] || "",
+        action: actionVal, provider: usedProvider, model: usedModel,
         inputLen: selectedText.length, outputLen: result.length
       });
       await browser.storage.local.set({ historyLog: fresh.slice(-200), lastAction: actionVal });
@@ -114,24 +119,22 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       browser.tabs.sendMessage(tabId, { action: "show-error", error: err.message });
     }
   })();
-  return true; // keep message channel open for async response
+  return true;
 });
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!info.selectionText) return;
 
   const selectedText = info.selectionText.trim();
-  const menuId = info.menuItemId;
+  const menuId       = info.menuItemId;
 
   const settings = await browser.storage.local.get([
-    "provider", "openaiKey", "claudeKey", "geminiKey",
-    "openaiModel", "claudeModel", "geminiModel",
+    ...PROVIDER_STORAGE_KEYS,
     "variants", "customPrompts",
     "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
   ]);
 
-  const provider = settings.provider || "openai";
-  const variants  = menuId === "fix-spelling" ? 1 : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
+  const variants = menuId === "fix-spelling" ? 1 : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
 
   let systemPrompt;
   if (menuId.startsWith("dyn-")) {
@@ -139,32 +142,35 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     const cp  = (settings.customPrompts || [])[idx];
     systemPrompt = cp?.prompt || "Process the following text:";
   } else {
-    systemPrompt = MENU_PROMPTS[menuId]; // from lib/prompts.js
+    systemPrompt = MENU_PROMPTS[menuId];
     if (!systemPrompt) return;
   }
-
-  systemPrompt = buildPromptWithProfile(systemPrompt, settings); // from lib/prompts.js
+  systemPrompt = buildPromptWithProfile(systemPrompt, settings);
 
   browser.tabs.sendMessage(tab.id, { action: "show-loading", originalText: selectedText });
 
   try {
     const results = [];
+    let usedProvider = "", usedModel = "";
     for (let i = 0; i < variants; i++) {
-      results.push(await callAI(provider, settings, systemPrompt, selectedText)); // from lib/api.js
+      const r = await callAIWithFallback(
+        settings.configuredProviders, settings.geminiModels, settings, systemPrompt, selectedText
+      );
+      results.push(r.result);
+      usedProvider = r.usedProvider;
+      usedModel    = r.usedModel;
     }
     browser.tabs.sendMessage(tab.id, { action: "show-results", originalText: selectedText, results });
 
     const lastAction = menuId.startsWith("dyn-") ? menuId.replace("dyn-", "custom-") : menuId;
     await browser.storage.local.set({ lastAction });
 
-    // Append history log entry (metadata only — no text stored)
     const { historyLog = [] } = await browser.storage.local.get("historyLog");
     const today = todayDate();
     const fresh = purgeOldLog(historyLog);
     fresh.push({
       timestamp: Date.now(), date: today, source: "extension",
-      action: lastAction, provider,
-      model: settings[`${provider}Model`] || "",
+      action: lastAction, provider: usedProvider, model: usedModel,
       inputLen: selectedText.length,
       outputLen: results.reduce((s, r) => s + r.length, 0)
     });

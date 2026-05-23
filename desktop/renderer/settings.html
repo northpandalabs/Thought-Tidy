@@ -93,99 +93,86 @@
       No account needed.
     </div>
 
-    <!-- First-run wizard -->
-    <section id="setup-wizard" style="display:none">
-      <h2>👋 Welcome — let's get you set up</h2>
-      <p class="hint" style="margin-bottom:14px">
-        Pick a provider, paste your API key, and press <strong>Enter</strong> — the app tests it and saves automatically.
-      </p>
-      <div class="setup-steps">
-        <div class="setup-step"><span class="step-num">1</span> Choose a provider in <strong>Active Provider</strong></div>
-        <div class="setup-step"><span class="step-num">2</span> Paste your key and press <strong>Enter</strong> to test &amp; save</div>
-        <div class="setup-step"><span class="step-num">3</span> Press <strong>Ctrl+Shift+Space</strong> anywhere to start processing text</div>
-      </div>
-    </section>
+    <!-- AI Providers -->
+    <section id="providers-section">
+      <h2>
+        AI Providers
+        <button id="add-provider-btn" class="add-provider-btn">+ Add Provider</button>
+      </h2>
 
-    <!-- Active Provider -->
-    <section>
-      <h2>Active Provider</h2>
-      <div class="radio-group">
-        <label class="radio-card" id="card-openai">
-          <input type="radio" name="provider" value="openai">
-          <span class="radio-title">OpenAI</span>
-          <span class="radio-sub">GPT-4o, o1, o3…</span>
-        </label>
-        <label class="radio-card" id="card-claude">
-          <input type="radio" name="provider" value="claude">
-          <span class="radio-title">Claude</span>
-          <span class="radio-sub">Haiku, Sonnet, Opus…</span>
-        </label>
-        <label class="radio-card" id="card-gemini">
-          <input type="radio" name="provider" value="gemini">
-          <span class="radio-title">Gemini</span>
-          <span class="radio-sub">2.0 Flash, 1.5 Pro…</span>
-        </label>
+      <div id="no-providers-state" style="display:none">
+        <p class="hint" style="margin-bottom:14px">No AI providers configured yet. Add one to get started.</p>
       </div>
-    </section>
 
-    <!-- OpenAI -->
-    <section>
-      <h2>OpenAI <a class="api-link" id="link-openai-key">Get API key ↗</a></h2>
-      <div class="field">
-        <label for="openaiKey">API Key</label>
-        <div class="key-row">
-          <input type="password" id="openaiKey" placeholder="sk-… (paste key, press Enter to test)" autocomplete="off">
-          <button class="show-btn" data-target="openaiKey">Show</button>
-          <button class="edit-key-btn" data-provider="openai" style="display:none">Edit</button>
-        </div>
-      </div>
-      <div class="field">
-        <label for="openaiModel">Model <span class="fetch-status" id="openai-status"></span></label>
-        <div class="model-select-row">
-          <select id="openaiModel" disabled><option value="">— paste key above to load models —</option></select>
-          <button class="fetch-btn" data-provider="openai">Refresh</button>
-        </div>
-      </div>
-    </section>
+      <div id="provider-cards"></div>
 
-    <!-- Claude -->
-    <section>
-      <h2>Claude (Anthropic) <a class="api-link" id="link-claude-key">Get API key ↗</a></h2>
-      <div class="field">
-        <label for="claudeKey">API Key</label>
-        <div class="key-row">
-          <input type="password" id="claudeKey" placeholder="sk-ant-… (paste key, press Enter to test)" autocomplete="off">
-          <button class="show-btn" data-target="claudeKey">Show</button>
-          <button class="edit-key-btn" data-provider="claude" style="display:none">Edit</button>
-        </div>
-      </div>
-      <div class="field">
-        <label for="claudeModel">Model <span class="fetch-status" id="claude-status"></span></label>
-        <div class="model-select-row">
-          <select id="claudeModel" disabled><option value="">— paste key above to load models —</option></select>
-          <button class="fetch-btn" data-provider="claude">Refresh</button>
-        </div>
-      </div>
-    </section>
+      <!-- Add Provider Wizard -->
+      <div id="provider-wizard" style="display:none">
 
-    <!-- Gemini -->
-    <section>
-      <h2>Google Gemini <a class="api-link" id="link-gemini-key">Get API key ↗</a></h2>
-      <div class="field">
-        <label for="geminiKey">API Key</label>
-        <div class="key-row">
-          <input type="password" id="geminiKey" placeholder="AIza… (paste key, press Enter to test)" autocomplete="off">
-          <button class="show-btn" data-target="geminiKey">Show</button>
-          <button class="edit-key-btn" data-provider="gemini" style="display:none">Edit</button>
+        <div id="wizard-step-1">
+          <p class="hint" style="margin-bottom:14px">Choose a provider to add:</p>
+          <div class="wizard-provider-grid">
+            <button class="wizard-provider-btn" data-provider="claude">
+              <span class="wp-name">Claude</span>
+              <span class="wp-sub">Anthropic · Haiku, Sonnet, Opus</span>
+            </button>
+            <button class="wizard-provider-btn" data-provider="openai">
+              <span class="wp-name">ChatGPT</span>
+              <span class="wp-sub">OpenAI · GPT-4o, o1, o3</span>
+            </button>
+            <button class="wizard-provider-btn" data-provider="gemini">
+              <span class="wp-name">Gemini</span>
+              <span class="wp-sub">Google · 2.0 Flash, 1.5 Pro</span>
+            </button>
+          </div>
+          <div class="wizard-footer">
+            <button id="wizard-cancel-1" class="revert-btn">Cancel</button>
+          </div>
         </div>
-      </div>
-      <div class="field">
-        <label for="geminiModel">Model <span class="fetch-status" id="gemini-status"></span></label>
-        <div class="model-select-row">
-          <select id="geminiModel" disabled><option value="">— paste key above to load models —</option></select>
-          <button class="fetch-btn" data-provider="gemini">Refresh</button>
+
+        <div id="wizard-step-2" style="display:none">
+          <h3 id="wizard-provider-title"></h3>
+          <div class="field">
+            <label>
+              API Key
+              <span id="wizard-key-link" class="api-link" style="cursor:pointer">Get key ↗</span>
+            </label>
+            <div class="key-row">
+              <input type="password" id="wizard-api-key" placeholder="" autocomplete="off">
+              <button id="wizard-show-btn" class="show-btn">Show</button>
+              <button id="wizard-test-btn" class="fetch-btn">Test &amp; Load Models</button>
+            </div>
+            <div class="fetch-status" id="wizard-key-status"></div>
+          </div>
+          <div class="field">
+            <label>Model <span class="fetch-status" id="wizard-model-status"></span></label>
+            <div class="model-select-row">
+              <select id="wizard-model-select" disabled>
+                <option value="">— test your key above to load models —</option>
+              </select>
+            </div>
+          </div>
+          <div id="wizard-gemini-extra" style="display:none">
+            <div class="field">
+              <label>Secondary Model <span class="hint">(optional fallback)</span></label>
+              <div class="model-select-row">
+                <select id="wizard-gemini-model-2" disabled><option value="">— test key first —</option></select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Tertiary Model <span class="hint">(optional fallback)</span></label>
+              <div class="model-select-row">
+                <select id="wizard-gemini-model-3" disabled><option value="">— test key first —</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-footer">
+            <button id="wizard-back" class="revert-btn">← Back</button>
+            <button id="wizard-save" class="btn-primary">Save Provider</button>
+          </div>
         </div>
-      </div>
+
+      </div><!-- /provider-wizard -->
     </section>
 
     <!-- Your Profile -->

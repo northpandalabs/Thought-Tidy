@@ -3,15 +3,11 @@
 
 /* global browser, btcAPI, callAI, buildPromptWithProfile, MENU_PROMPTS, wordCount */
 
-const KEY_FIELDS   = { openai: "openaiKey",   claude: "claudeKey",   gemini: "geminiKey"   };
-const MODEL_FIELDS = { openai: "openaiModel",  claude: "claudeModel", gemini: "geminiModel" };
-const DEFAULT_MODELS = {
-  openai: "gpt-4o-mini",
-  claude: "claude-haiku-4-5-20251001",
-  gemini: "gemini-2.0-flash"
-};
+const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
 
 const STORAGE_KEYS = [
+  "configuredProviders", "geminiModels",
+  // legacy keys — passed to callAIWithFallback migration shim
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "customPrompts", "lastAction",
@@ -99,16 +95,9 @@ function populateCustomActions() {
 }
 
 async function runProcess() {
-  const inputEl  = document.getElementById("input-text");
-  const text     = inputEl.value.trim();
+  const inputEl = document.getElementById("input-text");
+  const text    = inputEl.value.trim();
   if (!text) { inputEl.focus(); return; }
-
-  const provider = settings.provider || "openai";
-  const key      = settings[KEY_FIELDS[provider]];
-  if (!key) {
-    showResult(null, "No API key set for this provider — open Settings first.");
-    return;
-  }
 
   const actionVal = document.getElementById("action-select").value;
   const cps       = settings.customPrompts || [];
@@ -121,14 +110,19 @@ async function runProcess() {
     systemPrompt = MENU_PROMPTS[actionVal];
     if (!systemPrompt) return;
   }
-
   systemPrompt = buildPromptWithProfile(systemPrompt, settings);
 
   document.getElementById("run-btn").disabled = true;
   showLoading(true);
 
   try {
-    const result = await callAI(provider, settings, systemPrompt, text);
+    const { result } = await callAIWithFallback(
+      settings.configuredProviders,
+      settings.geminiModels,
+      settings,
+      systemPrompt,
+      text
+    );
     showResult(result, null);
     await browser.storage.local.set({ lastAction: actionVal });
   } catch (err) {
@@ -163,11 +157,18 @@ function showResult(text, error) {
 }
 
 function updateFooter() {
-  const provider = settings.provider || "openai";
-  const model    = settings[MODEL_FIELDS[provider]] || DEFAULT_MODELS[provider];
-  const badge    = document.getElementById("provider-badge");
-  const labels   = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
-  badge.textContent = `${labels[provider] || provider} · ${model}`;
+  const badge     = document.getElementById("provider-badge");
+  const providers = settings.configuredProviders;
+  if (Array.isArray(providers) && providers.length > 0) {
+    const p     = providers[0];
+    const label = PROVIDER_LABELS[p.id] || p.id;
+    const model = p.id === "gemini"
+      ? (settings.geminiModels?.find(Boolean) || p.model || "")
+      : (p.model || "");
+    badge.textContent = model ? `${label} · ${model}` : label;
+  } else {
+    badge.textContent = "No provider — open Settings";
+  }
 }
 
 async function loadHistory() {

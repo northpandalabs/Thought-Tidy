@@ -1,33 +1,26 @@
-const DEFAULT_MODELS = {
-  openai: "gpt-4o-mini",
-  claude: "claude-haiku-4-5-20251001",
-  gemini: "gemini-2.0-flash"
-};
+const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
 
-const KEY_FIELDS   = { openai: "openaiKey",   claude: "claudeKey",   gemini: "geminiKey" };
-const MODEL_FIELDS = { openai: "openaiModel",  claude: "claudeModel", gemini: "geminiModel" };
+const STORAGE_KEYS = [
+  "configuredProviders", "geminiModels",
+  // legacy keys — passed to callAIWithFallback migration shim
+  "provider", "openaiKey", "claudeKey", "geminiKey",
+  "openaiModel", "claudeModel", "geminiModel",
+  "variants", "customPrompts", "lastAction",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+];
 
 let currentSettings = {};
 
 async function init() {
-  currentSettings = await browser.storage.local.get([
-    "provider", "variants",
-    "openaiKey", "claudeKey", "geminiKey",
-    "openaiModel", "claudeModel", "geminiModel",
-    "customPrompts", "lastAction",
-    "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
-  ]);
+  currentSettings = await browser.storage.local.get(STORAGE_KEYS);
 
-  const providerEl  = document.getElementById("provider");
   const variantsEl  = document.getElementById("variants");
   const variantsVal = document.getElementById("variants-val");
 
-  providerEl.value = currentSettings.provider || "openai";
-  variantsEl.value = currentSettings.variants  || 1;
+  variantsEl.value    = currentSettings.variants || 1;
   variantsVal.textContent = variantsEl.value;
 
-  updateStatus(currentSettings, providerEl.value);
-  updateModelDisplay(currentSettings, providerEl.value);
+  updateProviderStatus(currentSettings);
 
   // Populate custom prompts into action select
   const actionSel = document.getElementById("action-select");
@@ -44,20 +37,14 @@ async function init() {
       actionSel.appendChild(opt);
     });
   }
-  // Restore last-used action (after custom options are appended so the value is available)
   actionSel.value = currentSettings.lastAction || "fix-spelling";
 
-  // Setup CTA: if no key for the active provider, show prominent prompt
-  const hasAnyKey = currentSettings.openaiKey || currentSettings.claudeKey || currentSettings.geminiKey;
+  // Setup CTA: shown when no providers configured
+  const providers   = currentSettings.configuredProviders;
+  const hasProvider = Array.isArray(providers) && providers.length > 0;
+  const hasLegacyKey = currentSettings.openaiKey || currentSettings.claudeKey || currentSettings.geminiKey;
   const ctaEl = document.getElementById("setup-cta");
-  if (ctaEl) ctaEl.style.display = hasAnyKey ? "none" : "block";
-
-  providerEl.addEventListener("change", () => {
-    currentSettings.provider = providerEl.value;
-    browser.storage.local.set({ provider: providerEl.value });
-    updateStatus(currentSettings, providerEl.value);
-    updateModelDisplay(currentSettings, providerEl.value);
-  });
+  if (ctaEl) ctaEl.style.display = (hasProvider || hasLegacyKey) ? "none" : "block";
 
   variantsEl.addEventListener("input", () => {
     variantsVal.textContent = variantsEl.value;
@@ -82,12 +69,9 @@ async function init() {
     setTimeout(() => (btn.textContent = "Copy"), 1600);
   });
 
-  // Purge stale log entries then render today's activity
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
   const purged = purgeOldLog(rawLog);
-  if (purged.length !== rawLog.length) {
-    await browser.storage.local.set({ historyLog: purged });
-  }
+  if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
   loadHistory();
 }
 
@@ -96,9 +80,7 @@ async function runFromSelection() {
   const status = document.getElementById("run-selection-status");
   status.style.display = "none";
   btn.disabled = true;
-
   try {
-    // Get the active tab's selected text via the scripting API
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) throw new Error("No active tab.");
 
@@ -114,16 +96,9 @@ async function runFromSelection() {
     }
 
     const actionVal = document.getElementById("action-select").value;
-    // Send only non-sensitive context — background reads keys from storage itself
-    await browser.runtime.sendMessage({
-      type: "run-from-popup",
-      tabId: tab.id,
-      actionVal,
-      selectedText
-    });
-
+    await browser.runtime.sendMessage({ type: "run-from-popup", tabId: tab.id, actionVal, selectedText });
     await browser.storage.local.set({ lastAction: actionVal });
-    window.close(); // close popup; result modal will appear on the page
+    window.close();
   } catch (err) {
     status.textContent = err.message;
     status.style.display = "block";
@@ -136,31 +111,27 @@ async function runProcess() {
   const text = document.getElementById("input-text").value.trim();
   if (!text) return;
 
-  const provider = currentSettings.provider || "openai";
-  const key = currentSettings[KEY_FIELDS[provider]];
-  if (!key) {
-    showResult(null, "No API key set for this provider — open Full Settings first.");
-    return;
-  }
-
   const actionVal = document.getElementById("action-select").value;
-  const cps = currentSettings.customPrompts || [];
+  const cps       = currentSettings.customPrompts || [];
   let systemPrompt;
-
   if (actionVal.startsWith("custom-")) {
-    const idx = parseInt(actionVal.replace("custom-", ""), 10);
+    const idx    = parseInt(actionVal.replace("custom-", ""), 10);
     systemPrompt = cps[idx]?.prompt || "Process the following text:";
   } else {
-    systemPrompt = MENU_PROMPTS[actionVal]; // from lib/prompts.js
+    systemPrompt = MENU_PROMPTS[actionVal];
     if (!systemPrompt) return;
   }
-
-  systemPrompt = buildPromptWithProfile(systemPrompt, currentSettings); // from lib/prompts.js
+  systemPrompt = buildPromptWithProfile(systemPrompt, currentSettings);
 
   showLoading(true);
-
   try {
-    const result = await callAI(provider, currentSettings, systemPrompt, text); // from lib/api.js
+    const { result } = await callAIWithFallback(
+      currentSettings.configuredProviders,
+      currentSettings.geminiModels,
+      currentSettings,
+      systemPrompt,
+      text
+    );
     showResult(result, null);
     await browser.storage.local.set({ lastAction: actionVal });
   } catch (err) {
@@ -169,9 +140,9 @@ async function runProcess() {
 }
 
 function showLoading(on) {
-  document.getElementById("result-area").style.display = "block";
+  document.getElementById("result-area").style.display  = "block";
   document.getElementById("result-loading").style.display = on ? "flex" : "none";
-  document.getElementById("result-text").textContent = "";
+  document.getElementById("result-text").textContent    = "";
   document.getElementById("result-actions").style.display = "none";
 }
 
@@ -180,36 +151,40 @@ function showResult(text, error) {
   const textEl = document.getElementById("result-text");
   if (error) {
     textEl.textContent = error;
-    textEl.className = "result-text result-error";
+    textEl.className   = "result-text result-error";
     document.getElementById("result-actions").style.display = "none";
   } else {
     textEl.textContent = text;
-    textEl.className = "result-text";
+    textEl.className   = "result-text";
     document.getElementById("result-actions").style.display = "flex";
   }
 }
 
-function updateStatus(settings, provider) {
-  const key  = settings[KEY_FIELDS[provider]];
+function updateProviderStatus(settings) {
+  const providers = settings.configuredProviders;
   const dot  = document.getElementById("key-indicator");
   const text = document.getElementById("key-text");
-  if (key) {
+  if (!dot || !text) return;
+
+  const hasNew    = Array.isArray(providers) && providers.length > 0;
+  const hasLegacy = settings.openaiKey || settings.claudeKey || settings.geminiKey;
+
+  if (hasNew) {
+    dot.className    = "dot dot-ok";
+    const names      = providers.map(p => PROVIDER_LABELS[p.id] || p.id).join(" → ");
+    text.textContent = `Priority: ${names}`;
+  } else if (hasLegacy) {
     dot.className    = "dot dot-ok";
     text.textContent = "API key set";
   } else {
     dot.className    = "dot dot-bad";
-    text.textContent = "No API key — open Settings";
+    text.textContent = "No providers configured — open Settings";
   }
-}
-
-function updateModelDisplay(settings, provider) {
-  const model = settings[MODEL_FIELDS[provider]] || DEFAULT_MODELS[provider];
-  document.getElementById("model-display").textContent = model;
 }
 
 async function loadHistory() {
   const { historyLog = [] } = await browser.storage.local.get("historyLog");
-  const entries = purgeOldLog(historyLog); // uses todayDate() internally
+  const entries = purgeOldLog(historyLog);
 
   const section = document.getElementById("history-section");
   if (!entries.length) { if (section) section.style.display = "none"; return; }
@@ -217,7 +192,6 @@ async function loadHistory() {
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;
 
-  // Persistent toggle — no { once: true } so collapse also works
   document.getElementById("history-toggle").addEventListener("click", () => {
     const list = document.getElementById("history-list");
     list.style.display = list.style.display === "none" ? "block" : "none";
@@ -227,10 +201,10 @@ async function loadHistory() {
   entries.slice(-10).reverse().forEach(e => {
     const item = document.createElement("div");
     item.className = "history-item";
-    const t = new Date(e.timestamp);
+    const t    = new Date(e.timestamp);
     const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
     const action = document.createElement("span");
-    action.className = "history-action";
+    action.className   = "history-action";
     action.textContent = e.action.replace(/-/g, " ");
     const meta = document.createElement("span");
     meta.textContent = `${time} · ${e.source}`;

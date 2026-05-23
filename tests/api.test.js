@@ -1,4 +1,4 @@
-const { callOpenAI, callClaude, callGemini, callAI } = require("../lib/api");
+const { callOpenAI, callClaude, callGemini, callAI, callAIWithFallback, isRetriable } = require("../lib/api");
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -204,5 +204,128 @@ describe("callAI", () => {
   test("throws a clear error for an unknown provider", async () => {
     await expect(callAI("unknown-ai", {}, "Fix:", "text"))
       .rejects.toThrow('Unknown provider "unknown-ai"');
+  });
+});
+
+// ── isRetriable ───────────────────────────────────────────────────────────────
+
+describe("isRetriable", () => {
+  test("returns true for 429 rate limit messages", () => {
+    expect(isRetriable("Rate limit 429 exceeded")).toBe(true);
+  });
+
+  test("returns true for 503 messages", () => {
+    expect(isRetriable("Service 503 temporarily unavailable")).toBe(true);
+  });
+
+  test("returns true for overload messages", () => {
+    expect(isRetriable("Model is overloaded")).toBe(true);
+  });
+
+  test("returns false for 401 auth errors", () => {
+    expect(isRetriable("401 Unauthorized: Invalid API key")).toBe(false);
+  });
+
+  test("returns false for 400 bad request errors", () => {
+    expect(isRetriable("400 Bad Request: Invalid model")).toBe(false);
+  });
+
+  test("returns false for empty string", () => {
+    expect(isRetriable("")).toBe(false);
+  });
+});
+
+// ── callAIWithFallback ────────────────────────────────────────────────────────
+
+describe("callAIWithFallback", () => {
+  function openaiOk() {
+    return jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+  }
+  function claudeOk() {
+    return jest.fn().mockResolvedValue({ ok: true, json: async () => ({ content: [{ text: "ok" }] }) });
+  }
+  function geminiOk() {
+    return jest.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "ok" }] } }] }) });
+  }
+  function rateLimitFail() {
+    return jest.fn().mockResolvedValue({ ok: false, statusText: "Too Many Requests", json: async () => ({ error: { message: "Rate limit 429 exceeded" } }) });
+  }
+  function authFail() {
+    return jest.fn().mockResolvedValue({ ok: false, statusText: "Unauthorized", json: async () => ({ error: { message: "401 Invalid API key" } }) });
+  }
+
+  afterEach(() => { jest.clearAllMocks(); });
+
+  test("throws when configuredProviders is empty", async () => {
+    await expect(callAIWithFallback([], [], {}, "Fix:", "text"))
+      .rejects.toThrow("No AI providers configured");
+  });
+
+  test("returns result from first provider when it succeeds", async () => {
+    global.fetch = openaiOk();
+    const p = [{ id: "openai", apiKey: "sk-x", model: "gpt-4o-mini" }];
+    const { result, usedProvider } = await callAIWithFallback(p, [], {}, "Fix:", "text");
+    expect(result).toBe("ok");
+    expect(usedProvider).toBe("openai");
+  });
+
+  test("falls to provider[1] when provider[0] returns a retriable error", async () => {
+    global.fetch = rateLimitFail()
+      .mockResolvedValueOnce({ ok: false, statusText: "Rate limit", json: async () => ({ error: { message: "Rate limit 429 exceeded" } }) })
+      .mockResolvedValueOnce({ ok: true,  json: async () => ({ content: [{ text: "from claude" }] }) });
+    const p = [
+      { id: "openai", apiKey: "sk-x", model: "gpt-4o-mini" },
+      { id: "claude", apiKey: "sk-ant-x", model: "claude-haiku-4-5-20251001" }
+    ];
+    const { result, usedProvider } = await callAIWithFallback(p, [], {}, "Fix:", "text");
+    expect(result).toBe("from claude");
+    expect(usedProvider).toBe("claude");
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("throws immediately on non-retriable 401 without trying next provider", async () => {
+    global.fetch = authFail();
+    const p = [
+      { id: "openai", apiKey: "sk-bad", model: "gpt-4o-mini" },
+      { id: "claude", apiKey: "sk-ant-x", model: "claude-haiku-4-5-20251001" }
+    ];
+    await expect(callAIWithFallback(p, [], {}, "Fix:", "text"))
+      .rejects.toThrow("401 Invalid API key");
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("Gemini falls to secondary model when primary returns retriable error", async () => {
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({ ok: false, statusText: "Overloaded", json: async () => ({ error: { message: "Model overloaded 503" } }) })
+      .mockResolvedValueOnce({ ok: true,  json: async () => ({ candidates: [{ content: { parts: [{ text: "from secondary" }] } }] }) });
+    const p = [{ id: "gemini", apiKey: "AIza-x", model: "gemini-2.0-flash" }];
+    const gm = ["gemini-2.0-flash", "gemini-1.5-flash", null];
+    const { result, usedModel } = await callAIWithFallback(p, gm, {}, "Fix:", "text");
+    expect(result).toBe("from secondary");
+    expect(usedModel).toBe("gemini-1.5-flash");
+  });
+
+  test("calls onStatusUpdate with provider name at each attempt", async () => {
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({ ok: false, statusText: "Rate limit", json: async () => ({ error: { message: "Rate limit 429" } }) })
+      .mockResolvedValueOnce({ ok: true,  json: async () => ({ content: [{ text: "ok" }] }) });
+    const p = [
+      { id: "openai", apiKey: "sk-x",     model: "gpt-4o-mini" },
+      { id: "claude", apiKey: "sk-ant-x", model: "claude-haiku-4-5-20251001" }
+    ];
+    const updates = [];
+    await callAIWithFallback(p, [], {}, "Fix:", "text", { onStatusUpdate: msg => updates.push(msg) });
+    expect(updates[0]).toContain("OpenAI");
+    expect(updates[1]).toContain("Claude");
+  });
+
+  test("falls back to legacy flat keys when configuredProviders is null", async () => {
+    global.fetch = openaiOk();
+    const { result } = await callAIWithFallback(
+      null, null,
+      { provider: "openai", openaiKey: "sk-x", openaiModel: "gpt-4o-mini" },
+      "Fix:", "text"
+    );
+    expect(result).toBe("ok");
   });
 });
