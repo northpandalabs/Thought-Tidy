@@ -94,6 +94,57 @@ jobs:
         run: npm test -- --coverage
         working-directory: desktop
 
+  # ── Desktop installers (Windows NSIS · macOS DMG · Linux deb) ────────────
+  desktop-installers:
+    name: Desktop installer (${{ matrix.os-label }})
+    needs: [desktop-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            os-label: Windows
+            script: dist:win
+            artifact-name: blur-to-clear-installer-windows
+            artifact-path: desktop/dist-build/*.exe
+          - os: macos-latest
+            os-label: macOS
+            script: dist:mac
+            artifact-name: blur-to-clear-installer-mac
+            artifact-path: desktop/dist-build/*.dmg
+          - os: ubuntu-latest
+            os-label: Linux
+            script: dist:linux
+            artifact-name: blur-to-clear-installer-linux
+            artifact-path: |
+              desktop/dist-build/*.deb
+              desktop/dist-build/*.AppImage
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install desktop dependencies
+        run: npm ci
+        working-directory: desktop
+
+      - name: Build installer
+        run: npm run ${{ matrix.script }}
+        working-directory: desktop
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-path }}
+          retention-days: 90
+          if-no-files-found: error
+
   # ── Desktop TEST ONLY build (Windows portable EXE) ────────────────────────
   desktop-test-build:
     name: Desktop TEST ONLY build (Windows)
