@@ -33,5 +33,3 @@ win:
       arch:
         - x64
   icon: ../icons/icon.png
-
-publish: never

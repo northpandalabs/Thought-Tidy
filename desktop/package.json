@@ -12,7 +12,7 @@
     "dist:win": "electron-builder --win --publish never",
     "dist:mac": "electron-builder --mac --publish never",
     "dist:linux": "electron-builder --linux --publish never",
-    "dist:test": "electron-builder --config electron-builder-test.yml",
+    "dist:test": "electron-builder --config electron-builder-test.yml --publish never",
     "release": "electron-builder --win --publish always",
     "test": "jest",
     "test:watch": "jest --watch",

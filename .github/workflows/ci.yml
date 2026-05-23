@@ -114,8 +114,6 @@ jobs:
       - name: Build TEST ONLY portable EXE
         run: npm run dist:test
         working-directory: desktop
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Zip TEST ONLY EXE
         shell: pwsh
