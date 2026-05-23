@@ -171,10 +171,8 @@ function updateFooter() {
 }
 
 async function loadHistory() {
-  const raw    = await browser.storage.local.get("historyLog");
-  const today  = new Date();
-  const ymd    = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
-  const entries = (raw.historyLog || []).filter(e => e.date === ymd);
+  const raw     = await browser.storage.local.get("historyLog");
+  const entries = purgeOldLog(raw.historyLog || []); // uses todayDate() internally
 
   const section = document.getElementById("history-section");
   if (!entries.length) { if (section) section.style.display = "none"; return; }
@@ -182,10 +180,11 @@ async function loadHistory() {
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;
 
+  // Persistent toggle — no { once: true } so collapse also works
   document.getElementById("history-toggle").addEventListener("click", () => {
     const list = document.getElementById("history-list");
     list.style.display = list.style.display === "none" ? "block" : "none";
-  }, { once: true });
+  });
 
   const list = document.getElementById("history-list");
   entries.slice(-10).reverse().forEach(e => {

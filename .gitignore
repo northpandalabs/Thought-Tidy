@@ -12,8 +12,8 @@ Thumbs.db
 
 # AgenticFlywheel runtime state (advisory layer, not source of truth)
 .agentic-flywheel/state/
-.claude
-AgenticFlyWheel
-docs
-ETC
 AGENTS.md
+ETC
+docs
+AgenticFlyWheel
+.claude

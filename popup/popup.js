@@ -84,11 +84,9 @@ async function init() {
 
   // Purge stale log entries then render today's activity
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
-  const today2 = new Date();
-  const todayStr2 = `${today2.getFullYear()}-${String(today2.getMonth()+1).padStart(2,"0")}-${String(today2.getDate()).padStart(2,"0")}`;
-  const fresh2 = rawLog.filter(e => e.date === todayStr2);
-  if (fresh2.length !== rawLog.length) {
-    await browser.storage.local.set({ historyLog: fresh2 });
+  const purged = purgeOldLog(rawLog);
+  if (purged.length !== rawLog.length) {
+    await browser.storage.local.set({ historyLog: purged });
   }
   loadHistory();
 }
@@ -116,13 +114,12 @@ async function runFromSelection() {
     }
 
     const actionVal = document.getElementById("action-select").value;
-    // Send to background — same flow as right-click
+    // Send only non-sensitive context — background reads keys from storage itself
     await browser.runtime.sendMessage({
       type: "run-from-popup",
       tabId: tab.id,
       actionVal,
-      selectedText,
-      settings: currentSettings
+      selectedText
     });
 
     await browser.storage.local.set({ lastAction: actionVal });
@@ -212,9 +209,7 @@ function updateModelDisplay(settings, provider) {
 
 async function loadHistory() {
   const { historyLog = [] } = await browser.storage.local.get("historyLog");
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
-  const entries = historyLog.filter(e => e.date === todayStr);
+  const entries = purgeOldLog(historyLog); // uses todayDate() internally
 
   const section = document.getElementById("history-section");
   if (!entries.length) { if (section) section.style.display = "none"; return; }
@@ -222,10 +217,11 @@ async function loadHistory() {
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;
 
+  // Persistent toggle — no { once: true } so collapse also works
   document.getElementById("history-toggle").addEventListener("click", () => {
     const list = document.getElementById("history-list");
     list.style.display = list.style.display === "none" ? "block" : "none";
-  }, { once: true });
+  });
 
   const list = document.getElementById("history-list");
   entries.slice(-10).reverse().forEach(e => {

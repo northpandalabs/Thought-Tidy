@@ -143,9 +143,9 @@ async function quickAction(action) {
     store.set("lastAction", action);
 
     // Append history log entry (metadata only — no text stored)
-    const s           = store.store;
-    const today       = todayDate();
-    const fresh       = purgeOldLog(store.get("historyLog") || []);
+    // s is already defined above as store.store
+    const today = todayDate();
+    const fresh = purgeOldLog(store.get("historyLog") || []);
     fresh.push({
       timestamp: Date.now(), date: today, source: "desktop",
       action, provider: s.provider || "openai",

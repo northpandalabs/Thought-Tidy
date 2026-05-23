@@ -49,7 +49,14 @@ browser.storage.onChanged.addListener((changes) => {
 browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== "run-from-popup") return;
   (async () => {
-    const { tabId, actionVal, selectedText, settings } = msg;
+    const { tabId, actionVal, selectedText } = msg;
+    // Read settings from storage — never pass API keys through messages
+    const settings = await browser.storage.local.get([
+      "provider", "openaiKey", "claudeKey", "geminiKey",
+      "openaiModel", "claudeModel", "geminiModel",
+      "customPrompts",
+      "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+    ]);
     const provider = settings.provider || "openai";
 
     let systemPrompt;
