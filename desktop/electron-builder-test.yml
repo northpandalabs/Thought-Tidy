@@ -13,14 +13,16 @@ files:
   - main.js
   - preload.js
   - ipc-handlers.js
-  - lib-node/**/*
-  - renderer/**/*
-  - node_modules/**/*
-  - "!node_modules/.cache"
+  - lib-node/**
+  - renderer/**
 
 extraResources:
+  - from: ../lib
+    to: lib
   - from: ../icons
     to: icons
+  - from: ../options/options.css
+    to: options/options.css
 
 extraMetadata:
   testBuild: true

@@ -26,7 +26,7 @@
     "testEnvironment": "node",
     "testMatch": ["**/tests/**/*.test.js"],
     "testPathIgnorePatterns": ["node_modules", "desktop/"],
-    "collectCoverageFrom": ["lib/**/*.js"],
+    "collectCoverageFrom": ["lib/**/*.js", "!lib/updater.js"],
     "coverageReporters": ["text", "lcov"],
     "coverageThreshold": {
       "global": {

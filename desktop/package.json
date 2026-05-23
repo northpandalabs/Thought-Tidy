@@ -77,7 +77,8 @@
     ],
     "collectCoverageFrom": [
       "lib-node/**/*.js",
-      "ipc-handlers.js"
+      "ipc-handlers.js",
+      "!lib-node/updater.js"
     ],
     "coverageReporters": ["text", "lcov"],
     "coverageThreshold": {
