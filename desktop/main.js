@@ -14,6 +14,13 @@ const { todayDate, purgeOldLog } = require("../lib/text");
 const store = new Store({ name: "blur-to-clear-settings" });
 const isDev = process.argv.includes("--dev");
 
+// True when built with testBuild:true injected via electron-builder-test.yml.
+// Drives TEST ONLY banners in settings UI and tray menu label.
+const IS_TEST_BUILD = (() => {
+  if (!app.isPackaged) return process.env.TEST_BUILD === 'true';
+  try { return require('./package.json').testBuild === true; } catch { return false; }
+})();
+
 let tray        = null;
 let popupWin    = null;
 let settingsWin = null;
@@ -106,7 +113,12 @@ function openSettings() {
 // ── Tray ───────────────────────────────────────────────────────────────────────
 
 function buildTrayMenu() {
-  return Menu.buildFromTemplate([
+  const items = [];
+  if (IS_TEST_BUILD) {
+    items.push({ label: "── TEST ONLY ──", enabled: false });
+    items.push({ type: "separator" });
+  }
+  items.push(
     { label: "Process Text…",     click: openPopup },
     { type:  "separator" },
     {
@@ -122,7 +134,8 @@ function buildTrayMenu() {
     { label: "Settings…",         click: openSettings },
     { type:  "separator" },
     { label: "Quit Blur-to-Clear", role: "quit" }
-  ]);
+  );
+  return Menu.buildFromTemplate(items);
 }
 
 async function quickAction(action) {
@@ -208,6 +221,11 @@ app.whenReady().then(() => {
     openURL:    (url) => shell.openExternal(url)
   });
 
+  ipcMain.handle("get-app-config", () => ({
+    isTestBuild:     IS_TEST_BUILD,
+    updateAvailable: store.get("updateAvailable") || null
+  }));
+
   ipcMain.handle("quick-action", async (_, { action, text }) => {
     const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
     const { callAI }                               = require("./lib-node/api");
@@ -239,44 +257,13 @@ app.whenReady().then(() => {
     openSettings();
   }
 
-  setupAutoUpdater();
+  // Schedule passive update check (packaged builds only — checks at noon daily)
+  if (app.isPackaged) {
+    const { scheduleUpdateCheck } = require("./lib-node/updater");
+    scheduleUpdateCheck(store);
+  }
 });
 
-// ── Auto-updater ───────────────────────────────────────────────────────────────
-
-function setupAutoUpdater() {
-  if (!app.isPackaged) return; // only check for updates in production builds
-
-  const { autoUpdater } = require("electron-updater");
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  autoUpdater.on("update-available", (info) => {
-    new Notification({
-      title: "Blur-to-Clear Update",
-      body:  `Version ${info.version} is downloading in the background.`
-    }).show();
-  });
-
-  autoUpdater.on("update-downloaded", () => {
-    dialog.showMessageBox({
-      type:    "info",
-      title:   "Update Ready",
-      message: "A new version has been downloaded. Restart now to apply the update?",
-      buttons: ["Restart Now", "Later"]
-    }).then(({ response }) => {
-      if (response === 0) autoUpdater.quitAndInstall();
-    });
-  });
-
-  autoUpdater.on("error", (err) => {
-    if (isDev) console.error("Auto-updater error:", err.message);
-  });
-
-  // Check on launch, then every 4 hours
-  autoUpdater.checkForUpdates();
-  setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000);
-}
 
 // Keep process alive after all windows close (tray app — stays in background)
 app.on("window-all-closed", () => {});

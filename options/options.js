@@ -356,6 +356,24 @@ async function init() {
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
   });
+
+  // TEST ONLY banner (driven by build-flags.js loaded in HTML)
+  if (typeof BUILD_FLAGS !== 'undefined' && BUILD_FLAGS.testBuild) {
+    const banner = document.getElementById('test-only-banner');
+    if (banner) banner.style.display = 'block';
+  }
+
+  // Update notice (driven by storage key written by background.js at noon)
+  const { updateAvailable } = await browser.storage.local.get('updateAvailable');
+  if (updateAvailable && updateAvailable.version) {
+    const notice = document.getElementById('update-notice');
+    const link   = document.getElementById('update-link');
+    if (notice && link) {
+      link.textContent = `Version ${updateAvailable.version} available — Download from GitHub ↗`;
+      link.href        = updateAvailable.url;
+      notice.style.display = 'block';
+    }
+  }
 }
 
 function updateCardHighlight() {

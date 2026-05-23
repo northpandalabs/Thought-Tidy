@@ -1,9 +1,22 @@
 // background.js — Blur-to-Clear event wiring (MV3 service worker)
-importScripts("browser-polyfill.js", "lib/text.js", "lib/prompts.js", "lib/api.js");
+importScripts("browser-polyfill.js", "lib/build-flags.js", "lib/text.js", "lib/prompts.js", "lib/api.js", "lib/updater.js");
 
 const DYN_SEP = "dyn-sep";
 const DYN_MAX = 8;
 const dynId   = (i) => `dyn-${i}`;
+
+// ── Update alarm ───────────────────────────────────────────────────────────────
+
+function scheduleUpdateAlarm() {
+  const noon = new Date();
+  noon.setHours(12, 0, 0, 0);
+  if (noon.getTime() <= Date.now()) noon.setDate(noon.getDate() + 1);
+  browser.alarms.create('btc-update-check', { when: noon.getTime(), periodInMinutes: 1440 });
+}
+
+browser.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === 'btc-update-check') checkAndStoreUpdate();
+});
 
 async function rebuildCustomMenu() {
   const toRemove = [DYN_SEP, ...Array.from({ length: DYN_MAX }, (_, i) => dynId(i))];
@@ -25,7 +38,16 @@ async function rebuildCustomMenu() {
 }
 
 browser.runtime.onInstalled.addListener(async () => {
-  browser.contextMenus.create({ id: "ai-root",       title: "Blur-to-Clear",                  contexts: ["selection"] });
+  browser.contextMenus.create({ id: "ai-root", title: "Blur-to-Clear", contexts: ["selection"] });
+
+  // TEST ONLY label — top of submenu, only in test builds
+  if (typeof BUILD_FLAGS !== 'undefined' && BUILD_FLAGS.testBuild) {
+    browser.contextMenus.create({
+      id: "test-only-label", parentId: "ai-root",
+      title: "── TEST ONLY ──", enabled: false, contexts: ["selection"]
+    });
+  }
+
   browser.contextMenus.create({ id: "sound-like-me", parentId: "ai-root", title: "👤  Sound Like Me",             contexts: ["selection"] });
   browser.contextMenus.create({ id: "fix-spelling",  parentId: "ai-root", title: "✓   Fix Spelling & Grammar",   contexts: ["selection"] });
   browser.contextMenus.create({ id: "professional",  parentId: "ai-root", title: "★   Make Professional",        contexts: ["selection"] });
@@ -38,9 +60,13 @@ browser.runtime.onInstalled.addListener(async () => {
   browser.contextMenus.create({ id: "shorten",       parentId: "ai-root", title: "    Shorten",                  contexts: ["selection"] });
   browser.contextMenus.create({ id: "expand",        parentId: "ai-root", title: "    Expand",                   contexts: ["selection"] });
   await rebuildCustomMenu();
+  scheduleUpdateAlarm();
 });
 
-browser.runtime.onStartup.addListener(rebuildCustomMenu);
+browser.runtime.onStartup.addListener(() => {
+  rebuildCustomMenu();
+  scheduleUpdateAlarm();
+});
 browser.storage.onChanged.addListener((changes) => {
   if (changes.customPrompts) rebuildCustomMenu();
 });

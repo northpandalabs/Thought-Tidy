@@ -1,0 +1,35 @@
+# electron-builder config for TEST ONLY CI builds.
+# Produces a portable .exe (no installer) with testBuild=true injected into package.json.
+# Output goes to dist-build-test/ to avoid mixing with production dist-build/.
+
+appId: com.brainfixai.blurtoclear
+productName: Blur-to-Clear
+copyright: "Copyright © 2025 BrainFix AI"
+
+directories:
+  output: dist-build-test
+
+files:
+  - main.js
+  - preload.js
+  - ipc-handlers.js
+  - lib-node/**/*
+  - renderer/**/*
+  - node_modules/**/*
+  - "!node_modules/.cache"
+
+extraResources:
+  - from: ../icons
+    to: icons
+
+extraMetadata:
+  testBuild: true
+
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  icon: ../icons/icon.png
+
+publish: never

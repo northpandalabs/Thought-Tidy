@@ -9,6 +9,22 @@ Built for ADHD brains, fast thinkers, and anyone who knows exactly what they mea
 
 ---
 
+## Downloads
+
+> Always get the latest stable build from the **[Releases page](https://github.com/BHeck/BrainFix-AI/releases/latest)**.
+
+| Platform | File |
+| --- | --- |
+| Chrome Extension | `blur-to-clear-chrome.zip` — load unpacked in Chrome |
+| Firefox Extension | `blur-to-clear-firefox.zip` — load as temporary add-on or submit to AMO |
+| Windows Desktop | `Blur-to-Clear Setup x.x.x.exe` — NSIS installer |
+| macOS Desktop | `Blur-to-Clear-x.x.x.dmg` — drag-to-Applications |
+| Linux Desktop | `blur-to-clear_x.x.x_amd64.deb` or `Blur-to-Clear-x.x.x.AppImage` |
+
+> **CI test builds** — every push to `main` also produces a TEST ONLY Windows portable `.exe` (no installer) available as a GitHub Actions artifact. Test builds display **⚠ TEST ONLY** banners in the settings page and tray menu — they are not stable releases.
+
+---
+
 ## Two versions — one codebase
 
 | | Browser Extension | Desktop App |

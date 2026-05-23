@@ -12,9 +12,11 @@
     "dist:win": "electron-builder --win --publish never",
     "dist:mac": "electron-builder --mac --publish never",
     "dist:linux": "electron-builder --linux --publish never",
+    "dist:test": "electron-builder --config electron-builder-test.yml",
     "release": "electron-builder --win --publish always",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "build": {
     "appId": "com.brainfixai.blurtoclear",
@@ -70,8 +72,22 @@
     ],
     "testPathIgnorePatterns": [
       "node_modules",
-      "dist-build"
-    ]
+      "dist-build",
+      "dist-build-test"
+    ],
+    "collectCoverageFrom": [
+      "lib-node/**/*.js",
+      "ipc-handlers.js"
+    ],
+    "coverageReporters": ["text", "lcov"],
+    "coverageThreshold": {
+      "global": {
+        "lines": 70,
+        "functions": 70,
+        "statements": 70,
+        "branches": 60
+      }
+    }
   },
   "dependencies": {
     "electron-store": "^8.2.0",

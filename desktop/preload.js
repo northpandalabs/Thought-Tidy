@@ -19,6 +19,9 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // External links
   openURL:        (url)      => ipcRenderer.invoke("open-url", url),
 
+  // App meta: { isTestBuild, updateAvailable }
+  getAppConfig:   ()         => ipcRenderer.invoke("get-app-config"),
+
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {
     ipcRenderer.on("popup-opened", () => callback());

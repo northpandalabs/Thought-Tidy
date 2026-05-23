@@ -23,8 +23,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests (121)
-        run: npm test
+      - name: Run tests with coverage
+        run: npm test -- --coverage
 
       - name: Build Chrome
         run: npm run build:chrome
@@ -32,21 +32,51 @@ jobs:
       - name: Build Firefox
         run: npm run build:firefox
 
-      - name: Upload Chrome build
+      - name: Validate Chrome manifest
+        run: |
+          node -e "
+            const m = require('./dist/chrome/manifest.json');
+            if (m.manifest_version !== 3) throw new Error('manifest_version must be 3, got ' + m.manifest_version);
+            const allowed = ['contextMenus','scripting','storage','activeTab','alarms'];
+            const bad = (m.permissions || []).filter(p => !allowed.includes(p));
+            if (bad.length) throw new Error('Unexpected permissions: ' + bad.join(', '));
+            console.log('Chrome manifest OK  version=' + m.manifest_version + '  permissions=' + (m.permissions||[]).join(','));
+          "
+
+      - name: Validate Firefox manifest
+        run: |
+          node -e "
+            const m = require('./dist/firefox/manifest.json');
+            if (![2,3].includes(m.manifest_version)) throw new Error('manifest_version must be 2 or 3, got ' + m.manifest_version);
+            const allowed = ['contextMenus','scripting','storage','activeTab','alarms'];
+            const bad = (m.permissions || []).filter(p => !allowed.includes(p));
+            if (bad.length) throw new Error('Unexpected permissions: ' + bad.join(', '));
+            console.log('Firefox manifest OK  version=' + m.manifest_version + '  permissions=' + (m.permissions||[]).join(','));
+          "
+
+      - name: Zip Chrome extension
+        run: cd dist/chrome && zip -r ../../blur-to-clear-chrome.zip . && cd ../..
+
+      - name: Zip Firefox extension
+        run: cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
+
+      - name: Upload Chrome zip
         uses: actions/upload-artifact@v4
         with:
           name: blur-to-clear-chrome
-          path: dist/chrome/
+          path: blur-to-clear-chrome.zip
+          retention-days: 90
 
-      - name: Upload Firefox build
+      - name: Upload Firefox zip
         uses: actions/upload-artifact@v4
         with:
           name: blur-to-clear-firefox
-          path: dist/firefox/
+          path: blur-to-clear-firefox.zip
+          retention-days: 90
 
   # ── Desktop tests ──────────────────────────────────────────────────────────
   desktop-tests:
-    name: Desktop tests (55)
+    name: Desktop tests
     runs-on: ubuntu-latest
 
     steps:
@@ -60,6 +90,44 @@ jobs:
         run: npm ci
         working-directory: desktop
 
-      - name: Run desktop tests
-        run: npm test
+      - name: Run desktop tests with coverage
+        run: npm test -- --coverage
         working-directory: desktop
+
+  # ── Desktop TEST ONLY build (Windows portable EXE) ────────────────────────
+  desktop-test-build:
+    name: Desktop TEST ONLY build (Windows)
+    runs-on: windows-latest
+    needs: [extensions, desktop-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install desktop dependencies
+        run: npm ci
+        working-directory: desktop
+
+      - name: Build TEST ONLY portable EXE
+        run: npm run dist:test
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Zip TEST ONLY EXE
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path "desktop/dist-build-test" -Filter "*.exe" | Select-Object -First 1
+          if (-not $exe) { throw "No .exe found in desktop/dist-build-test" }
+          Compress-Archive -Path $exe.FullName -DestinationPath "blur-to-clear-windows-TEST-ONLY.zip"
+          Write-Host "Zipped: $($exe.Name)"
+
+      - name: Upload TEST ONLY zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: blur-to-clear-windows-TEST-ONLY
+          path: blur-to-clear-windows-TEST-ONLY.zip
+          retention-days: 90

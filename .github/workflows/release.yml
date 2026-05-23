@@ -57,7 +57,7 @@ jobs:
             glob: "desktop/dist-build/*.dmg"
           - os: ubuntu-latest
             artifact: blur-to-clear-linux
-            glob: "desktop/dist-build/*.AppImage"
+            glob: "desktop/dist-build/*.{AppImage,deb}"
 
     steps:
       - uses: actions/checkout@v4

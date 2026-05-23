@@ -292,6 +292,24 @@ function updateProviderAvailability() {
 async function init() {
   wireLinks();
 
+  // TEST ONLY banner + update notice (driven by main process via IPC)
+  if (typeof btcAPI !== 'undefined' && btcAPI.getAppConfig) {
+    const config = await btcAPI.getAppConfig();
+    if (config.isTestBuild) {
+      const banner = document.getElementById('test-only-banner');
+      if (banner) banner.style.display = 'block';
+    }
+    if (config.updateAvailable && config.updateAvailable.version) {
+      const notice = document.getElementById('update-notice');
+      const link   = document.getElementById('update-link');
+      if (notice && link) {
+        link.textContent = `Version ${config.updateAvailable.version} available — Download from GitHub ↗`;
+        link.addEventListener('click', () => btcAPI.openURL(config.updateAvailable.url));
+        notice.style.display = 'block';
+      }
+    }
+  }
+
   const s = await browser.storage.local.get(STORAGE_KEYS);
 
   // Show wizard if no key at all
