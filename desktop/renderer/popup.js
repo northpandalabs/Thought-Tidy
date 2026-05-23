@@ -14,7 +14,7 @@ const DEFAULT_MODELS = {
 const STORAGE_KEYS = [
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
-  "customPrompts",
+  "customPrompts", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ];
 
@@ -81,19 +81,21 @@ async function init() {
 function populateCustomActions() {
   const sel = document.getElementById("action-select");
   const cps = settings.customPrompts || [];
-  if (!cps.length) return;
+  if (cps.length) {
+    const sep = document.createElement("option");
+    sep.disabled = true;
+    sep.textContent = "── Custom ──";
+    sel.appendChild(sep);
 
-  const sep = document.createElement("option");
-  sep.disabled = true;
-  sep.textContent = "── Custom ──";
-  sel.appendChild(sep);
-
-  cps.slice(0, 8).forEach((cp, i) => {
-    const opt = document.createElement("option");
-    opt.value = `custom-${i}`;
-    opt.textContent = `⚡ ${cp.name}`;
-    sel.appendChild(opt);
-  });
+    cps.slice(0, 8).forEach((cp, i) => {
+      const opt = document.createElement("option");
+      opt.value = `custom-${i}`;
+      opt.textContent = `⚡ ${cp.name}`;
+      sel.appendChild(opt);
+    });
+  }
+  // Restore last-used action after all options are present
+  sel.value = settings.lastAction || "fix-spelling";
 }
 
 async function runProcess() {
@@ -128,6 +130,7 @@ async function runProcess() {
   try {
     const result = await callAI(provider, settings, systemPrompt, text);
     showResult(result, null);
+    await browser.storage.local.set({ lastAction: actionVal });
   } catch (err) {
     showResult(null, err.message);
   } finally {
@@ -167,4 +170,37 @@ function updateFooter() {
   badge.textContent = `${labels[provider] || provider} · ${model}`;
 }
 
-init();
+async function loadHistory() {
+  const raw    = await browser.storage.local.get("historyLog");
+  const today  = new Date();
+  const ymd    = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  const entries = (raw.historyLog || []).filter(e => e.date === ymd);
+
+  const section = document.getElementById("history-section");
+  if (!entries.length) { if (section) section.style.display = "none"; return; }
+
+  section.style.display = "block";
+  document.getElementById("history-count").textContent = entries.length;
+
+  document.getElementById("history-toggle").addEventListener("click", () => {
+    const list = document.getElementById("history-list");
+    list.style.display = list.style.display === "none" ? "block" : "none";
+  }, { once: true });
+
+  const list = document.getElementById("history-list");
+  entries.slice(-10).reverse().forEach(e => {
+    const item = document.createElement("div");
+    item.className = "history-item";
+    const t = new Date(e.timestamp);
+    const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+    const action = document.createElement("span");
+    action.className = "history-action";
+    action.textContent = e.action.replace(/-/g, " ");
+    const meta = document.createElement("span");
+    meta.textContent = `${time} · ${e.source}`;
+    item.append(action, meta);
+    list.appendChild(item);
+  });
+}
+
+init().then(loadHistory);

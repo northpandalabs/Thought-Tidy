@@ -7,15 +7,27 @@
 
 const STORAGE_KEYS = [
   "provider",
-  "openaiKey", "openaiModel",
-  "claudeKey", "claudeModel",
-  "geminiKey", "geminiModel",
+  "openaiKey", "openaiModel", "openaiModels", "openaiModelsLastFetched",
+  "claudeKey", "claudeModel", "claudeModels", "claudeModelsLastFetched",
+  "geminiKey", "geminiModel", "geminiModels", "geminiModelsLastFetched",
   "variants", "customPrompts",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ];
 
 const FETCHERS = { openai: fetchOpenAIModels, claude: fetchClaudeModels, gemini: fetchGeminiModels };
 const TESTERS  = { openai: testOpenAI,        claude: testClaude,        gemini: testGemini };
+
+function showCacheStatus(provider, fetchedAt) {
+  const btn = document.querySelector(`.fetch-btn[data-provider="${provider}"]`);
+  if (!btn) return;
+  if (!fetchedAt || isModelCacheStale(fetchedAt)) {
+    btn.textContent = "⚠ Refresh";
+    btn.title = fetchedAt ? "Model list may be outdated — click to refresh" : "No model list cached yet";
+  } else {
+    btn.textContent = "Refresh";
+    btn.title = `Last updated: ${formatCacheAge(fetchedAt)}`;
+  }
+}
 
 // ── Wire external links (no <a href> in Electron — use btcAPI.openURL) ─────────
 function wireLinks() {
@@ -84,6 +96,14 @@ async function doFetch(provider, silent = false) {
     if (!working.length) throw new Error("No models responded. Check your API key.");
 
     populateSelect(`${provider}Model`, working, currentModel);
+
+    const now = Date.now();
+    await browser.storage.local.set({
+      [`${provider}Models`]:            working,
+      [`${provider}ModelsLastFetched`]: now
+    });
+    showCacheStatus(provider, now);
+
     setStatus(provider,
       skipped > 0
         ? `${working.length}/${allModels.length} models verified (${skipped} unavailable)`
@@ -93,7 +113,7 @@ async function doFetch(provider, silent = false) {
   } catch (err) {
     setStatus(provider, `Error: ${err.message}`, "error");
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "Refresh"; }
+    if (btn) { btn.disabled = false; }
   }
 }
 
@@ -309,6 +329,8 @@ async function init() {
         keyField.value    = "";
         editBtn.style.display = "none";
         setStatus(p, "Enter new key and press Enter", "loading");
+        browser.storage.local.set({ [`${p}Models`]: [], [`${p}ModelsLastFetched`]: 0 });
+        showCacheStatus(p, 0);
         keyField.focus();
         updateProviderAvailability();
       });
@@ -321,15 +343,13 @@ async function init() {
       if (keyField.value.trim() && !keyField.readOnly) doFetchAndSaveKey(p);
     });
 
-    if (savedKey) {
-      const savedModel = s[`${p}Model`] || "";
-      doFetch(p, true).then(() => {
-        if (savedModel) {
-          const sel = document.getElementById(`${p}Model`);
-          if (sel && [...sel.options].some(o => o.value === savedModel)) sel.value = savedModel;
-        }
-      });
+    const cachedModels = s[`${p}Models`] || [];
+    const cachedAt     = s[`${p}ModelsLastFetched`] || 0;
+    const savedModel   = s[`${p}Model`] || "";
+    if (cachedModels.length) {
+      populateSelect(`${p}Model`, cachedModels, savedModel);
     }
+    showCacheStatus(p, cachedAt);
   }
 
   updateProviderAvailability();

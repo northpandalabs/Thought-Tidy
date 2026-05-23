@@ -9,6 +9,7 @@ const {
 const path  = require("path");
 const Store = require("electron-store");
 const { registerAll } = require("./ipc-handlers");
+const { todayDate, purgeOldLog } = require("../lib/text");
 
 const store = new Store({ name: "blur-to-clear-settings" });
 const isDev = process.argv.includes("--dev");
@@ -139,6 +140,21 @@ async function quickAction(action) {
     const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action], s);
     const result       = await callAI(provider, s, systemPrompt, text);
     clipboard.writeText(result);
+    store.set("lastAction", action);
+
+    // Append history log entry (metadata only — no text stored)
+    const s           = store.store;
+    const today       = todayDate();
+    const fresh       = purgeOldLog(store.get("historyLog") || []);
+    fresh.push({
+      timestamp: Date.now(), date: today, source: "desktop",
+      action, provider: s.provider || "openai",
+      model: s[`${s.provider || "openai"}Model`] || "",
+      inputLen: text.length, outputLen: result.length
+    });
+    store.set("historyLog", fresh.slice(-200));
+    updateTrayTooltip();
+
     new Notification({
       title: "Blur-to-Clear",
       body:  "Done — result copied to clipboard."
@@ -149,6 +165,12 @@ async function quickAction(action) {
       body:  err.message
     }).show();
   }
+}
+
+function updateTrayTooltip() {
+  if (!tray) return;
+  const count = purgeOldLog(store.get("historyLog") || []).length;
+  tray.setToolTip(count > 0 ? `Blur-to-Clear · ${count} fix${count === 1 ? "" : "es"} today` : "Blur-to-Clear");
 }
 
 function createTray() {
@@ -199,6 +221,9 @@ app.whenReady().then(() => {
   if (process.platform === "darwin") app.dock.hide();
 
   createTray();
+  updateTrayTooltip();
+  // Purge stale log entries from previous days on launch
+  store.set("historyLog", purgeOldLog(store.get("historyLog") || []));
 
   // Global shortcut: Ctrl+Shift+Space  (Cmd+Shift+Space on Mac)
   const shortcut = process.platform === "darwin"

@@ -1,6 +1,7 @@
 const {
   fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels,
-  testOpenAI, testClaude, testGemini
+  testOpenAI, testClaude, testGemini,
+  isModelCacheStale, formatCacheAge, MODEL_CACHE_STALE_MS
 } = require("../lib/models");
 
 beforeEach(() => { global.fetch = jest.fn(); });
@@ -219,5 +220,66 @@ describe("testGemini", () => {
     await testGemini("AIza-test", "gemini-2.0-flash");
     const body = JSON.parse(global.fetch.mock.calls[0][1].body);
     expect(body.generationConfig.maxOutputTokens).toBe(5);
+  });
+});
+
+// ── isModelCacheStale ─────────────────────────────────────────────────────────
+
+describe("isModelCacheStale", () => {
+  test("returns true when fetchedAt is 0 (never fetched)", () => {
+    expect(isModelCacheStale(0)).toBe(true);
+  });
+
+  test("returns true when fetchedAt is null/undefined", () => {
+    expect(isModelCacheStale(null)).toBe(true);
+    expect(isModelCacheStale(undefined)).toBe(true);
+  });
+
+  test("returns false for a timestamp fetched 1 hour ago", () => {
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    expect(isModelCacheStale(oneHourAgo)).toBe(false);
+  });
+
+  test("returns false for a timestamp fetched 6 days ago", () => {
+    const sixDaysAgo = Date.now() - 6 * 24 * 60 * 60 * 1000;
+    expect(isModelCacheStale(sixDaysAgo)).toBe(false);
+  });
+
+  test("returns true for a timestamp older than 7 days", () => {
+    const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
+    expect(isModelCacheStale(eightDaysAgo)).toBe(true);
+  });
+
+  test("returns true for a timestamp exactly at the stale boundary", () => {
+    const exactlyStale = Date.now() - MODEL_CACHE_STALE_MS - 1;
+    expect(isModelCacheStale(exactlyStale)).toBe(true);
+  });
+});
+
+// ── formatCacheAge ────────────────────────────────────────────────────────────
+
+describe("formatCacheAge", () => {
+  test("returns null when fetchedAt is falsy", () => {
+    expect(formatCacheAge(0)).toBeNull();
+    expect(formatCacheAge(null)).toBeNull();
+  });
+
+  test("returns 'just now' for timestamps less than 1 minute ago", () => {
+    expect(formatCacheAge(Date.now() - 30_000)).toBe("just now");
+  });
+
+  test("returns minutes for timestamps 1–59 minutes ago", () => {
+    expect(formatCacheAge(Date.now() - 5 * 60_000)).toBe("5m ago");
+    expect(formatCacheAge(Date.now() - 59 * 60_000)).toBe("59m ago");
+  });
+
+  test("returns hours for timestamps 1–23 hours ago", () => {
+    expect(formatCacheAge(Date.now() - 3 * 3_600_000)).toBe("3h ago");
+    expect(formatCacheAge(Date.now() - 23 * 3_600_000)).toBe("23h ago");
+  });
+
+  test("returns days for timestamps 24+ hours ago", () => {
+    expect(formatCacheAge(Date.now() - 2 * 86_400_000)).toBe("2d ago");
+    expect(formatCacheAge(Date.now() - 6 * 86_400_000)).toBe("6d ago");
   });
 });

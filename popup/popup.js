@@ -14,7 +14,7 @@ async function init() {
     "provider", "variants",
     "openaiKey", "claudeKey", "geminiKey",
     "openaiModel", "claudeModel", "geminiModel",
-    "customPrompts",
+    "customPrompts", "lastAction",
     "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
   ]);
 
@@ -44,6 +44,13 @@ async function init() {
       actionSel.appendChild(opt);
     });
   }
+  // Restore last-used action (after custom options are appended so the value is available)
+  actionSel.value = currentSettings.lastAction || "fix-spelling";
+
+  // Setup CTA: if no key for the active provider, show prominent prompt
+  const hasAnyKey = currentSettings.openaiKey || currentSettings.claudeKey || currentSettings.geminiKey;
+  const ctaEl = document.getElementById("setup-cta");
+  if (ctaEl) ctaEl.style.display = hasAnyKey ? "none" : "block";
 
   providerEl.addEventListener("change", () => {
     currentSettings.provider = providerEl.value;
@@ -60,8 +67,12 @@ async function init() {
   document.getElementById("open-settings").addEventListener("click", () => {
     browser.runtime.openOptionsPage();
   });
+  document.getElementById("open-settings-cta")?.addEventListener("click", () => {
+    browser.runtime.openOptionsPage();
+  });
 
   document.getElementById("process-btn").addEventListener("click", runProcess);
+  document.getElementById("run-selection-btn").addEventListener("click", runFromSelection);
 
   document.getElementById("copy-result").addEventListener("click", () => {
     const text = document.getElementById("result-text").textContent;
@@ -70,6 +81,58 @@ async function init() {
     btn.textContent = "Copied!";
     setTimeout(() => (btn.textContent = "Copy"), 1600);
   });
+
+  // Purge stale log entries then render today's activity
+  const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
+  const today2 = new Date();
+  const todayStr2 = `${today2.getFullYear()}-${String(today2.getMonth()+1).padStart(2,"0")}-${String(today2.getDate()).padStart(2,"0")}`;
+  const fresh2 = rawLog.filter(e => e.date === todayStr2);
+  if (fresh2.length !== rawLog.length) {
+    await browser.storage.local.set({ historyLog: fresh2 });
+  }
+  loadHistory();
+}
+
+async function runFromSelection() {
+  const btn    = document.getElementById("run-selection-btn");
+  const status = document.getElementById("run-selection-status");
+  status.style.display = "none";
+  btn.disabled = true;
+
+  try {
+    // Get the active tab's selected text via the scripting API
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) throw new Error("No active tab.");
+
+    const [{ result: selectedText }] = await browser.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => window.getSelection()?.toString()?.trim() || ""
+    });
+
+    if (!selectedText) {
+      status.textContent = "No text selected on the page — highlight text first.";
+      status.style.display = "block";
+      return;
+    }
+
+    const actionVal = document.getElementById("action-select").value;
+    // Send to background — same flow as right-click
+    await browser.runtime.sendMessage({
+      type: "run-from-popup",
+      tabId: tab.id,
+      actionVal,
+      selectedText,
+      settings: currentSettings
+    });
+
+    await browser.storage.local.set({ lastAction: actionVal });
+    window.close(); // close popup; result modal will appear on the page
+  } catch (err) {
+    status.textContent = err.message;
+    status.style.display = "block";
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function runProcess() {
@@ -102,6 +165,7 @@ async function runProcess() {
   try {
     const result = await callAI(provider, currentSettings, systemPrompt, text); // from lib/api.js
     showResult(result, null);
+    await browser.storage.local.set({ lastAction: actionVal });
   } catch (err) {
     showResult(null, `Error: ${err.message}`);
   }
@@ -144,6 +208,39 @@ function updateStatus(settings, provider) {
 function updateModelDisplay(settings, provider) {
   const model = settings[MODEL_FIELDS[provider]] || DEFAULT_MODELS[provider];
   document.getElementById("model-display").textContent = model;
+}
+
+async function loadHistory() {
+  const { historyLog = [] } = await browser.storage.local.get("historyLog");
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  const entries = historyLog.filter(e => e.date === todayStr);
+
+  const section = document.getElementById("history-section");
+  if (!entries.length) { if (section) section.style.display = "none"; return; }
+
+  section.style.display = "block";
+  document.getElementById("history-count").textContent = entries.length;
+
+  document.getElementById("history-toggle").addEventListener("click", () => {
+    const list = document.getElementById("history-list");
+    list.style.display = list.style.display === "none" ? "block" : "none";
+  }, { once: true });
+
+  const list = document.getElementById("history-list");
+  entries.slice(-10).reverse().forEach(e => {
+    const item = document.createElement("div");
+    item.className = "history-item";
+    const t = new Date(e.timestamp);
+    const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+    const action = document.createElement("span");
+    action.className = "history-action";
+    action.textContent = e.action.replace(/-/g, " ");
+    const meta = document.createElement("span");
+    meta.textContent = `${time} · ${e.source}`;
+    item.append(action, meta);
+    list.appendChild(item);
+  });
 }
 
 init();

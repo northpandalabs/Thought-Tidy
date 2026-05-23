@@ -12,6 +12,12 @@
     Blur-to-Clear
   </div>
 
+  <!-- First-run CTA: shown when no API key is configured -->
+  <div id="setup-cta" class="section setup-cta" style="display:none">
+    <p>No API key set up yet.</p>
+    <button id="open-settings-cta">Set up API key →</button>
+  </div>
+
   <!-- Quick-process panel -->
   <div class="section process-section">
     <label for="input-text">Paste or type text</label>
@@ -31,6 +37,8 @@
       </select>
       <button id="process-btn">Run</button>
     </div>
+    <button id="run-selection-btn" title="Process highlighted text on the current page">Process Selected Text</button>
+    <div id="run-selection-status" class="run-selection-status" style="display:none"></div>
     <div id="result-area" style="display:none">
       <div id="result-loading" class="result-loading" style="display:none">
         <div class="mini-spinner"></div> Processing…
@@ -68,6 +76,12 @@
   <div class="section key-status" id="key-status">
     <span id="key-indicator" class="dot dot-bad"></span>
     <span id="key-text">No API key set</span>
+  </div>
+
+  <!-- Today's Activity -->
+  <div class="section history-section" id="history-section" style="display:none">
+    <button class="history-toggle" id="history-toggle">Today — <span id="history-count">0</span> fixes</button>
+    <div id="history-list" class="history-list" style="display:none"></div>
   </div>
 
   <button id="open-settings">Open Full Settings</button>

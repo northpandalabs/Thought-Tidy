@@ -1,5 +1,5 @@
 // background.js — Blur-to-Clear event wiring (MV3 service worker)
-importScripts("browser-polyfill.js", "lib/prompts.js", "lib/api.js");
+importScripts("browser-polyfill.js", "lib/text.js", "lib/prompts.js", "lib/api.js");
 
 const DYN_SEP = "dyn-sep";
 const DYN_MAX = 8;
@@ -45,6 +45,45 @@ browser.storage.onChanged.addListener((changes) => {
   if (changes.customPrompts) rebuildCustomMenu();
 });
 
+// ── Run from popup (Process Selected Text button) ────────────────────────────
+browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type !== "run-from-popup") return;
+  (async () => {
+    const { tabId, actionVal, selectedText, settings } = msg;
+    const provider = settings.provider || "openai";
+
+    let systemPrompt;
+    if (actionVal.startsWith("custom-")) {
+      const idx = parseInt(actionVal.replace("custom-", ""), 10);
+      systemPrompt = (settings.customPrompts || [])[idx]?.prompt || "Process the following text:";
+    } else {
+      systemPrompt = MENU_PROMPTS[actionVal];
+      if (!systemPrompt) return;
+    }
+    systemPrompt = buildPromptWithProfile(systemPrompt, settings);
+
+    browser.tabs.sendMessage(tabId, { action: "show-loading", originalText: selectedText });
+    try {
+      const result = await callAI(provider, settings, systemPrompt, selectedText);
+      browser.tabs.sendMessage(tabId, { action: "show-results", originalText: selectedText, results: [result] });
+
+      const today = todayDate();
+      const { historyLog: hl = [] } = await browser.storage.local.get("historyLog");
+      const fresh = purgeOldLog(hl);
+      fresh.push({
+        timestamp: Date.now(), date: today, source: "extension",
+        action: actionVal, provider,
+        model: settings[`${provider}Model`] || "",
+        inputLen: selectedText.length, outputLen: result.length
+      });
+      await browser.storage.local.set({ historyLog: fresh.slice(-200), lastAction: actionVal });
+    } catch (err) {
+      browser.tabs.sendMessage(tabId, { action: "show-error", error: err.message });
+    }
+  })();
+  return true; // keep message channel open for async response
+});
+
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!info.selectionText) return;
 
@@ -81,6 +120,22 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
       results.push(await callAI(provider, settings, systemPrompt, selectedText)); // from lib/api.js
     }
     browser.tabs.sendMessage(tab.id, { action: "show-results", originalText: selectedText, results });
+
+    const lastAction = menuId.startsWith("dyn-") ? menuId.replace("dyn-", "custom-") : menuId;
+    await browser.storage.local.set({ lastAction });
+
+    // Append history log entry (metadata only — no text stored)
+    const { historyLog = [] } = await browser.storage.local.get("historyLog");
+    const today = todayDate();
+    const fresh = purgeOldLog(historyLog);
+    fresh.push({
+      timestamp: Date.now(), date: today, source: "extension",
+      action: lastAction, provider,
+      model: settings[`${provider}Model`] || "",
+      inputLen: selectedText.length,
+      outputLen: results.reduce((s, r) => s + r.length, 0)
+    });
+    await browser.storage.local.set({ historyLog: fresh.slice(-200) });
   } catch (err) {
     browser.tabs.sendMessage(tab.id, { action: "show-error", error: err.message });
   }

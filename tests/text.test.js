@@ -1,4 +1,4 @@
-const { wordCount, wordDiff, esc, escHtml, uid } = require("../lib/text");
+const { wordCount, wordDiff, esc, escHtml, uid, todayDate, purgeOldLog } = require("../lib/text");
 
 // ── wordCount ─────────────────────────────────────────────────────────────────
 
@@ -137,5 +137,74 @@ describe("uid", () => {
     const ids = Array.from({ length: 100 }, uid);
     const unique = new Set(ids);
     expect(unique.size).toBe(100);
+  });
+});
+
+// ── todayDate ─────────────────────────────────────────────────────────────────
+
+describe("todayDate", () => {
+  test("returns a string in YYYY-MM-DD format", () => {
+    expect(todayDate()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  test("matches the current date in local time", () => {
+    const d = new Date();
+    const expected = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    expect(todayDate()).toBe(expected);
+  });
+
+  test("zero-pads single-digit month and day", () => {
+    const result = todayDate();
+    const [, month, day] = result.split("-");
+    expect(month).toHaveLength(2);
+    expect(day).toHaveLength(2);
+  });
+});
+
+// ── purgeOldLog ───────────────────────────────────────────────────────────────
+
+describe("purgeOldLog", () => {
+  const TODAY = todayDate();
+  const YESTERDAY = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+
+  test("returns empty array for undefined input", () => {
+    expect(purgeOldLog(undefined)).toEqual([]);
+  });
+
+  test("returns empty array for empty array input", () => {
+    expect(purgeOldLog([])).toEqual([]);
+  });
+
+  test("keeps entries from today", () => {
+    const entries = [{ date: TODAY, action: "fix-spelling" }];
+    expect(purgeOldLog(entries)).toHaveLength(1);
+  });
+
+  test("removes entries from yesterday", () => {
+    const entries = [{ date: YESTERDAY, action: "fix-spelling" }];
+    expect(purgeOldLog(entries)).toHaveLength(0);
+  });
+
+  test("keeps today and removes older entries in a mixed array", () => {
+    const entries = [
+      { date: YESTERDAY, action: "improve" },
+      { date: TODAY,     action: "fix-spelling" },
+      { date: "2020-01-01", action: "professional" }
+    ];
+    const result = purgeOldLog(entries);
+    expect(result).toHaveLength(1);
+    expect(result[0].action).toBe("fix-spelling");
+  });
+
+  test("returns all entries when all are from today", () => {
+    const entries = [
+      { date: TODAY, action: "fix-spelling" },
+      { date: TODAY, action: "professional" }
+    ];
+    expect(purgeOldLog(entries)).toHaveLength(2);
   });
 });

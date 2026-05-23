@@ -220,3 +220,74 @@ input[type="range"] {
   text-align: center;
 }
 #open-settings:hover { background: #45475a; }
+
+/* ── Setup CTA ───────────────────────────────────────────────────── */
+.setup-cta {
+  background: #1e2a3a;
+  border-bottom: 1px solid #313244;
+  text-align: center;
+}
+.setup-cta p {
+  font-size: 12px;
+  color: #9399b2;
+  margin-bottom: 8px;
+}
+#open-settings-cta {
+  width: 100%;
+  background: #89b4fa;
+  color: #1e1e2e;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#open-settings-cta:hover { opacity: 0.88; }
+
+/* ── History ─────────────────────────────────────────────────────── */
+.history-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #6c7086;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+.history-toggle:hover { color: #9399b2; }
+.history-list { margin-top: 8px; }
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6c7086;
+  padding: 2px 0;
+  border-top: 1px solid #313244;
+}
+.history-item:first-child { border-top: none; }
+.history-action { color: #9399b2; font-weight: 500; }
+
+/* ── Process Selected Text button ────────────────────────────────── */
+#run-selection-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: #313244;
+  border: 1px solid #45475a;
+  color: #cdd6f4;
+  border-radius: 7px;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#run-selection-btn:hover:not(:disabled) { background: #45475a; }
+#run-selection-btn:disabled { opacity: 0.45; cursor: default; }
+.run-selection-status {
+  font-size: 11px;
+  color: #f38ba8;
+  margin-top: 5px;
+  text-align: center;
+}

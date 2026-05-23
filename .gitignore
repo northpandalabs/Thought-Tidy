@@ -9,3 +9,11 @@ Thumbs.db
 
 # Claude Code local settings — contains machine-specific paths
 .claude/settings.local.json
+
+# AgenticFlywheel runtime state (advisory layer, not source of truth)
+.agentic-flywheel/state/
+.claude
+AgenticFlyWheel
+docs
+ETC
+AGENTS.md

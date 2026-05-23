@@ -1,15 +1,28 @@
 const STORAGE_KEYS = [
   "provider",
-  "openaiKey", "openaiModel",
-  "claudeKey", "claudeModel",
-  "geminiKey", "geminiModel",
+  "openaiKey", "openaiModel", "openaiModels", "openaiModelsLastFetched",
+  "claudeKey", "claudeModel", "claudeModels", "claudeModelsLastFetched",
+  "geminiKey", "geminiModel", "geminiModels", "geminiModelsLastFetched",
   "variants", "customPrompts",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ];
 
-// Model fetchers and testers come from lib/models.js (loaded in options.html)
+// Model fetchers, testers, and cache helpers come from lib/models.js (loaded in options.html)
 const FETCHERS = { openai: fetchOpenAIModels, claude: fetchClaudeModels, gemini: fetchGeminiModels };
 const TESTERS  = { openai: testOpenAI,        claude: testClaude,        gemini: testGemini };
+
+// Updates the Refresh button label/title to reflect cache age or staleness.
+function showCacheStatus(provider, fetchedAt) {
+  const btn = document.querySelector(`.fetch-btn[data-provider="${provider}"]`);
+  if (!btn) return;
+  if (!fetchedAt || isModelCacheStale(fetchedAt)) {
+    btn.textContent = "⚠ Refresh";
+    btn.title = fetchedAt ? "Model list may be outdated — click to refresh" : "No model list cached yet";
+  } else {
+    btn.textContent = "Refresh";
+    btn.title = `Last updated: ${formatCacheAge(fetchedAt)}`;
+  }
+}
 
 // ── Fetch + test + populate ───────────────────────────────────────────────────
 
@@ -63,6 +76,13 @@ async function doFetch(provider, silent = false) {
 
     populateSelect(`${provider}Model`, working, currentModel);
 
+    const now = Date.now();
+    await browser.storage.local.set({
+      [`${provider}Models`]:            working,
+      [`${provider}ModelsLastFetched`]: now
+    });
+    showCacheStatus(provider, now);
+
     const msg = skipped > 0
       ? `${working.length}/${allModels.length} models verified (${skipped} unavailable)`
       : `All ${working.length} models verified ✓`;
@@ -71,7 +91,7 @@ async function doFetch(provider, silent = false) {
   } catch (err) {
     setStatus(provider, `Error: ${err.message}`, "error");
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "Refresh"; }
+    if (btn) { btn.disabled = false; }
   }
 }
 
@@ -92,8 +112,12 @@ async function doFetchAndSaveKey(provider) {
     document.getElementById("setup-wizard").style.display = "none";
     await browser.storage.local.set({
       [`${provider}Key`]:   key,
-      [`${provider}Model`]: sel.value
+      [`${provider}Model`]: sel.value,
+      provider              // auto-switch active provider to the one just configured
     });
+    const radio = document.querySelector(`input[name="provider"][value="${provider}"]`);
+    if (radio) { radio.checked = true; updateCardHighlight(); }
+    updateProviderAvailability();
   }
 }
 
@@ -226,7 +250,10 @@ async function init() {
         keyField.type = "password";
         editBtn.style.display = "none";
         setStatus(p, "Enter new key and press Enter", "loading");
+        browser.storage.local.set({ [`${p}Models`]: [], [`${p}ModelsLastFetched`]: 0 });
+        showCacheStatus(p, 0);
         keyField.focus();
+        updateProviderAvailability();
       });
     }
 
@@ -240,17 +267,17 @@ async function init() {
       if (keyField.value.trim() && !keyField.readOnly) doFetchAndSaveKey(p);
     });
 
-    // If we already have a saved key, auto-fetch on load to populate models
-    if (savedKey) {
-      const savedModel = s[`${p}Model`] || "";
-      doFetch(p, true).then(() => {
-        if (savedModel) {
-          const sel = document.getElementById(`${p}Model`);
-          if (sel && [...sel.options].some(o => o.value === savedModel)) sel.value = savedModel;
-        }
-      });
+    // Load model list from cache — no API call on settings open
+    const cachedModels = s[`${p}Models`] || [];
+    const cachedAt     = s[`${p}ModelsLastFetched`] || 0;
+    const savedModel   = s[`${p}Model`] || "";
+    if (cachedModels.length) {
+      populateSelect(`${p}Model`, cachedModels, savedModel);
     }
+    showCacheStatus(p, cachedAt);
   }
+
+  updateProviderAvailability();
 
   // Variants
   const variantsVal = s.variants || 1;
@@ -336,6 +363,30 @@ function updateCardHighlight() {
   document.querySelectorAll(".radio-card").forEach(card => {
     card.classList.toggle("selected", card.querySelector("input").value === selected);
   });
+}
+
+function updateProviderAvailability() {
+  for (const p of ["openai", "claude", "gemini"]) {
+    const keyField = document.getElementById(`${p}Key`);
+    const card     = document.getElementById(`card-${p}`);
+    const radio    = card?.querySelector("input");
+    if (!card || !radio || !keyField) continue;
+
+    const hasKey      = !!(keyField.value.trim());
+    radio.disabled    = !hasKey;
+    card.style.opacity = hasKey ? "1" : "0.45";
+    card.style.cursor  = hasKey ? "pointer" : "not-allowed";
+    card.title         = hasKey ? "" : "Enter an API key for this provider to enable it";
+
+    if (!hasKey && radio.checked) {
+      const first = document.querySelector('input[name="provider"]:not(:disabled)');
+      if (first) {
+        first.checked = true;
+        browser.storage.local.set({ provider: first.value });
+        updateCardHighlight();
+      }
+    }
+  }
 }
 
 async function save() {
