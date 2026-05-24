@@ -471,8 +471,22 @@ input[type="range"] { width: 100%; accent-color: #89b4fa; cursor: pointer; margi
 }
 .pc-remove-btn { border-color: #f38ba8; color: #f38ba8; }
 .pc-remove-btn:hover { background: rgba(243,139,168,0.12); }
-.btn-primary { background: #89b4fa; color: #1e1e2e; border-color: #89b4fa; font-weight: 700; }
-.btn-primary:hover { opacity: 0.88; }
+.btn-primary {
+  background: #89b4fa;
+  color: #1e1e2e;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover  { opacity: 0.88; }
+.btn-primary:active { opacity: 0.75; }
+.btn-primary:focus-visible { outline: 2px solid #89b4fa; outline-offset: 3px; }
+.pc-btn.btn-primary { padding: 4px 10px; border-radius: 6px; font-size: 12px; border: none; }
 
 /* ── Provider wizard ──────────────────────────────────────────── */
 #provider-wizard {

@@ -269,7 +269,7 @@ function buildCard(p, idx) {
     card.querySelector(".pc-edit-panel").style.display = "block";
   });
   card.querySelector(".pc-cancel-edit-btn").addEventListener("click", () => {
-    card.querySelector(".pc-edit-panel").style.display = "none";
+    renderProviderCards();
   });
   card.querySelector(".pc-save-edit-btn").addEventListener("click", () => saveCardEdit(card, idx, p));
   card.querySelector(".pc-remove-btn").addEventListener("click", () => confirmRemoveProvider(idx));
@@ -286,12 +286,15 @@ async function saveCardEdit(card, idx, provider) {
   }
   configuredProviders[idx] = { ...provider, apiKey: newKey };
   if (provider.id === "gemini") {
-    const slots = [...card.querySelectorAll(".pc-gemini-slot-select")];
-    geminiModels = slots.map(s => s.value || null);
-    configuredProviders[idx].model = geminiModels[0] || "";
+    const slots     = [...card.querySelectorAll(".pc-gemini-slot-select")];
+    const refreshed = slots.some(s => !s.disabled);
+    if (refreshed) {
+      geminiModels = slots.map(s => s.value || null);
+      configuredProviders[idx].model = geminiModels[0] || "";
+    }
   } else {
     const sel = card.querySelector(".pc-model-select");
-    if (sel && sel.value) configuredProviders[idx].model = sel.value;
+    if (sel && !sel.disabled && sel.value) configuredProviders[idx].model = sel.value;
   }
   await saveProviders();
   renderProviderCards();
