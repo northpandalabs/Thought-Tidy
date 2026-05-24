@@ -23,10 +23,11 @@ async function init() {
   updateFooter();
   populateCustomActions();
 
-  // Pre-fill from clipboard when popup is shown
+  // Refresh settings + UI each time the popup is shown
   btcAPI.onPopupOpened(async () => {
-    settings = await browser.storage.local.get(STORAGE_KEYS); // refresh
+    settings = await browser.storage.local.get(STORAGE_KEYS);
     updateFooter();
+    rebuildActionDropdown();
     const clipText = (await btcAPI.readClipboard()).trim();
     const textarea = document.getElementById("input-text");
     if (clipText && !textarea.value.trim()) {
@@ -62,8 +63,10 @@ async function init() {
 
 // ── Actions ────────────────────────────────────────────────────────────────────
 
-function populateCustomActions() {
+function rebuildActionDropdown() {
   const sel        = document.getElementById("action-select");
+  const prevValue  = sel.value;
+  sel.innerHTML    = "";
   const storedActs = resolveActionSettings(settings.actionSettings || []);
   const cps        = settings.customPrompts || [];
 
@@ -81,8 +84,14 @@ function populateCustomActions() {
       sel.appendChild(opt);
     });
   }
-  const lastAction = settings.lastAction || "";
-  sel.value = sel.querySelector(`option[value="${lastAction}"]`) ? lastAction : (storedActs.find(a => a.enabled)?.id || "");
+  // Restore previous selection or fall back to first enabled action
+  const lastAction = prevValue || settings.lastAction || "";
+  sel.value = lastAction;
+  if (sel.value !== lastAction) sel.value = storedActs.find(a => a.enabled)?.id || "";
+}
+
+function populateCustomActions() {
+  rebuildActionDropdown();
 }
 
 async function runProcess() {

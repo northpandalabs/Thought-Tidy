@@ -7,8 +7,13 @@
 const browser = {
   storage: {
     local: {
-      get(keys)  { return btcAPI.getSettings(keys); },
-      set(data)  { return btcAPI.setSettings(data); }
+      async get(keys) {
+        const result = await btcAPI.getSettings(keys);
+        // IPC handler returns raw value for a string key; wrap to match WebExtension API
+        if (typeof keys === "string") return { [keys]: result };
+        return result;
+      },
+      set(data) { return btcAPI.setSettings(data); }
     }
   },
   runtime: {

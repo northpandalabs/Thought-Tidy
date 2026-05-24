@@ -552,6 +552,18 @@ async function loadHistoryViewer() {
 // ── Save / revert ──────────────────────────────────────────────────────────────
 
 async function save() {
+  // Check if the user's last-used action was disabled — reset if needed
+  const { lastAction = "" } = await browser.storage.local.get("lastAction");
+  const enabledIds   = new Set(actionSettings.filter(a => a.enabled).map(a => a.id));
+  let resetMsg       = "";
+  let resolvedAction = lastAction;
+  if (lastAction && !lastAction.startsWith("custom-") && !enabledIds.has(lastAction)) {
+    const first    = actionSettings.find(a => a.enabled);
+    resolvedAction = first?.id || "";
+    resetMsg       = ` Note: your last action was disabled — switched to "${first?.label || resolvedAction}".`;
+    await browser.storage.local.set({ lastAction: resolvedAction });
+  }
+
   await browser.storage.local.set({
     variants:       getVal("variants"),
     customPrompts,
@@ -563,8 +575,9 @@ async function save() {
     profileEnabled: document.getElementById("profileEnabled")?.checked || false
   });
   const status = document.getElementById("save-status");
-  status.textContent = "Saved!"; status.className = "status-ok";
-  setTimeout(() => { status.textContent = ""; }, 2000);
+  status.textContent = "Saved!" + resetMsg;
+  status.className   = "status-ok";
+  setTimeout(() => { status.textContent = ""; }, resetMsg ? 5000 : 2000);
 }
 
 function getVal(id) { return document.getElementById(id)?.value ?? ""; }
@@ -636,9 +649,16 @@ async function init() {
   const profileEnabledEl = document.getElementById("profileEnabled");
   if (profileEnabledEl) profileEnabledEl.checked = s.profileEnabled || false;
 
-  // Action editor
+  // Action editor (behind toggle)
   actionSettings = resolveActionSettings(s.actionSettings || []);
   renderActionEditor();
+  document.getElementById("toggle-action-editor")?.addEventListener("click", () => {
+    const panel = document.getElementById("action-editor-panel");
+    const btn   = document.getElementById("toggle-action-editor");
+    const open  = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    btn.textContent     = open ? "← Close Editor" : "Edit Actions →";
+  });
 
   // Context URL toggle
   document.getElementById("load-context-url-btn")?.addEventListener("click", () => {
