@@ -121,6 +121,8 @@ function rootPath(...parts) {
     : path.join(__dirname, "..", ...parts);
 }
 
+const APP_ICON = rootPath("icons", "icon.png");
+
 // ── Popup window ───────────────────────────────────────────────────────────────
 
 function createPopup() {
@@ -134,6 +136,7 @@ function createPopup() {
     alwaysOnTop: true,
     skipTaskbar: true,
     roundedCorners: true,
+    icon: APP_ICON,
     webPreferences: {
       preload:          path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -182,6 +185,7 @@ function openHistory() {
     height:   700,
     minWidth: 600,
     title:    "Blur-to-Clear — History",
+    icon:     APP_ICON,
     webPreferences: {
       preload:          path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -205,6 +209,7 @@ function openSettings() {
     height:   720,
     minWidth: 600,
     title:    "Blur-to-Clear — Settings",
+    icon:     APP_ICON,
     webPreferences: {
       preload:          path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -354,11 +359,8 @@ function updateTrayTooltip() {
 
 function createTray() {
   let icon;
-  // Windows requires PNG or ICO for tray icons — SVG is not supported
-  const pngPath = rootPath("icons", "icon.png");
-
   try {
-    icon = nativeImage.createFromPath(pngPath);
+    icon = nativeImage.createFromPath(APP_ICON);
     if (icon.isEmpty()) throw new Error("empty");
     icon = icon.resize({ width: 22, height: 22 });
   } catch {
@@ -377,53 +379,15 @@ function createTray() {
 // ── Smart shortcut routing ─────────────────────────────────────────────────────
 // Browsers capture Ctrl+Shift+Space for the extension shortcut at the browser level,
 // but Electron's globalShortcut is an OS-level hook that fires regardless of which
-// app has focus. This helper detects the foreground process and skips the desktop
-// popup when a browser is in front, letting the extension handle it instead.
-
-const BROWSER_PROCS = new Set([
-  "chrome", "msedge", "firefox", "brave", "opera", "vivaldi", "chromium", "browser"
-]);
-
-function getBrowserAwareForegroundProcess(cb) {
-  const { exec } = require("child_process");
-  if (process.platform === "win32") {
-    // Use PowerShell to resolve foreground window → process name via Win32 API
-    const cmd =
-      "powershell -NoProfile -NonInteractive -WindowStyle Hidden -Command " +
-      "\"$t=Add-Type -MemberDefinition '[DllImport(`\"user32.dll`\")] public static extern IntPtr GetForegroundWindow();" +
-      "[DllImport(`\"user32.dll`\")] public static extern int GetWindowThreadProcessId(IntPtr h, out int p);'" +
-      " -Name W -Namespace W -PassThru;" +
-      "$p=0;$t::GetWindowThreadProcessId($t::GetForegroundWindow(),[ref]$p)|Out-Null;" +
-      "(Get-Process -Id $p -ErrorAction SilentlyContinue).ProcessName\"";
-    exec(cmd, { timeout: 900, windowsHide: true }, (err, stdout) => {
-      cb(err ? null : (stdout || "").trim().toLowerCase());
-    });
-  } else if (process.platform === "darwin") {
-    exec(
-      "osascript -e 'tell application \"System Events\" to name of first application process whose frontmost is true'",
-      { timeout: 800 },
-      (err, stdout) => {
-        cb(err ? null : (stdout || "").trim().toLowerCase());
-      }
-    );
-  } else {
-    cb(null); // Linux: no subprocess check, always open popup
-  }
-}
-
 function smartOpenPopup() {
-  // If the popup is already shown and focused, treat shortcut as toggle-close
+  // Toggle-close if the popup is already visible and focused
   if (popupWin && !popupWin.isDestroyed() && popupWin.isVisible() && popupWin.isFocused()) {
     popupWin.hide();
     return;
   }
-  // If any Electron window has focus, skip (settings or history window is active)
+  // Skip if a settings/history window has focus
   if (BrowserWindow.getFocusedWindow()) return;
-
-  getBrowserAwareForegroundProcess(procName => {
-    if (procName && BROWSER_PROCS.has(procName)) return; // browser extension handles it
-    openPopup();
-  });
+  openPopup();
 }
 
 // ── App lifecycle ──────────────────────────────────────────────────────────────
