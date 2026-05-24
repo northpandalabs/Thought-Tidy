@@ -1,15 +1,18 @@
 // Tests for desktop/lib-node/sync-server.js
-// Starts the server against a mock encStore, exercises every route branch.
+// Uses port 0 so the OS assigns a free port — no conflict with a running desktop app.
 
 const http = require("http");
+const { startSyncServer } = require("../lib-node/sync-server");
 
 // ── helpers ────────────────────────────────────────────────────────────────────
+
+let TEST_PORT = 0; // set after server starts
 
 function request({ method = "GET", path = "/ping", token = null, body = null } = {}) {
   return new Promise((resolve, reject) => {
     const opts = {
       hostname: "127.0.0.1",
-      port: 47391,
+      port: TEST_PORT,
       path,
       method,
       headers: {}
@@ -50,33 +53,23 @@ describe("sync-server", () => {
       set(key, val) { this._data[key] = val; }
     };
 
-    const { startSyncServer } = require("../lib-node/sync-server");
-    server = startSyncServer(mockStore);
+    server = startSyncServer(mockStore, 0); // 0 = OS-assigned free port
 
     await new Promise((resolve, reject) => {
-      if (server.listening) { resolve(); return; }
-      const done = (fn) => () => {
-        server.removeListener("listening", onListen);
-        server.removeListener("error",     onErr);
-        fn();
-      };
-      const onListen = done(resolve);
-      const onErr    = done(reject);
-      server.once("listening", onListen);
-      server.once("error",     onErr);
+      if (server.listening) { TEST_PORT = server.address().port; resolve(); return; }
+      server.once("listening", () => { TEST_PORT = server.address().port; resolve(); });
+      server.once("error",     reject);
     });
 
-    // Fetch the real session token from /ping
     const ping = await request({ path: "/ping" });
     sessionToken = JSON.parse(ping.body).token;
   });
 
   afterAll(() => new Promise(resolve => server.close(resolve)));
 
-  // ── exports ──────────────────────────────────────────────────────────────────
+  // ── exports ───────────────────────────────────────────────────────────────────
 
   test("exports startSyncServer as a function", () => {
-    const { startSyncServer } = require("../lib-node/sync-server");
     expect(typeof startSyncServer).toBe("function");
   });
 
@@ -150,7 +143,6 @@ describe("sync-server", () => {
     expect(res.status).toBe(200);
     const { syncMeta } = JSON.parse(res.body);
     expect(typeof syncMeta.lastChanged).toBe("string");
-    // encStore.set was called with the new key
     expect(mockStore._data.openaiKey).toBe("sk-new");
     // Non-SYNC_KEY "unknownKey" should not have been stored
     expect(mockStore._data.unknownKey).toBeUndefined();

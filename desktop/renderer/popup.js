@@ -218,16 +218,7 @@ function showResult(results, error) {
       btcAPI.closePopup();
     });
 
-    const replaceBtn = document.createElement("button");
-    replaceBtn.className   = "replace-btn";
-    replaceBtn.textContent = "Use this ↑";
-    replaceBtn.addEventListener("click", () => {
-      document.getElementById("input-text").value = text;
-      document.getElementById("result-area").style.display = "none";
-      document.getElementById("result-slots").innerHTML = "";
-    });
-
-    actions.append(copyBtn, copyCloseBtn, replaceBtn);
+    actions.append(copyBtn, copyCloseBtn);
     slot.appendChild(actions);
     slots.appendChild(slot);
   });

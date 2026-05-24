@@ -17,7 +17,8 @@ const SYNC_KEYS = new Set([
 ]);
 
 // encStore must implement: .get(key) → decrypted value, .set(key, val) → encrypts sensitive values
-function startSyncServer(encStore) {
+// port defaults to PORT (47391); pass 0 in tests to get an OS-assigned free port
+function startSyncServer(encStore, port = PORT) {
   const server = http.createServer((req, res) => {
     res.setHeader("Access-Control-Allow-Origin",  "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -86,7 +87,7 @@ function startSyncServer(encStore) {
     res.end("Not Found");
   });
 
-  server.listen(PORT, "127.0.0.1", () => {});
+  server.listen(port, "127.0.0.1", () => {});
   server.on("error", () => {}); // Silently ignore port conflicts (another instance running)
   return server;
 }

@@ -418,7 +418,7 @@ function smartOpenPopup() {
     return;
   }
   // If any Electron window has focus, skip (settings or history window is active)
-  if (app.getFocusedWindow()) return;
+  if (BrowserWindow.getFocusedWindow()) return;
 
   getBrowserAwareForegroundProcess(procName => {
     if (procName && BROWSER_PROCS.has(procName)) return; // browser extension handles it
