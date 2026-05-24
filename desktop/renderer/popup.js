@@ -10,7 +10,7 @@ const STORAGE_KEYS = [
   // legacy keys — passed to callAIWithFallback migration shim
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
-  "customPrompts", "lastAction",
+  "variants", "customPrompts", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ];
 
@@ -52,19 +52,7 @@ async function init() {
     }
   });
 
-  document.getElementById("copy-btn").addEventListener("click", async () => {
-    const text = document.getElementById("result-text").textContent;
-    await btcAPI.writeClipboard(text);
-    const btn = document.getElementById("copy-btn");
-    btn.textContent = "Copied!";
-    setTimeout(() => (btn.textContent = "Copy to Clipboard"), 1600);
-  });
-
-  document.getElementById("copy-close-btn").addEventListener("click", async () => {
-    const text = document.getElementById("result-text").textContent;
-    await btcAPI.writeClipboard(text);
-    btcAPI.closePopup();
-  });
+  // copy/close buttons are created dynamically in showResult()
 
   // Escape hides the popup
   document.addEventListener("keydown", (e) => {
@@ -112,18 +100,30 @@ async function runProcess() {
   }
   systemPrompt = buildPromptWithProfile(systemPrompt, settings);
 
+  const count = actionVal === "fix-spelling"
+    ? 1
+    : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
+
   document.getElementById("run-btn").disabled = true;
-  showLoading(true);
+  showLoading(true, count);
 
   try {
-    const { result } = await callAIWithFallback(
-      settings.configuredProviders,
-      settings.geminiModels,
-      settings,
-      systemPrompt,
-      text
-    );
-    showResult(result, null);
+    const results     = [];
+    const loadingText = document.getElementById("result-loading-text");
+    for (let i = 0; i < count; i++) {
+      if (count > 1 && loadingText) {
+        loadingText.textContent = `Getting suggestion ${i + 1} of ${count}…`;
+      }
+      const { result } = await callAIWithFallback(
+        settings.configuredProviders,
+        settings.geminiModels,
+        settings,
+        systemPrompt,
+        text
+      );
+      results.push(result);
+    }
+    showResult(results, null);
     await browser.storage.local.set({ lastAction: actionVal });
   } catch (err) {
     showResult(null, err.message);
@@ -137,23 +137,63 @@ async function runProcess() {
 function showLoading(on) {
   document.getElementById("result-area").style.display = "block";
   document.getElementById("result-loading").style.display = on ? "flex" : "none";
-  document.getElementById("result-text").textContent = "";
-  document.getElementById("result-text").className   = "result-text";
-  document.getElementById("result-actions").style.display = "none";
+  const loadingText = document.getElementById("result-loading-text");
+  if (loadingText) loadingText.textContent = "Processing…";
+  document.getElementById("result-slots").innerHTML = "";
 }
 
-function showResult(text, error) {
+function showResult(results, error) {
   document.getElementById("result-loading").style.display = "none";
-  const el = document.getElementById("result-text");
+  const slots = document.getElementById("result-slots");
+  slots.innerHTML = "";
+
   if (error) {
-    el.textContent = error;
+    const el = document.createElement("div");
     el.className   = "result-text is-error";
-    document.getElementById("result-actions").style.display = "none";
-  } else {
-    el.textContent = text;
-    el.className   = "result-text";
-    document.getElementById("result-actions").style.display = "flex";
+    el.textContent = error;
+    slots.appendChild(el);
+    return;
   }
+
+  results.forEach((text, i) => {
+    const slot = document.createElement("div");
+    slot.className = "result-slot";
+
+    if (results.length > 1) {
+      const label = document.createElement("div");
+      label.className   = "result-slot-label";
+      label.textContent = `Suggestion ${i + 1} of ${results.length}`;
+      slot.appendChild(label);
+    }
+
+    const box = document.createElement("div");
+    box.className   = "result-text";
+    box.textContent = text;
+    slot.appendChild(box);
+
+    const actions = document.createElement("div");
+    actions.className = "result-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "Copy";
+    copyBtn.addEventListener("click", async () => {
+      await btcAPI.writeClipboard(text);
+      copyBtn.textContent = "Copied!";
+      setTimeout(() => (copyBtn.textContent = "Copy"), 1600);
+    });
+
+    const copyCloseBtn = document.createElement("button");
+    copyCloseBtn.className   = "copy-close-btn";
+    copyCloseBtn.textContent = "Copy & Close";
+    copyCloseBtn.addEventListener("click", async () => {
+      await btcAPI.writeClipboard(text);
+      btcAPI.closePopup();
+    });
+
+    actions.append(copyBtn, copyCloseBtn);
+    slot.appendChild(actions);
+    slots.appendChild(slot);
+  });
 }
 
 function updateFooter() {

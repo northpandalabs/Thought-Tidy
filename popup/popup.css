@@ -127,6 +127,7 @@ select:focus { border-color: #89b4fa; }
 
 .result-text {
   font-size: 12.5px;
+  font-weight: 400;
   color: #cdd6f4;
   background: #1e1e2e;
   border: 1px solid #89b4fa;

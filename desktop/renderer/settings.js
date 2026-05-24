@@ -462,6 +462,42 @@ function addPrompt() {
   document.getElementById("new-prompt-text").value = "";
 }
 
+// ── History viewer ─────────────────────────────────────────────────────────────
+
+async function loadHistoryViewer() {
+  const { historyLog = [] } = await browser.storage.local.get("historyLog");
+  const entries = purgeOldLog(historyLog);
+  const section = document.getElementById("history-viewer-section");
+  if (!section) return;
+
+  if (!entries.length) { section.style.display = "none"; return; }
+  section.style.display = "block";
+  document.getElementById("history-viewer-count").textContent = entries.length;
+
+  const list = document.getElementById("history-viewer-list");
+  list.innerHTML = "";
+  [...entries].reverse().forEach(e => {
+    const t    = new Date(e.timestamp);
+    const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+    const row  = document.createElement("div");
+    row.className = "hv-entry";
+    row.innerHTML = `
+      <span class="hv-time">${time}</span>
+      <span class="hv-action">${e.action.replace(/-/g, " ")}</span>
+      <span class="hv-meta">${[e.provider, e.model].filter(Boolean).join(" · ")}</span>
+      <span class="hv-words">${e.inputLen || 0} → ${e.outputLen || 0} chars</span>`;
+    list.appendChild(row);
+  });
+
+  document.getElementById("history-clear-btn")?.addEventListener("click", async () => {
+    if (!confirm("Clear all of today's history?")) return;
+    const { historyLog: hl = [] } = await browser.storage.local.get("historyLog");
+    const today = todayDate();
+    await browser.storage.local.set({ historyLog: hl.filter(e => e.date !== today) });
+    section.style.display = "none";
+  }, { once: true });
+}
+
 // ── Save / revert ──────────────────────────────────────────────────────────────
 
 async function save() {
@@ -558,6 +594,8 @@ async function init() {
       document.getElementById("new-prompt-text").value = btn.dataset.prompt;
     });
   });
+
+  loadHistoryViewer();
 
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {
