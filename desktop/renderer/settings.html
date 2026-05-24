@@ -201,8 +201,29 @@
         <input type="text" id="profileStyle" placeholder="Casual and direct. Short sentences. Say 'gonna'. Use em-dashes.">
       </div>
       <div class="field">
-        <label for="profileContext">Personal Context</label>
+        <label for="profileContext">
+          Personal Context
+          <span class="label-hint">— your bio, what you do, who you write to, common topics.</span>
+        </label>
         <textarea id="profileContext" rows="5" placeholder="I run a small roofing company in Texas. I write quotes, follow-up emails, and job updates to residential customers…"></textarea>
+        <div class="context-actions">
+          <span class="hint">Paste anything — a bio, writing samples, common phrases.</span>
+          <button id="load-context-url-btn" class="link-btn" title="Load context from a URL you maintain">Load from URL…</button>
+        </div>
+      </div>
+
+      <div id="context-url-row" class="context-url-row" style="display:none">
+        <div class="field">
+          <label for="contextUrl">
+            Context URL
+            <span class="label-hint">— a public URL returning plain text (GitHub Gist raw, etc.)</span>
+          </label>
+          <div class="key-row">
+            <input type="text" id="contextUrl" placeholder="https://gist.githubusercontent.com/you/abc123/raw/context.txt">
+            <button id="fetch-context-btn" class="fetch-btn" style="white-space:nowrap">Fetch &amp; Save</button>
+          </div>
+          <div class="fetch-status" id="context-url-status"></div>
+        </div>
       </div>
     </section>
 
@@ -215,6 +236,13 @@
         <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
         <p class="hint">Fix Spelling is always 1. Other actions generate multiple versions so you can compare.</p>
       </div>
+    </section>
+
+    <!-- Edit Actions -->
+    <section id="actions-section">
+      <h2>Action List</h2>
+      <p class="hint" style="margin-bottom:12px">Enable/disable and reorder the actions shown in the dropdown. Built-in actions can't be renamed. Last 4 can be renamed. At least one must stay active.</p>
+      <div id="action-list" class="ae-list"></div>
     </section>
 
     <!-- Custom Prompts -->
@@ -254,7 +282,8 @@
       <h2>
         Today's History
         <span class="section-count" id="history-viewer-count">0</span>
-        <button id="history-clear-btn" class="link-btn" style="margin-left:auto">Clear today</button>
+        <button id="view-full-history-btn" class="link-btn">View Full History →</button>
+        <button id="history-clear-btn" class="link-btn" style="margin-left:8px">Clear today</button>
       </h2>
       <p class="hint" style="margin-bottom:10px">Every AI action you run today. Clears automatically at midnight.</p>
       <div id="history-viewer-list" class="hv-list"></div>
@@ -277,7 +306,8 @@
   </div>
 
   <script src="storage-shim.js"></script>
-  <script src="text.js"></script>
+  <script src="../../lib/text.js"></script>
+  <script src="../../lib/prompts.js"></script>
   <script src="models.js"></script>
   <script src="settings.js"></script>
 </body>

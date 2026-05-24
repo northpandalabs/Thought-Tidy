@@ -10,7 +10,7 @@ const STORAGE_KEYS = [
   // legacy keys — passed to callAIWithFallback migration shim
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
-  "variants", "customPrompts", "lastAction",
+  "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ];
 
@@ -63,23 +63,26 @@ async function init() {
 // ── Actions ────────────────────────────────────────────────────────────────────
 
 function populateCustomActions() {
-  const sel = document.getElementById("action-select");
-  const cps = settings.customPrompts || [];
-  if (cps.length) {
-    const sep = document.createElement("option");
-    sep.disabled = true;
-    sep.textContent = "── Custom ──";
-    sel.appendChild(sep);
+  const sel        = document.getElementById("action-select");
+  const storedActs = resolveActionSettings(settings.actionSettings || []);
+  const cps        = settings.customPrompts || [];
 
+  storedActs.filter(a => a.enabled).forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a.id; opt.textContent = a.label;
+    sel.appendChild(opt);
+  });
+  if (cps.length) {
+    const sep = document.createElement("option"); sep.disabled = true; sep.textContent = "── Custom ──";
+    sel.appendChild(sep);
     cps.slice(0, 8).forEach((cp, i) => {
       const opt = document.createElement("option");
-      opt.value = `custom-${i}`;
-      opt.textContent = `⚡ ${cp.name}`;
+      opt.value = `custom-${i}`; opt.textContent = `⚡ ${cp.name}`;
       sel.appendChild(opt);
     });
   }
-  // Restore last-used action after all options are present
-  sel.value = settings.lastAction || "fix-spelling";
+  const lastAction = settings.lastAction || "";
+  sel.value = sel.querySelector(`option[value="${lastAction}"]`) ? lastAction : (storedActs.find(a => a.enabled)?.id || "");
 }
 
 async function runProcess() {
@@ -109,22 +112,38 @@ async function runProcess() {
 
   try {
     const results     = [];
+    let usedProvider  = "";
+    let usedModel     = "";
     const loadingText = document.getElementById("result-loading-text");
     for (let i = 0; i < count; i++) {
       if (count > 1 && loadingText) {
         loadingText.textContent = `Getting suggestion ${i + 1} of ${count}…`;
       }
-      const { result } = await callAIWithFallback(
+      const r = await callAIWithFallback(
         settings.configuredProviders,
         settings.geminiModels,
         settings,
         systemPrompt,
         text
       );
-      results.push(result);
+      results.push(r.result);
+      usedProvider = r.usedProvider;
+      usedModel    = r.usedModel;
     }
     showResult(results, null);
     await browser.storage.local.set({ lastAction: actionVal });
+
+    const today = todayDate();
+    const { historyFull = [] } = await browser.storage.local.get("historyFull");
+    const cost = estimateCost(usedModel, text, results);
+    historyFull.push({
+      id: uid(), timestamp: Date.now(), date: today, source: "desktop",
+      action: actionVal, provider: usedProvider, model: usedModel,
+      inputText: text.slice(0, 5000),
+      outputs: results.map(r => r.slice(0, 5000)),
+      ...cost
+    });
+    await browser.storage.local.set({ historyFull: historyFull.slice(-500) });
   } catch (err) {
     showResult(null, err.message);
   } finally {

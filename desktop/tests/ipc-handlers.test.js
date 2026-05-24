@@ -157,15 +157,16 @@ describe("registerAll", () => {
       store:        makeStore(),
       clipboard:    makeClipboard(),
       openSettings: jest.fn(),
+      openHistory:  jest.fn(),
       closePopup:   jest.fn(),
       openURL:      jest.fn()
     });
     expect(registered).toEqual(expect.arrayContaining([
       "store-get", "store-set",
       "read-clipboard", "write-clipboard",
-      "open-settings", "close-popup", "open-url"
+      "open-settings", "open-history", "close-popup", "open-url"
     ]));
-    expect(registered).toHaveLength(7);
+    expect(registered).toHaveLength(8);
   });
 
   test("open-settings handler calls the provided callback", () => {

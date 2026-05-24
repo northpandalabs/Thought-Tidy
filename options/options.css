@@ -633,3 +633,47 @@ input[type="range"] { width: 100%; accent-color: #89b4fa; cursor: pointer; margi
 
 .status-ok  { color: #a6e3a1; font-size: 13px; }
 .status-err { color: #f38ba8; font-size: 13px; }
+
+/* ── Action editor ─────────────────────────────────── */
+.ae-list { display: flex; flex-direction: column; gap: 4px; }
+
+.ae-row {
+  display: grid;
+  grid-template-columns: 28px 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: #181825;
+  border: 1px solid #313244;
+  border-radius: 7px;
+  transition: border-color 0.1s;
+}
+.ae-row:hover { border-color: #45475a; }
+.ae-row.ae-disabled { opacity: 0.45; }
+
+.ae-order { display: flex; flex-direction: column; gap: 1px; }
+.ae-ord-btn {
+  background: transparent; border: none; color: #6c7086;
+  font-size: 9px; padding: 1px 3px; cursor: pointer; line-height: 1;
+}
+.ae-ord-btn:hover:not(:disabled) { color: #cdd6f4; }
+.ae-ord-btn:disabled { opacity: 0.2; cursor: default; }
+
+.ae-check { width: 15px; height: 15px; cursor: pointer; accent-color: #89b4fa; }
+
+.ae-label { font-size: 13px; color: #cdd6f4; }
+
+.ae-name-input {
+  background: #1e1e2e; border: 1px solid #313244; border-radius: 5px;
+  color: #cdd6f4; font-size: 12.5px; font-family: inherit;
+  padding: 3px 8px; width: 100%; outline: none;
+}
+.ae-name-input:focus { border-color: #89b4fa; }
+
+.ae-lock-badge {
+  font-size: 10px; color: #45475a; white-space: nowrap;
+}
+
+/* Context URL row */
+.context-url-row { margin-top: 10px; }
+.context-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; gap: 10px; }

@@ -17,6 +17,7 @@ const COPY_ENTRIES = [
   "lib",
   "popup",
   "options",
+  "history",
   "icons",
 ];
 
@@ -93,6 +94,7 @@ const ALL_TARGETS = {
           "lib/build-flags.js",
           "lib/text.js",
           "lib/prompts.js",
+          "lib/pricing.js",
           "lib/api.js",
           "lib/updater.js",
           "background.js"

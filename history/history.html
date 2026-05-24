@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blur-to-Clear — History</title>
+  <link rel="stylesheet" href="history.css">
+</head>
+<body>
+  <div class="page">
+
+    <div class="page-header">
+      <div class="header-left">
+        <img src="../icons/icon.svg" class="logo" alt="">
+        <h1>Processing History</h1>
+      </div>
+      <div class="header-controls">
+        <input type="text" id="search-input" placeholder="Search actions, text, providers…" autocomplete="off">
+        <button id="clear-all-btn" class="danger-btn">Clear All</button>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="stats-bar" style="display:none">
+      <span id="stats-count"></span>
+      <span class="stats-sep">·</span>
+      <span id="stats-tokens"></span>
+      <span class="stats-sep">·</span>
+      <span id="stats-cost"></span>
+    </div>
+
+    <div id="empty-state" class="empty-state" style="display:none">
+      <div class="empty-icon">📋</div>
+      <p>No history yet.</p>
+      <p class="empty-sub">Every time you run text through Blur-to-Clear it'll appear here with token counts and cost estimates.</p>
+    </div>
+
+    <div id="history-list" class="history-list"></div>
+
+  </div>
+
+  <script src="../browser-polyfill.js"></script>
+  <script src="../lib/text.js"></script>
+  <script src="../lib/pricing.js"></script>
+  <script src="history.js"></script>
+</body>
+</html>

@@ -199,6 +199,13 @@
       </div>
     </section>
 
+    <!-- Edit Actions -->
+    <section id="actions-section">
+      <h2>Action List</h2>
+      <p class="hint" style="margin-bottom:12px">Enable/disable and reorder the actions shown in the dropdown. Built-in actions can't be renamed. Last 4 can be renamed. At least one must stay active.</p>
+      <div id="action-list" class="ae-list"></div>
+    </section>
+
     <!-- Custom Prompts -->
     <section>
       <h2>My Custom Prompts</h2>
@@ -233,7 +240,8 @@
       <h2>
         Today's History
         <span class="section-count" id="history-viewer-count">0</span>
-        <button id="history-clear-btn" class="link-btn" style="margin-left:auto">Clear today</button>
+        <button id="view-full-history-btn" class="link-btn">View Full History →</button>
+        <button id="history-clear-btn" class="link-btn" style="margin-left:8px">Clear today</button>
       </h2>
       <p class="hint" style="margin-bottom:10px">Every AI action you run today. Clears automatically at midnight.</p>
       <div id="history-viewer-list" class="hv-list"></div>
@@ -259,6 +267,7 @@
   <script src="../browser-polyfill.js"></script>
   <script src="../lib/build-flags.js"></script>
   <script src="../lib/text.js"></script>
+  <script src="../lib/prompts.js"></script>
   <script src="../lib/models.js"></script>
   <script src="options.js"></script>
 </body>

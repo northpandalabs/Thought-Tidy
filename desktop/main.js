@@ -85,6 +85,28 @@ function openPopup() {
   popupWin.webContents.send("popup-opened");
 }
 
+// ── History window ─────────────────────────────────────────────────────────────
+
+let historyWin = null;
+
+function openHistory() {
+  if (historyWin && !historyWin.isDestroyed()) { historyWin.focus(); return; }
+  historyWin = new BrowserWindow({
+    width:    860,
+    height:   700,
+    minWidth: 600,
+    title:    "Blur-to-Clear — History",
+    webPreferences: {
+      preload:          path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration:  false
+    }
+  });
+  historyWin.setMenu(null);
+  historyWin.loadFile(path.join(__dirname, "renderer", "history.html"));
+  historyWin.on("closed", () => { historyWin = null; });
+}
+
 // ── Settings window ────────────────────────────────────────────────────────────
 
 function openSettings() {
@@ -113,27 +135,37 @@ function openSettings() {
 // ── Tray ───────────────────────────────────────────────────────────────────────
 
 function buildTrayMenu() {
+  const { DEFAULT_ACTION_SETTINGS, resolveActionSettings } = require("../lib/prompts");
+  const storedActions  = resolveActionSettings(store.get("actionSettings") || []);
+  const enabledActions = storedActions.filter(a => a.enabled);
+  const customPrompts  = store.get("customPrompts") || [];
+
+  const quickItems = enabledActions.map(a => ({
+    label: a.label,
+    click: () => quickAction(a.id, a.label)
+  }));
+  if (customPrompts.length) {
+    quickItems.push({ type: "separator" });
+    customPrompts.slice(0, 8).forEach((cp, i) => {
+      quickItems.push({ label: `⚡ ${cp.name}`, click: () => quickCustomAction(i) });
+    });
+  }
+
   const items = [];
   if (IS_TEST_BUILD) {
     items.push({ label: "── TEST ONLY ──", enabled: false });
     items.push({ type: "separator" });
   }
   items.push(
-    { label: "Process Text…",     click: openPopup },
+    { label: "Process Text…",          click: openPopup },
     { type:  "separator" },
-    {
-      label: "Quick Fix (Clipboard)",
-      submenu: [
-        { label: "✓  Fix Spelling & Grammar",  click: () => quickAction("fix-spelling") },
-        { label: "★  Make Professional",        click: () => quickAction("professional") },
-        { label: "↑  Improve Writing",          click: () => quickAction("improve") },
-        { label: "💬  Sound Human",              click: () => quickAction("sound-human") }
-      ]
-    },
+    { label: "Quick Fix (Clipboard)",  submenu: quickItems },
     { type:  "separator" },
-    { label: "Settings…",         click: openSettings },
+    { label: "📋 See History",         click: openHistory },
     { type:  "separator" },
-    { label: "Quit Blur-to-Clear", role: "quit" }
+    { label: "Settings…",              click: openSettings },
+    { type:  "separator" },
+    { label: "Quit Blur-to-Clear",     role: "quit" }
   );
   return Menu.buildFromTemplate(items);
 }
@@ -147,36 +179,84 @@ async function quickAction(action) {
 
   try {
     const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
-    const { callAI }                               = require("./lib-node/api");
-    const s            = store.store;
-    const provider     = s.provider || "openai";
-    const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action], s);
-    const result       = await callAI(provider, s, systemPrompt, text);
+    const { callAIWithFallback }                   = require("./lib-node/api");
+    const { estimateCost }                         = require("../lib/pricing");
+    const s = store.store;
+    const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
+    const { result, usedProvider, usedModel } = await callAIWithFallback(
+      s.configuredProviders || [], s.geminiModels || [null, null, null], s, systemPrompt, text
+    );
     clipboard.writeText(result);
     store.set("lastAction", action);
 
-    // Append history log entry (metadata only — no text stored)
-    // s is already defined above as store.store
     const today = todayDate();
     const fresh = purgeOldLog(store.get("historyLog") || []);
     fresh.push({
       timestamp: Date.now(), date: today, source: "desktop",
-      action, provider: s.provider || "openai",
-      model: s[`${s.provider || "openai"}Model`] || "",
+      action, provider: usedProvider, model: usedModel,
       inputLen: text.length, outputLen: result.length
     });
     store.set("historyLog", fresh.slice(-200));
-    updateTrayTooltip();
 
-    new Notification({
-      title: "Blur-to-Clear",
-      body:  "Done — result copied to clipboard."
-    }).show();
+    const historyFull = store.get("historyFull") || [];
+    const cost = estimateCost(usedModel, text, [result]);
+    historyFull.push({
+      id: Math.random().toString(36).slice(2, 9),
+      timestamp: Date.now(), date: today, source: "desktop",
+      action, provider: usedProvider, model: usedModel,
+      inputText: text.slice(0, 5000),
+      outputs: [result.slice(0, 5000)],
+      ...cost
+    });
+    store.set("historyFull", historyFull.slice(-500));
+
+    updateTrayTooltip();
+    new Notification({ title: "Blur-to-Clear", body: "Done — result copied to clipboard." }).show();
   } catch (err) {
-    new Notification({
-      title: "Blur-to-Clear — Error",
-      body:  err.message
-    }).show();
+    new Notification({ title: "Blur-to-Clear — Error", body: err.message }).show();
+  }
+}
+
+async function quickCustomAction(idx) {
+  const text = clipboard.readText().trim();
+  if (!text) { new Notification({ title: "Blur-to-Clear", body: "Clipboard is empty." }).show(); return; }
+  try {
+    const { buildPromptWithProfile } = require("./lib-node/prompts");
+    const { callAIWithFallback }     = require("./lib-node/api");
+    const { estimateCost }           = require("../lib/pricing");
+    const s         = store.store;
+    const cp        = (s.customPrompts || [])[idx];
+    if (!cp) return;
+    const systemPrompt = buildPromptWithProfile(cp.prompt, s);
+    const { result, usedProvider, usedModel } = await callAIWithFallback(
+      s.configuredProviders || [], s.geminiModels || [null, null, null], s, systemPrompt, text
+    );
+    clipboard.writeText(result);
+    store.set("lastAction", `custom-${idx}`);
+
+    const today = todayDate();
+    const fresh = purgeOldLog(store.get("historyLog") || []);
+    fresh.push({
+      timestamp: Date.now(), date: today, source: "desktop",
+      action: `custom-${idx}`, provider: usedProvider, model: usedModel,
+      inputLen: text.length, outputLen: result.length
+    });
+    store.set("historyLog", fresh.slice(-200));
+
+    const historyFull = store.get("historyFull") || [];
+    const cost = estimateCost(usedModel, text, [result]);
+    historyFull.push({
+      id: Math.random().toString(36).slice(2, 9),
+      timestamp: Date.now(), date: today, source: "desktop",
+      action: `custom-${idx}`, provider: usedProvider, model: usedModel,
+      inputText: text.slice(0, 5000), outputs: [result.slice(0, 5000)], ...cost
+    });
+    store.set("historyFull", historyFull.slice(-500));
+
+    updateTrayTooltip();
+    new Notification({ title: "Blur-to-Clear", body: "Done — result copied to clipboard." }).show();
+  } catch (err) {
+    new Notification({ title: "Blur-to-Clear — Error", body: err.message }).show();
   }
 }
 
@@ -217,6 +297,7 @@ app.whenReady().then(() => {
     store,
     clipboard,
     openSettings,
+    openHistory,
     closePopup: () => { if (popupWin) popupWin.hide(); },
     openURL:    (url) => shell.openExternal(url)
   });

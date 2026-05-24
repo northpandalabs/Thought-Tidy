@@ -5,7 +5,7 @@ const STORAGE_KEYS = [
   // legacy keys — passed to callAIWithFallback migration shim
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
-  "variants", "customPrompts", "lastAction",
+  "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ];
 
@@ -22,22 +22,27 @@ async function init() {
 
   updateProviderStatus(currentSettings);
 
-  // Populate custom prompts into action select
-  const actionSel = document.getElementById("action-select");
-  const cps = currentSettings.customPrompts || [];
+  // Populate action dropdown from actionSettings (user-ordered/enabled list) + custom prompts
+  const actionSel   = document.getElementById("action-select");
+  const storedActs  = resolveActionSettings(currentSettings.actionSettings || []);
+  const cps         = currentSettings.customPrompts || [];
+
+  storedActs.filter(a => a.enabled).forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a.id; opt.textContent = a.label;
+    actionSel.appendChild(opt);
+  });
   if (cps.length) {
-    const sep = document.createElement("option");
-    sep.disabled = true;
-    sep.textContent = "── Custom ──";
+    const sep = document.createElement("option"); sep.disabled = true; sep.textContent = "── Custom ──";
     actionSel.appendChild(sep);
     cps.slice(0, 8).forEach((cp, i) => {
       const opt = document.createElement("option");
-      opt.value = `custom-${i}`;
-      opt.textContent = `⚡ ${cp.name}`;
+      opt.value = `custom-${i}`; opt.textContent = `⚡ ${cp.name}`;
       actionSel.appendChild(opt);
     });
   }
-  actionSel.value = currentSettings.lastAction || "fix-spelling";
+  const lastAction = currentSettings.lastAction || "";
+  actionSel.value  = actionSel.querySelector(`option[value="${lastAction}"]`) ? lastAction : (storedActs.find(a => a.enabled)?.id || "");
 
   // Setup CTA: shown when no providers configured
   const providers   = currentSettings.configuredProviders;
@@ -125,7 +130,7 @@ async function runProcess() {
 
   showLoading(true);
   try {
-    const { result } = await callAIWithFallback(
+    const { result, usedProvider, usedModel } = await callAIWithFallback(
       currentSettings.configuredProviders,
       currentSettings.geminiModels,
       currentSettings,
@@ -134,6 +139,18 @@ async function runProcess() {
     );
     showResult(result, null);
     await browser.storage.local.set({ lastAction: actionVal });
+
+    const today = todayDate();
+    const { historyFull = [] } = await browser.storage.local.get("historyFull");
+    const cost = estimateCost(usedModel, text, [result]);
+    historyFull.push({
+      id: uid(), timestamp: Date.now(), date: today, source: "extension",
+      action: actionVal, provider: usedProvider, model: usedModel,
+      inputText: text.slice(0, 5000),
+      outputs: [result.slice(0, 5000)],
+      ...cost
+    });
+    await browser.storage.local.set({ historyFull: historyFull.slice(-500) });
   } catch (err) {
     showResult(null, `Error: ${err.message}`);
   }

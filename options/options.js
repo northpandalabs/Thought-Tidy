@@ -4,7 +4,7 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "openaiModel", "openaiModels", "openaiModelsLastFetched",
   "claudeKey", "claudeModel", "claudeModels", "claudeModelsLastFetched",
   "geminiKey", "geminiModel", "geminiModels", "geminiModelsLastFetched",
-  "variants", "customPrompts",
+  "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ];
 
@@ -431,6 +431,59 @@ async function saveWizardProvider() {
   renderProviderCards();
 }
 
+// ── Action Settings Editor ─────────────────────────────────────────────────────
+
+let actionSettings = [];
+
+function renderActionEditor() {
+  const list = document.getElementById("action-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const enabledCount = actionSettings.filter(a => a.enabled).length;
+
+  actionSettings.forEach((action, idx) => {
+    const isLocked    = LOCKED_ACTIONS.has(action.id);
+    const isOnlyOne   = action.enabled && enabledCount === 1;
+    const row = document.createElement("div");
+    row.className = `ae-row${!action.enabled ? " ae-disabled" : ""}`;
+
+    const ordHtml = `
+      <div class="ae-order">
+        <button class="ae-ord-btn ae-up"  ${idx === 0 ? "disabled" : ""}     title="Move up">▲</button>
+        <button class="ae-ord-btn ae-dn"  ${idx === actionSettings.length - 1 ? "disabled" : ""} title="Move down">▼</button>
+      </div>`;
+
+    const checkHtml = `<input type="checkbox" class="ae-check" ${action.enabled ? "checked" : ""}
+      ${isOnlyOne ? "disabled title='At least one action must stay enabled'" : ""}>`;
+
+    const labelHtml = isLocked
+      ? `<span class="ae-label">${escHtml(action.label)}</span><span class="ae-lock-badge">built-in</span>`
+      : `<input class="ae-name-input" value="${escHtml(action.label)}" placeholder="Action name"><span class="ae-lock-badge"></span>`;
+
+    row.innerHTML = ordHtml + checkHtml + labelHtml;
+
+    row.querySelector(".ae-up").addEventListener("click", () => {
+      if (idx > 0) { [actionSettings[idx - 1], actionSettings[idx]] = [actionSettings[idx], actionSettings[idx - 1]]; renderActionEditor(); }
+    });
+    row.querySelector(".ae-dn").addEventListener("click", () => {
+      if (idx < actionSettings.length - 1) { [actionSettings[idx], actionSettings[idx + 1]] = [actionSettings[idx + 1], actionSettings[idx]]; renderActionEditor(); }
+    });
+    row.querySelector(".ae-check").addEventListener("change", (e) => {
+      if (!e.target.checked && actionSettings.filter(a => a.enabled).length <= 1) {
+        e.target.checked = true; return;
+      }
+      actionSettings[idx].enabled = e.target.checked;
+      renderActionEditor();
+    });
+    if (!isLocked) {
+      row.querySelector(".ae-name-input").addEventListener("input", (e) => {
+        actionSettings[idx].label = e.target.value;
+      });
+    }
+    list.appendChild(row);
+  });
+}
+
 // ── Custom Prompts ─────────────────────────────────────────────────────────────
 
 let customPrompts = [];
@@ -558,6 +611,7 @@ async function save() {
   await browser.storage.local.set({
     variants:       getVal("variants"),
     customPrompts,
+    actionSettings,
     profileName:    getVal("profileName"),
     profileRole:    getVal("profileRole"),
     profileStyle:   getVal("profileStyle"),
@@ -648,6 +702,10 @@ async function init() {
     }
   });
 
+  // Action editor
+  actionSettings = resolveActionSettings(s.actionSettings || []);
+  renderActionEditor();
+
   // Custom prompts
   customPrompts = s.customPrompts || [];
   renderCustomPrompts();
@@ -660,6 +718,10 @@ async function init() {
   });
 
   loadHistoryViewer();
+
+  document.getElementById("view-full-history-btn")?.addEventListener("click", () => {
+    browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
+  });
 
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {
