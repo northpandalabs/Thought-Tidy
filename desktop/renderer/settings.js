@@ -588,12 +588,19 @@ function setVal(id, v) { const el = document.getElementById(id); if (el) el.valu
 async function init() {
   wireLinks();
 
-  // TEST ONLY banner + update notice via IPC
+  // TEST ONLY banner + version label + update notice via IPC
   if (typeof btcAPI !== "undefined" && btcAPI.getAppConfig) {
     const config = await btcAPI.getAppConfig();
     if (config.isTestBuild) {
       const banner = document.getElementById("test-only-banner");
       if (banner) banner.style.display = "block";
+    }
+    if (config.appVersion) {
+      const el = document.getElementById("app-version-label");
+      if (el) {
+        const [base, hash] = config.appVersion.split("+");
+        el.textContent = hash ? `v${base} (dev ${hash})` : `v${base}`;
+      }
     }
     if (config.updateAvailable?.version) {
       const notice = document.getElementById("update-notice");

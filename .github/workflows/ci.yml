@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -61,14 +61,14 @@ jobs:
         run: cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
 
       - name: Upload Chrome zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blur-to-clear-chrome
           path: blur-to-clear-chrome.zip
           retention-days: 90
 
       - name: Upload Firefox zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blur-to-clear-firefox
           path: blur-to-clear-firefox.zip
@@ -80,11 +80,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install desktop dependencies
         run: npm ci
@@ -123,11 +123,27 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Stamp build version with commit hash
+        id: ver
+        shell: bash
+        run: |
+          SHA="${GITHUB_SHA:0:8}"
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          node - << 'EOF'
+          const fs = require('fs');
+          const sha = process.env.GITHUB_SHA.slice(0, 8);
+          const p = JSON.parse(fs.readFileSync('desktop/package.json', 'utf8'));
+          const base = p.version.split('+')[0];
+          p.version = base + '+' + sha;
+          fs.writeFileSync('desktop/package.json', JSON.stringify(p, null, 2) + '\n');
+          console.log('Stamped version:', p.version);
+          EOF
 
       - name: Install desktop dependencies
         run: npm ci
@@ -138,9 +154,9 @@ jobs:
         working-directory: desktop
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name }}
+          name: ${{ matrix.artifact-name }}-${{ steps.ver.outputs.sha }}
           path: ${{ matrix.artifact-path }}
           retention-days: 90
           if-no-files-found: error
@@ -152,11 +168,27 @@ jobs:
     needs: [extensions, desktop-tests]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Stamp build version with commit hash
+        id: ver
+        shell: bash
+        run: |
+          SHA="${GITHUB_SHA:0:8}"
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          node - << 'EOF'
+          const fs = require('fs');
+          const sha = process.env.GITHUB_SHA.slice(0, 8);
+          const p = JSON.parse(fs.readFileSync('desktop/package.json', 'utf8'));
+          const base = p.version.split('+')[0];
+          p.version = base + '+' + sha;
+          fs.writeFileSync('desktop/package.json', JSON.stringify(p, null, 2) + '\n');
+          console.log('Stamped version:', p.version);
+          EOF
 
       - name: Install desktop dependencies
         run: npm ci
@@ -169,14 +201,15 @@ jobs:
       - name: Zip TEST ONLY EXE
         shell: pwsh
         run: |
+          $sha = "${{ steps.ver.outputs.sha }}"
           $exe = Get-ChildItem -Path "desktop/dist-build-test" -Filter "*.exe" | Select-Object -First 1
           if (-not $exe) { throw "No .exe found in desktop/dist-build-test" }
-          Compress-Archive -Path $exe.FullName -DestinationPath "blur-to-clear-windows-TEST-ONLY.zip"
-          Write-Host "Zipped: $($exe.Name)"
+          Compress-Archive -Path $exe.FullName -DestinationPath "blur-to-clear-TEST-ONLY-$sha.zip"
+          Write-Host "Zipped: $($exe.Name) → blur-to-clear-TEST-ONLY-$sha.zip"
 
       - name: Upload TEST ONLY zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: blur-to-clear-windows-TEST-ONLY
-          path: blur-to-clear-windows-TEST-ONLY.zip
+          name: blur-to-clear-TEST-ONLY-${{ steps.ver.outputs.sha }}
+          path: blur-to-clear-TEST-ONLY-${{ steps.ver.outputs.sha }}.zip
           retention-days: 90

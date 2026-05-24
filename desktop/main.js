@@ -414,6 +414,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle("get-app-config", () => ({
     isTestBuild:     IS_TEST_BUILD,
+    appVersion:      app.getVersion(),
     updateAvailable: encStore.get("updateAvailable") || null
   }));
 

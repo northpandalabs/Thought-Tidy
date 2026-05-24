@@ -14,12 +14,27 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+
+      - name: Set release version from tag
+        run: |
+          node - << 'EOF'
+          const fs = require('fs');
+          const tag = process.env.GITHUB_REF_NAME.replace(/^v/, '');
+          for (const f of ['package.json', 'desktop/package.json']) {
+            try {
+              const p = JSON.parse(fs.readFileSync(f, 'utf8'));
+              p.version = tag;
+              fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n');
+              console.log('Set', f, 'to', tag);
+            } catch (_) {}
+          }
+          EOF
 
       - run: npm ci
       - run: npm test
@@ -32,7 +47,7 @@ jobs:
         run: cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
 
       - name: Attach to Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             blur-to-clear-chrome.zip
@@ -60,11 +75,22 @@ jobs:
             glob: "desktop/dist-build/*.{AppImage,deb}"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Set release version from tag
+        run: |
+          node - << 'EOF'
+          const fs = require('fs');
+          const tag = process.env.GITHUB_REF_NAME.replace(/^v/, '');
+          const p = JSON.parse(fs.readFileSync('desktop/package.json', 'utf8'));
+          p.version = tag;
+          fs.writeFileSync('desktop/package.json', JSON.stringify(p, null, 2) + '\n');
+          console.log('Set desktop/package.json to', tag);
+          EOF
 
       - name: Install desktop deps
         run: npm ci
@@ -77,6 +103,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach to Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.glob }}

@@ -27,7 +27,8 @@ function fetchLatestRelease() {
 }
 
 function semverGt(a, b) {
-  const parse = v => v.replace(/^v/, '').split('.').map(Number);
+  // Strip build metadata (+hash) and prerelease (-tag) before numeric comparison
+  const parse = v => v.replace(/^v/, '').split('+')[0].split('-')[0].split('.').map(Number);
   const [aM, am, ap = 0] = parse(a);
   const [bM, bm, bp = 0] = parse(b);
   return aM !== bM ? aM > bM : am !== bm ? am > bm : ap > bp;

@@ -1,12 +1,13 @@
 {
   "name": "blur-to-clear",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "ADHD-friendly AI writing assistant — Chrome and Firefox extension",
   "private": true,
   "scripts": {
     "test":           "jest",
     "test:watch":     "jest --watch",
     "test:coverage":  "jest --coverage",
+    "set-version":    "node scripts/set-version.js",
     "setup":          "node scripts/setup.js",
 
     "build":          "node scripts/build.js",
