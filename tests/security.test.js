@@ -123,10 +123,11 @@ describe("browser extension security principles", () => {
   });
 
   test("no hardcoded HTTP API base URLs", () => {
-    // Catch base-URL constants that might be swapped into fetch calls later
+    // Catch base-URL constants that might be swapped into fetch calls later.
+    // 127.0.0.1:47391 is the local extension↔desktop sync server — loopback only, intentional.
     failWithHits(
       "HTTP base URL found",
-      scanLines(src, /(?:const|let|var|=)\s*[^=]*['"]http:\/\/(?!localhost)[^'"]+['"]/g)
+      scanLines(src, /(?:const|let|var|=)\s*[^=]*['"]http:\/\/(?!localhost)(?!127\.)[^'"]+['"]/g)
     );
   });
 
@@ -208,11 +209,14 @@ describe("browser extension security principles", () => {
       expect(perms).not.toContain("tabs");
     });
 
-    test("all host permissions use HTTPS, not HTTP", () => {
-      // MV3 splits host permissions into their own key; check both
+    test("all host permissions use HTTPS, not HTTP (127.0.0.1 local-sync excepted)", () => {
+      // MV3 splits host permissions into their own key; check both.
+      // http://127.0.0.1:47391/* is the loopback sync server — intentional exception.
       const perms      = manifest.permissions      || [];
       const hostPerms  = manifest.host_permissions || [];
-      const httpHosts  = [...perms, ...hostPerms].filter(p => p.startsWith("http://"));
+      const httpHosts  = [...perms, ...hostPerms].filter(
+        p => p.startsWith("http://") && !p.startsWith("http://127.0.0.1")
+      );
       expect(httpHosts).toHaveLength(0);
     });
 

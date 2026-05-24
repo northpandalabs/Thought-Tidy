@@ -12,7 +12,7 @@ const STORAGE_KEYS = [
 let currentSettings = {};
 
 async function init() {
-  currentSettings = await browser.storage.local.get(STORAGE_KEYS);
+  currentSettings = await cryptoGet(STORAGE_KEYS);
 
   const variantsEl  = document.getElementById("variants");
   const variantsVal = document.getElementById("variants-val");

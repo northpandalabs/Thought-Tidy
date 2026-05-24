@@ -1,5 +1,5 @@
 // background.js — Blur-to-Clear event wiring (MV3 service worker)
-importScripts("browser-polyfill.js", "lib/build-flags.js", "lib/text.js", "lib/prompts.js", "lib/pricing.js", "lib/api.js", "lib/updater.js");
+importScripts("browser-polyfill.js", "lib/build-flags.js", "lib/text.js", "lib/prompts.js", "lib/pricing.js", "lib/api.js", "lib/updater.js", "lib/crypto-storage.js");
 
 const DYN_SEP = "dyn-sep";
 const DYN_MAX = 8;
@@ -38,6 +38,9 @@ async function rebuildCustomMenu() {
 }
 
 browser.runtime.onInstalled.addListener(async () => {
+  await migrateExtensionKeys();
+  await syncWithDesktop();
+
   browser.contextMenus.create({ id: "ai-root", title: "Blur-to-Clear", contexts: ["selection"] });
   browser.contextMenus.create({ id: "see-history", title: "📋  See History", contexts: ["all"] });
 
@@ -64,9 +67,11 @@ browser.runtime.onInstalled.addListener(async () => {
   scheduleUpdateAlarm();
 });
 
-browser.runtime.onStartup.addListener(() => {
+browser.runtime.onStartup.addListener(async () => {
   rebuildCustomMenu();
   scheduleUpdateAlarm();
+  await migrateExtensionKeys();
+  await syncWithDesktop();
 });
 browser.storage.onChanged.addListener((changes) => {
   if (changes.customPrompts) rebuildCustomMenu();
@@ -84,7 +89,7 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== "run-from-popup") return;
   (async () => {
     const { tabId, actionVal, selectedText } = msg;
-    const settings = await browser.storage.local.get([
+    const settings = await cryptoGet([
       ...PROVIDER_STORAGE_KEYS,
       "customPrompts",
       "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
@@ -146,7 +151,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   const selectedText = info.selectionText.trim();
   const menuId       = info.menuItemId;
 
-  const settings = await browser.storage.local.get([
+  const settings = await cryptoGet([
     ...PROVIDER_STORAGE_KEYS,
     "variants", "customPrompts",
     "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"

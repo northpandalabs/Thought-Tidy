@@ -27,11 +27,13 @@ let wizardProvider      = null;
 // ── Storage migration ─────────────────────────────────────────────────────────
 
 async function migrateStorage() {
-  const s = await browser.storage.local.get([
-    "configuredProviders",
+  const check = await browser.storage.local.get("configuredProviders");
+  if (check.configuredProviders !== undefined) return; // already migrated
+
+  // Use cryptoGet so any already-encrypted legacy keys are decrypted before reading
+  const s = await cryptoGet([
     "provider", "openaiKey", "openaiModel", "claudeKey", "claudeModel", "geminiKey", "geminiModel"
   ]);
-  if (s.configuredProviders !== undefined) return; // already migrated
 
   const providers = [];
   const active    = s.provider || "openai";
@@ -41,13 +43,14 @@ async function migrateStorage() {
     if (!apiKey) continue;
     providers.push({ id, apiKey, model: s[`${id}Model`] || "" });
   }
-  const gEntry = providers.find(p => p.id === "gemini");
+  const gEntry  = providers.find(p => p.id === "gemini");
   const gModels = gEntry ? [gEntry.model || null, null, null] : [null, null, null];
-  await browser.storage.local.set({ configuredProviders: providers, geminiModels: gModels });
+  await cryptoSet({ configuredProviders: providers, geminiModels: gModels });
 }
 
 async function saveProviders() {
-  await browser.storage.local.set({ configuredProviders, geminiModels });
+  await cryptoSet({ configuredProviders, geminiModels });
+  syncWithDesktop().catch(() => {});
 }
 
 // ── Generic model fetch + select populate ─────────────────────────────────────
@@ -620,7 +623,7 @@ async function save() {
     await browser.storage.local.set({ lastAction: resolvedAction });
   }
 
-  await browser.storage.local.set({
+  await cryptoSet({
     variants:       getVal("variants"),
     customPrompts,
     actionSettings,
@@ -630,6 +633,7 @@ async function save() {
     profileContext: getVal("profileContext"),
     profileEnabled: document.getElementById("profileEnabled")?.checked || false
   });
+  syncWithDesktop().catch(() => {});
   const status = document.getElementById("save-status");
   status.textContent = "Saved!" + resetMsg;
   status.className   = "status-ok";
@@ -641,7 +645,7 @@ async function save() {
 async function init() {
   await migrateStorage();
 
-  const s = await browser.storage.local.get(STORAGE_KEYS);
+  const s = await cryptoGet(STORAGE_KEYS);
 
   configuredProviders = s.configuredProviders || [];
   geminiModels        = s.geminiModels || [null, null, null];

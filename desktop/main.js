@@ -4,7 +4,7 @@
 const {
   app, BrowserWindow, Tray, Menu, globalShortcut,
   ipcMain, clipboard, nativeImage, shell, Notification, screen,
-  dialog
+  safeStorage
 } = require("electron");
 const path  = require("path");
 const Store = require("electron-store");
@@ -12,6 +12,92 @@ const { registerAll } = require("./ipc-handlers");
 const { todayDate, purgeOldLog } = require("../lib/text");
 
 const store = new Store({ name: "blur-to-clear-settings" });
+
+// ── OS keychain encryption (Electron safeStorage) ──────────────────────────────
+// safeStorage uses DPAPI on Windows, Keychain on macOS — keys are never stored
+// in plaintext on disk. The ENC_PREFIX sentinel lets us detect already-encrypted
+// values so migration and getters are safe to call repeatedly.
+
+const ENC_PREFIX = "enc1:";
+const _SENSITIVE = new Set(["openaiKey", "claudeKey", "geminiKey"]);
+const _SYNC_KEYS = new Set([
+  "configuredProviders", "geminiModels",
+  "openaiKey", "claudeKey", "geminiKey",
+  "openaiModel", "claudeModel", "geminiModel",
+  "variants", "customPrompts", "actionSettings",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+]);
+
+function _encVal(v) {
+  if (!safeStorage.isEncryptionAvailable()) return v;
+  try { return ENC_PREFIX + safeStorage.encryptString(String(v)).toString("base64"); }
+  catch { return v; }
+}
+function _decVal(v) {
+  if (typeof v !== "string" || !v.startsWith(ENC_PREFIX)) return v;
+  try { return safeStorage.decryptString(Buffer.from(v.slice(ENC_PREFIX.length), "base64")); }
+  catch { return v; }
+}
+function _encProviders(arr) {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map(p => ({ ...p, apiKey: p.apiKey ? _encVal(p.apiKey) : p.apiKey }));
+}
+function _decProviders(arr) {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map(p => ({ ...p, apiKey: p.apiKey ? _decVal(p.apiKey) : p.apiKey }));
+}
+
+function makeEncryptingStore(raw) {
+  return {
+    get(key) {
+      const v = raw.get(key);
+      if (_SENSITIVE.has(key)) return _decVal(v);
+      if (key === "configuredProviders") return _decProviders(v);
+      return v;
+    },
+    set(key, val) {
+      if (_SENSITIVE.has(key)) {
+        raw.set(key, _encVal(val));
+      } else if (key === "configuredProviders") {
+        raw.set(key, _encProviders(val));
+      } else {
+        raw.set(key, val);
+      }
+      // Auto-stamp syncMeta whenever a sync-relevant key changes so the extension
+      // can compare timestamps without decrypting anything.
+      if (_SYNC_KEYS.has(key)) {
+        raw.set("syncMeta", { lastChanged: new Date().toISOString() });
+      }
+    },
+    get store() {
+      const s = { ...raw.store };
+      for (const k of _SENSITIVE) { if (k in s) s[k] = _decVal(s[k]); }
+      if (s.configuredProviders) s.configuredProviders = _decProviders(s.configuredProviders);
+      return s;
+    }
+  };
+}
+
+function migrateToEncryptedKeys(raw) {
+  if (!safeStorage.isEncryptionAvailable()) return;
+  for (const k of _SENSITIVE) {
+    const v = raw.get(k);
+    if (v && typeof v === "string" && !v.startsWith(ENC_PREFIX)) {
+      try { raw.set(k, _encVal(v)); } catch {}
+    }
+  }
+  const providers = raw.get("configuredProviders");
+  if (Array.isArray(providers)) {
+    const needsMig = providers.some(p => p.apiKey && !p.apiKey.startsWith(ENC_PREFIX));
+    if (needsMig) {
+      try { raw.set("configuredProviders", _encProviders(providers)); } catch {}
+    }
+  }
+}
+
+// encStore is set in whenReady() after safeStorage becomes available.
+// quickAction / quickCustomAction run only after startup, so it is always initialised.
+let encStore = null;
 const isDev = process.argv.includes("--dev");
 
 // True when built with testBuild:true injected via electron-builder-test.yml.
@@ -181,7 +267,7 @@ async function quickAction(action) {
     const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
     const { callAIWithFallback }                   = require("./lib-node/api");
     const { estimateCost }                         = require("../lib/pricing");
-    const s = store.store;
+    const s = encStore.store;
     const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
     const { result, usedProvider, usedModel } = await callAIWithFallback(
       s.configuredProviders || [], s.geminiModels || [null, null, null], s, systemPrompt, text
@@ -224,7 +310,7 @@ async function quickCustomAction(idx) {
     const { buildPromptWithProfile } = require("./lib-node/prompts");
     const { callAIWithFallback }     = require("./lib-node/api");
     const { estimateCost }           = require("../lib/pricing");
-    const s         = store.store;
+    const s         = encStore.store;
     const cp        = (s.customPrompts || [])[idx];
     if (!cp) return;
     const systemPrompt = buildPromptWithProfile(cp.prompt, s);
@@ -345,8 +431,16 @@ function smartOpenPopup() {
 app.whenReady().then(() => {
   app.setName("Blur-to-Clear");
 
+  // Migrate plaintext keys to OS keychain encryption, then wrap the store
+  migrateToEncryptedKeys(store);
+  encStore = makeEncryptingStore(store);
+
+  // Start the local sync server so the browser extension can sync settings
+  const { startSyncServer } = require("./lib-node/sync-server");
+  startSyncServer(encStore);
+
   registerAll(ipcMain, {
-    store,
+    store:       encStore,
     clipboard,
     openSettings,
     openHistory,
@@ -356,13 +450,13 @@ app.whenReady().then(() => {
 
   ipcMain.handle("get-app-config", () => ({
     isTestBuild:     IS_TEST_BUILD,
-    updateAvailable: store.get("updateAvailable") || null
+    updateAvailable: encStore.get("updateAvailable") || null
   }));
 
   ipcMain.handle("quick-action", async (_, { action, text }) => {
     const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
     const { callAI }                               = require("./lib-node/api");
-    const s            = store.store;
+    const s            = encStore.store;
     const provider     = s.provider || "openai";
     const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
     return callAI(provider, s, systemPrompt, text);
@@ -384,8 +478,9 @@ app.whenReady().then(() => {
   const registered = globalShortcut.register(shortcut, smartOpenPopup);
   if (!registered && isDev) console.warn("Global shortcut registration failed.");
 
-  // First run: open settings if no API key saved yet
-  const hasKey = store.get("openaiKey") || store.get("claudeKey") || store.get("geminiKey");
+  // First run: open settings if no provider configured yet
+  const hasKey = encStore.get("openaiKey") || encStore.get("claudeKey") || encStore.get("geminiKey")
+    || (Array.isArray(encStore.get("configuredProviders")) && encStore.get("configuredProviders").length > 0);
   if (!hasKey) {
     openSettings();
   }
