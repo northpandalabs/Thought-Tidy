@@ -16,25 +16,23 @@ const SYNC_KEYS = new Set([
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ]);
 
-// Type validators for each sync key — rejects values with wrong shape from POST /settings
-const SYNC_VALIDATORS = {
-  configuredProviders: v => Array.isArray(v),
-  geminiModels:        v => Array.isArray(v),
-  openaiKey:           v => typeof v === "string",
-  claudeKey:           v => typeof v === "string",
-  geminiKey:           v => typeof v === "string",
-  openaiModel:         v => typeof v === "string",
-  claudeModel:         v => typeof v === "string",
-  geminiModel:         v => typeof v === "string",
-  variants:            v => typeof v === "number" && Number.isFinite(v),
-  customPrompts:       v => Array.isArray(v),
-  actionSettings:      v => Array.isArray(v),
-  profileName:         v => typeof v === "string",
-  profileRole:         v => typeof v === "string",
-  profileStyle:        v => typeof v === "string",
-  profileContext:      v => typeof v === "string",
-  profileEnabled:      v => typeof v === "boolean",
-};
+// Validates that a value has the correct type for its sync key.
+// Using a switch keeps this as one testable function instead of 16 arrow functions.
+function validateSyncValue(key, val) {
+  switch (key) {
+    case "configuredProviders":
+    case "geminiModels":
+    case "customPrompts":
+    case "actionSettings":
+      return Array.isArray(val);
+    case "variants":
+      return typeof val === "number" && Number.isFinite(val);
+    case "profileEnabled":
+      return typeof val === "boolean";
+    default:
+      return typeof val === "string";
+  }
+}
 
 // encStore must implement: .get(key) → decrypted value, .set(key, val) → encrypts sensitive values
 // port defaults to PORT (47391); pass 0 in tests to get an OS-assigned free port
@@ -93,8 +91,7 @@ function startSyncServer(encStore, port = PORT) {
         try {
           const { settings } = JSON.parse(body);
           for (const [k, v] of Object.entries(settings)) {
-            const valid = SYNC_VALIDATORS[k];
-            if (SYNC_KEYS.has(k) && v !== undefined && valid && valid(v)) encStore.set(k, v);
+            if (SYNC_KEYS.has(k) && v !== undefined && validateSyncValue(k, v)) encStore.set(k, v);
           }
           // Stamp the canonical sync time and return it so both sides agree
           const newMeta = { lastChanged: new Date().toISOString() };
