@@ -8,7 +8,7 @@ const { startSyncServer } = require("../lib-node/sync-server");
 
 let TEST_PORT = 0; // set after server starts
 
-function request({ method = "GET", path = "/ping", token = null, body = null } = {}) {
+function request({ method = "GET", path = "/ping", token = null, body = null, origin = null } = {}) {
   return new Promise((resolve, reject) => {
     const opts = {
       hostname: "127.0.0.1",
@@ -17,7 +17,8 @@ function request({ method = "GET", path = "/ping", token = null, body = null } =
       method,
       headers: {}
     };
-    if (token) opts.headers["X-Btc-Token"] = token;
+    if (token)  opts.headers["X-Btc-Token"] = token;
+    if (origin) opts.headers["Origin"]       = origin;
     if (body !== null) {
       const payload = typeof body === "string" ? body : JSON.stringify(body);
       opts.headers["Content-Type"]   = "application/json";
@@ -75,11 +76,17 @@ describe("sync-server", () => {
 
   // ── OPTIONS preflight ─────────────────────────────────────────────────────────
 
-  test("OPTIONS / returns 204 with CORS headers", async () => {
-    const res = await request({ method: "OPTIONS", path: "/" });
+  test("OPTIONS / from extension origin reflects that origin", async () => {
+    const res = await request({ method: "OPTIONS", path: "/", origin: "chrome-extension://testid" });
     expect(res.status).toBe(204);
-    expect(res.headers["access-control-allow-origin"]).toBe("*");
+    expect(res.headers["access-control-allow-origin"]).toBe("chrome-extension://testid");
     expect(res.headers["access-control-allow-methods"]).toContain("POST");
+  });
+
+  test("OPTIONS / from non-extension origin gets 127.0.0.1 (not wildcard)", async () => {
+    const res = await request({ method: "OPTIONS", path: "/", origin: "https://evil.com" });
+    expect(res.status).toBe(204);
+    expect(res.headers["access-control-allow-origin"]).toBe("http://127.0.0.1");
   });
 
   // ── GET /ping ─────────────────────────────────────────────────────────────────
@@ -156,6 +163,52 @@ describe("sync-server", () => {
       body:   "not-valid-json{{"
     });
     expect(res.status).toBe(400);
+  });
+
+  test("POST /settings with missing settings key returns 400", async () => {
+    const res = await request({
+      method: "POST",
+      path:   "/settings",
+      token:  sessionToken,
+      body:   { notSettings: {} }
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test("POST /settings ignores values with wrong type (string instead of number)", async () => {
+    mockStore._data.variants = 2;
+    const res = await request({
+      method: "POST",
+      path:   "/settings",
+      token:  sessionToken,
+      body:   { settings: { variants: "should-be-a-number" } }
+    });
+    expect(res.status).toBe(200);
+    expect(mockStore._data.variants).toBe(2); // unchanged — type mismatch rejected
+  });
+
+  test("POST /settings ignores configuredProviders if not an array", async () => {
+    mockStore._data.configuredProviders = [];
+    const res = await request({
+      method: "POST",
+      path:   "/settings",
+      token:  sessionToken,
+      body:   { settings: { configuredProviders: "not-an-array" } }
+    });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(mockStore._data.configuredProviders)).toBe(true); // unchanged
+  });
+
+  test("POST /settings ignores profileEnabled if not a boolean", async () => {
+    mockStore._data.profileEnabled = false;
+    const res = await request({
+      method: "POST",
+      path:   "/settings",
+      token:  sessionToken,
+      body:   { settings: { profileEnabled: "yes" } }
+    });
+    expect(res.status).toBe(200);
+    expect(mockStore._data.profileEnabled).toBe(false); // unchanged
   });
 
   // ── unknown routes ────────────────────────────────────────────────────────────

@@ -304,7 +304,9 @@ async function quickAction(action) {
     updateTrayTooltip();
     new Notification({ title: "Blur-to-Clear", body: "Done — result copied to clipboard." }).show();
   } catch (err) {
-    new Notification({ title: "Blur-to-Clear — Error", body: err.message }).show();
+    const n = new Notification({ title: "Blur-to-Clear — Error", body: err.message + " — Click to open Settings." });
+    n.on("click", openSettings);
+    n.show();
   }
 }
 
@@ -347,7 +349,9 @@ async function quickCustomAction(idx) {
     updateTrayTooltip();
     new Notification({ title: "Blur-to-Clear", body: "Done — result copied to clipboard." }).show();
   } catch (err) {
-    new Notification({ title: "Blur-to-Clear — Error", body: err.message }).show();
+    const n = new Notification({ title: "Blur-to-Clear — Error", body: err.message + " — Click to open Settings." });
+    n.on("click", openSettings);
+    n.show();
   }
 }
 
@@ -379,6 +383,8 @@ function createTray() {
 // ── Smart shortcut routing ─────────────────────────────────────────────────────
 // Browsers capture Ctrl+Shift+Space for the extension shortcut at the browser level,
 // but Electron's globalShortcut is an OS-level hook that fires regardless of which
+// app is focused. We use this to capture selected text from the active OS window
+// before the popup opens — the target app still has focus at the point we simulate Ctrl+C.
 function smartOpenPopup() {
   // Toggle-close if the popup is already visible and focused
   if (popupWin && !popupWin.isDestroyed() && popupWin.isVisible() && popupWin.isFocused()) {
@@ -417,15 +423,6 @@ app.whenReady().then(() => {
     appVersion:      app.getVersion(),
     updateAvailable: encStore.get("updateAvailable") || null
   }));
-
-  ipcMain.handle("quick-action", async (_, { action, text }) => {
-    const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
-    const { callAI }                               = require("./lib-node/api");
-    const s            = encStore.store;
-    const provider     = s.provider || "openai";
-    const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
-    return callAI(provider, s, systemPrompt, text);
-  });
 
   // macOS: no dock icon — pure tray app
   if (process.platform === "darwin") app.dock.hide();

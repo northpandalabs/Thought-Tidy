@@ -28,12 +28,6 @@ async function init() {
     settings = await browser.storage.local.get(STORAGE_KEYS);
     updateFooter();
     rebuildActionDropdown();
-    const clipText = (await btcAPI.readClipboard()).trim();
-    const textarea = document.getElementById("input-text");
-    if (clipText && !textarea.value.trim()) {
-      textarea.value = clipText;
-      textarea.select();
-    }
   });
 
   // Wire controls
@@ -44,6 +38,15 @@ async function init() {
     () => btcAPI.openSettings());
 
   document.getElementById("run-btn").addEventListener("click", runProcess);
+
+  document.getElementById("paste-btn").addEventListener("click", async () => {
+    const text = (await btcAPI.readClipboard()).trim();
+    if (!text) return;
+    const textarea = document.getElementById("input-text");
+    textarea.value = text;
+    textarea.focus();
+    textarea.select();
+  });
 
   document.getElementById("input-text").addEventListener("keydown", (e) => {
     // Ctrl/Cmd + Enter triggers Run
@@ -162,11 +165,11 @@ async function runProcess() {
 
 // ── UI helpers ─────────────────────────────────────────────────────────────────
 
-function showLoading(on) {
+function showLoading(on, count = 1) {
   document.getElementById("result-area").style.display = "block";
   document.getElementById("result-loading").style.display = on ? "flex" : "none";
   const loadingText = document.getElementById("result-loading-text");
-  if (loadingText) loadingText.textContent = "Processing…";
+  if (loadingText) loadingText.textContent = count > 1 ? `Getting suggestion 1 of ${count}…` : "Processing…";
   document.getElementById("result-slots").innerHTML = "";
 }
 

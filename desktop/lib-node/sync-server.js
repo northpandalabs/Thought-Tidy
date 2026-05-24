@@ -16,11 +16,36 @@ const SYNC_KEYS = new Set([
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
 ]);
 
+// Type validators for each sync key — rejects values with wrong shape from POST /settings
+const SYNC_VALIDATORS = {
+  configuredProviders: v => Array.isArray(v),
+  geminiModels:        v => Array.isArray(v),
+  openaiKey:           v => typeof v === "string",
+  claudeKey:           v => typeof v === "string",
+  geminiKey:           v => typeof v === "string",
+  openaiModel:         v => typeof v === "string",
+  claudeModel:         v => typeof v === "string",
+  geminiModel:         v => typeof v === "string",
+  variants:            v => typeof v === "number" && Number.isFinite(v),
+  customPrompts:       v => Array.isArray(v),
+  actionSettings:      v => Array.isArray(v),
+  profileName:         v => typeof v === "string",
+  profileRole:         v => typeof v === "string",
+  profileStyle:        v => typeof v === "string",
+  profileContext:      v => typeof v === "string",
+  profileEnabled:      v => typeof v === "boolean",
+};
+
 // encStore must implement: .get(key) → decrypted value, .set(key, val) → encrypts sensitive values
 // port defaults to PORT (47391); pass 0 in tests to get an OS-assigned free port
 function startSyncServer(encStore, port = PORT) {
   const server = http.createServer((req, res) => {
-    res.setHeader("Access-Control-Allow-Origin",  "*");
+    // Reflect extension origins; anything else gets 127.0.0.1 (won't match web page origins)
+    const origin = req.headers["origin"] || "";
+    const allowedOrigin = /^(chrome-extension|moz-extension):\/\//.test(origin)
+      ? origin
+      : "http://127.0.0.1";
+    res.setHeader("Access-Control-Allow-Origin",  allowedOrigin);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Btc-Token");
 
@@ -68,7 +93,8 @@ function startSyncServer(encStore, port = PORT) {
         try {
           const { settings } = JSON.parse(body);
           for (const [k, v] of Object.entries(settings)) {
-            if (SYNC_KEYS.has(k) && v !== undefined) encStore.set(k, v);
+            const valid = SYNC_VALIDATORS[k];
+            if (SYNC_KEYS.has(k) && v !== undefined && valid && valid(v)) encStore.set(k, v);
           }
           // Stamp the canonical sync time and return it so both sides agree
           const newMeta = { lastChanged: new Date().toISOString() };

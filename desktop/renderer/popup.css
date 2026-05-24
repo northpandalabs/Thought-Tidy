@@ -101,6 +101,34 @@ label {
   margin-bottom: 4px;
 }
 
+.input-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.input-label-row label { margin-bottom: 0; }
+
+#paste-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 5px;
+  padding: 2px 9px;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: normal;
+}
+#paste-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.input-tip {
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 textarea {
   width: 100%;
   background: var(--bg2);
@@ -232,13 +260,6 @@ select:focus { border-color: var(--accent); }
 }
 .copy-close-btn:hover { opacity: 0.88; }
 
-.replace-btn {
-  background: transparent !important;
-  border-color: #45475a !important;
-  color: var(--sub) !important;
-  margin-right: auto;
-}
-.replace-btn:hover { background: var(--border) !important; color: var(--text) !important; }
 
 /* ── Footer ───────────────────────────────────────────────────────── */
 .footer {

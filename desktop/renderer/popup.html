@@ -18,9 +18,13 @@
 
   <!-- Process panel -->
   <div class="panel">
-    <label for="input-text">Text to process</label>
+    <div class="input-label-row">
+      <label for="input-text">Text to process</label>
+      <button id="paste-btn">Paste clipboard</button>
+    </div>
+    <p class="input-tip">Tip: Ctrl+C text → Ctrl+Shift+Space → Ctrl+V or Paste clipboard</p>
     <textarea id="input-text"
-      placeholder="Paste or type text here — or press Ctrl+Shift+Space while text is in your clipboard to auto-fill…"
+      placeholder="Paste or type text here…"
       rows="7"
       spellcheck="false"></textarea>
 

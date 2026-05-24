@@ -26,6 +26,7 @@ const PROVIDER_INFO = {
 let configuredProviders = [];
 let geminiModels        = [null, null, null];
 let wizardProvider      = null;
+let isDirty             = false;
 
 // ── Wire external links (Electron can't use <a href> target="_blank") ──────────
 
@@ -574,6 +575,7 @@ async function save() {
     profileContext: getVal("profileContext"),
     profileEnabled: document.getElementById("profileEnabled")?.checked || false
   });
+  isDirty = false;
   const status = document.getElementById("save-status");
   status.textContent = "Saved!" + resetMsg;
   status.className   = "status-ok";
@@ -714,6 +716,15 @@ async function init() {
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
+  });
+
+  // Track unsaved changes — any input/change event on the page marks it dirty
+  document.querySelector(".page").addEventListener("input",  () => { isDirty = true; });
+  document.querySelector(".page").addEventListener("change", () => { isDirty = true; });
+
+  // Warn before closing with unsaved changes
+  window.addEventListener("beforeunload", e => {
+    if (isDirty) e.returnValue = "";
   });
 }
 
