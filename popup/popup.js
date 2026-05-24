@@ -74,6 +74,12 @@ async function init() {
     setTimeout(() => (btn.textContent = "Copy"), 1600);
   });
 
+  document.getElementById("replace-input").addEventListener("click", () => {
+    const result = document.getElementById("replace-input").dataset.result || "";
+    document.getElementById("input-text").value = result;
+    document.getElementById("result-area").style.display = "none";
+  });
+
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
   const purged = purgeOldLog(rawLog);
   if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
@@ -174,6 +180,8 @@ function showResult(text, error) {
     textEl.textContent = text;
     textEl.className   = "result-text";
     document.getElementById("result-actions").style.display = "flex";
+    // Replace-in-input: store the current result so the button handler can use it
+    document.getElementById("replace-input").dataset.result = text;
   }
 }
 

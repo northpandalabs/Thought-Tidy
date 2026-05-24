@@ -232,6 +232,14 @@ select:focus { border-color: var(--accent); }
 }
 .copy-close-btn:hover { opacity: 0.88; }
 
+.replace-btn {
+  background: transparent !important;
+  border-color: #45475a !important;
+  color: var(--sub) !important;
+  margin-right: auto;
+}
+.replace-btn:hover { background: var(--border) !important; color: var(--text) !important; }
+
 /* ── Footer ───────────────────────────────────────────────────────── */
 .footer {
   display: flex;

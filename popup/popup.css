@@ -164,6 +164,19 @@ select:focus { border-color: #89b4fa; }
 }
 #copy-result:hover { background: #45475a; }
 
+.replace-btn {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid #45475a;
+  border-radius: 5px;
+  color: #9399b2;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: auto;
+}
+.replace-btn:hover { background: #313244; color: #cdd6f4; }
+
 /* ── Provider / model ────────────────────────────────────────────── */
 .model-name {
   font-size: 12px;
