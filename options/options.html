@@ -108,6 +108,10 @@
               <span class="wp-name">Gemini</span>
               <span class="wp-sub">Google · 2.0 Flash, 1.5 Pro</span>
             </button>
+            <button class="wizard-provider-btn" data-provider="ollama">
+              <span class="wp-name">Ollama <span class="pro-badge-sm">PRO</span></span>
+              <span class="wp-sub">Local AI · llama3, mistral, phi4…</span>
+            </button>
           </div>
           <div class="wizard-footer">
             <button id="wizard-cancel-1" class="revert-btn">Cancel</button>
@@ -117,7 +121,7 @@
         <!-- Step 2: enter key + pick model -->
         <div id="wizard-step-2" style="display:none">
           <h3 id="wizard-provider-title"></h3>
-          <div class="field">
+          <div id="wizard-api-key-row" class="field">
             <label>
               API Key
               <a id="wizard-key-link" class="api-link" href="#" target="_blank" rel="noopener">Get key ↗</a>
@@ -154,6 +158,17 @@
                   <option value="">— test key first —</option>
                 </select>
               </div>
+            </div>
+          </div>
+          <!-- Ollama: base URL input (shown only for Ollama) -->
+          <div id="wizard-ollama-extra" style="display:none">
+            <div class="field">
+              <label for="wizard-ollama-url">Ollama Base URL</label>
+              <input type="text" id="wizard-ollama-url" value="http://localhost:11434"
+                     placeholder="http://localhost:11434" autocomplete="off">
+              <p class="hint" style="margin-top:6px">
+                Default: http://localhost:11434 · Enter a remote IP/port for a network-accessible Ollama instance.
+              </p>
             </div>
           </div>
           <div class="wizard-footer">

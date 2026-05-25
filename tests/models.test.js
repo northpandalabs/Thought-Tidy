@@ -1,6 +1,6 @@
 const {
-  fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels,
-  testOpenAI, testClaude, testGemini,
+  fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels, fetchOllamaModels,
+  testOpenAI, testClaude, testGemini, testOllama,
   isModelCacheStale, formatCacheAge, MODEL_CACHE_STALE_MS
 } = require("../lib/models");
 
@@ -153,6 +153,73 @@ describe("fetchGeminiModels", () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
     const result = await fetchGeminiModels("AIza-test");
     expect(result).toEqual([]);
+  });
+});
+
+// ── fetchOllamaModels ─────────────────────────────────────────────────────────
+
+describe("fetchOllamaModels", () => {
+  const OLLAMA_TAGS = {
+    models: [
+      { name: "llama3.2:latest" },
+      { name: "mistral:7b" },
+      { name: "phi4:latest" }
+    ]
+  };
+
+  test("fetches from /api/tags on the configured base URL", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => OLLAMA_TAGS });
+    await fetchOllamaModels("http://localhost:11434");
+    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:11434/api/tags");
+  });
+
+  test("strips trailing slash from base URL before building endpoint", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => OLLAMA_TAGS });
+    await fetchOllamaModels("http://localhost:11434/");
+    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:11434/api/tags");
+  });
+
+  test("defaults to localhost:11434 when baseUrl is falsy", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => OLLAMA_TAGS });
+    await fetchOllamaModels(null);
+    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:11434/api/tags");
+  });
+
+  test("returns [{id, label}] array from models response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => OLLAMA_TAGS });
+    const result = await fetchOllamaModels("http://localhost:11434");
+    expect(result).toHaveLength(3);
+    expect(result[0]).toEqual({ id: "llama3.2:latest", label: "llama3.2:latest" });
+    expect(result[1]).toEqual({ id: "mistral:7b",      label: "mistral:7b" });
+  });
+
+  test("throws descriptive error when status is not ok", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    await expect(fetchOllamaModels("http://localhost:11434"))
+      .rejects.toThrow("Ollama /api/tags returned 500");
+  });
+
+  test("throws descriptive error when models array is empty", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ models: [] }) });
+    await expect(fetchOllamaModels("http://localhost:11434"))
+      .rejects.toThrow("No models found");
+  });
+
+  test("works with a remote base URL", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => OLLAMA_TAGS });
+    await fetchOllamaModels("http://192.168.1.50:11434");
+    expect(global.fetch.mock.calls[0][0]).toBe("http://192.168.1.50:11434/api/tags");
+  });
+});
+
+// ── testOllama ────────────────────────────────────────────────────────────────
+
+describe("testOllama", () => {
+  test("always returns true without making a network request", async () => {
+    global.fetch = jest.fn();
+    const result = await testOllama();
+    expect(result).toBe(true);
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
 

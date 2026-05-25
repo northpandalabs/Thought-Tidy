@@ -4,7 +4,7 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 
 const SCAN_EXTENSIONS = new Set([".js", ".json", ".html", ".css", ".md"]);
-const EXCLUDE_DIRS    = new Set(["node_modules", "coverage", ".git", "tests"]);
+const EXCLUDE_DIRS    = new Set(["node_modules", "coverage", ".git", "tests", "scripts"]);
 
 // ── file collection ────────────────────────────────────────────────────────────
 
@@ -209,13 +209,16 @@ describe("browser extension security principles", () => {
       expect(perms).not.toContain("tabs");
     });
 
-    test("all host permissions use HTTPS, not HTTP (127.0.0.1 local-sync excepted)", () => {
+    test("all host permissions use HTTPS, not HTTP (loopback exceptions allowed)", () => {
       // MV3 splits host permissions into their own key; check both.
       // http://127.0.0.1:47391/* is the loopback sync server — intentional exception.
+      // http://localhost:11434/* and http://127.0.0.1:11434/* are the Ollama local AI endpoint — intentional exception.
       const perms      = manifest.permissions      || [];
       const hostPerms  = manifest.host_permissions || [];
       const httpHosts  = [...perms, ...hostPerms].filter(
-        p => p.startsWith("http://") && !p.startsWith("http://127.0.0.1")
+        p => p.startsWith("http://") &&
+             !p.startsWith("http://127.0.0.1") &&
+             !p.startsWith("http://localhost:")
       );
       expect(httpHosts).toHaveLength(0);
     });

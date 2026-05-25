@@ -19,7 +19,8 @@ const TESTERS  = { openai: testOpenAI,        claude: testClaude,        gemini:
 const PROVIDER_INFO = {
   openai: { name: "ChatGPT (OpenAI)",   sub: "GPT-4o, o1, o3…",     keyPlaceholder: "sk-…",    keyUrl: "https://platform.openai.com/api-keys" },
   claude: { name: "Claude (Anthropic)", sub: "Haiku, Sonnet, Opus…", keyPlaceholder: "sk-ant-…",keyUrl: "https://console.anthropic.com/settings/keys" },
-  gemini: { name: "Gemini (Google)",    sub: "2.0 Flash, 1.5 Pro…",  keyPlaceholder: "AIza…",   keyUrl: "https://aistudio.google.com/app/apikey" }
+  gemini: { name: "Gemini (Google)",    sub: "2.0 Flash, 1.5 Pro…",  keyPlaceholder: "AIza…",   keyUrl: "https://aistudio.google.com/app/apikey" },
+  ollama: { name: "Ollama (Local AI)",  sub: "llama3, mistral, phi4…", keyPlaceholder: "",       keyUrl: "" }
 };
 
 // ── In-memory provider state ───────────────────────────────────────────────────
@@ -150,6 +151,9 @@ function buildCard(p, idx) {
     modelHtml = slots.length
       ? `<div class="pc-model-list">${slots.map((m, i) => `<span class="pc-model-slot"><span class="pc-slot-label">${["Primary","Secondary","Tertiary"][i]}</span>${m}</span>`).join("")}</div>`
       : `<span class="pc-model-none">No models — click Edit to set</span>`;
+  } else if (p.id === "ollama") {
+    const baseUrlShort = (p.baseUrl || "localhost:11434").replace(/^https?:\/\//, "");
+    modelHtml = `<span class="pc-model">${p.model || "(no model)"} · <small>${baseUrlShort}</small></span>`;
   } else {
     modelHtml = `<span class="pc-model">${p.model || "(default)"}</span>`;
   }
@@ -186,6 +190,27 @@ function buildCard(p, idx) {
       </div>`;
   }
 
+  // Build edit panel fields differently for Ollama (no API key)
+  const editKeyFieldHtml = p.id === "ollama"
+    ? `<div class="field">
+        <label>Ollama Base URL</label>
+        <input type="text" class="pc-ollama-url-input" value="${p.baseUrl || "http://localhost:11434"}"
+               placeholder="http://localhost:11434" autocomplete="off">
+        <p class="hint" style="margin-top:4px">Use http://localhost:11434 for local Ollama, or enter a remote address.</p>
+       </div>`
+    : `<div class="field">
+        <label>
+          API Key
+          <span class="api-link pc-key-link" style="cursor:pointer" data-url="${info.keyUrl}">Get key ↗</span>
+        </label>
+        <div class="key-row">
+          <input type="password" class="pc-key-input" autocomplete="off" placeholder="${info.keyPlaceholder}">
+          <button class="show-btn pc-show-btn">Show</button>
+          <button class="pc-btn pc-test-btn">Test &amp; Load Models</button>
+        </div>
+        <div class="fetch-status pc-key-status"></div>
+       </div>`;
+
   const card = document.createElement("div");
   card.className   = "provider-card";
   card.dataset.idx = idx;
@@ -204,18 +229,7 @@ function buildCard(p, idx) {
       </div>
     </div>
     <div class="pc-edit-panel" style="display:none">
-      <div class="field">
-        <label>
-          API Key
-          <span class="api-link pc-key-link" style="cursor:pointer" data-url="${info.keyUrl}">Get key ↗</span>
-        </label>
-        <div class="key-row">
-          <input type="password" class="pc-key-input" autocomplete="off" placeholder="${info.keyPlaceholder}">
-          <button class="show-btn pc-show-btn">Show</button>
-          <button class="pc-btn pc-test-btn">Test &amp; Load Models</button>
-        </div>
-        <div class="fetch-status pc-key-status"></div>
-      </div>
+      ${editKeyFieldHtml}
       ${modelEditHtml}
       <div class="pc-edit-actions">
         <button class="pc-btn pc-remove-btn">Remove</button>
@@ -226,36 +240,54 @@ function buildCard(p, idx) {
       </div>
     </div>`;
 
-  card.querySelector(".pc-key-input").value = p.apiKey;
+  // Key value + show/hide + test (non-Ollama only)
+  if (p.id !== "ollama") {
+    card.querySelector(".pc-key-input").value = p.apiKey;
+    card.querySelector(".pc-key-link")?.addEventListener("click", () => btcAPI.openURL(info.keyUrl));
+    const showBtn  = card.querySelector(".pc-show-btn");
+    const keyInput = card.querySelector(".pc-key-input");
+    showBtn.addEventListener("click", () => {
+      keyInput.type       = keyInput.type === "password" ? "text" : "password";
+      showBtn.textContent = keyInput.type === "password" ? "Show" : "Hide";
+    });
+    card.querySelector(".pc-test-btn").addEventListener("click", async () => {
+      const key         = keyInput.value.trim();
+      const keyStatusEl = card.querySelector(".pc-key-status");
+      if (!key) { keyStatusEl.textContent = "Enter an API key first."; keyStatusEl.className = "fetch-status status-error"; return; }
+      if (p.id === "gemini") {
+        const sels = [...card.querySelectorAll(".pc-gemini-slot-select")];
+        await fetchAndPopulate("gemini", key, { statusEl: card.querySelector(".pc-model-status"), selectEls: sels, currentValues: geminiModels.map(m => m || "") });
+        keyStatusEl.textContent = ""; keyStatusEl.className = "fetch-status";
+      } else {
+        await fetchAndPopulate(p.id, key, { statusEl: card.querySelector(".pc-model-status"), selectEls: [card.querySelector(".pc-model-select")], currentValues: [p.model || ""] });
+      }
+    });
+  }
 
-  // "Get key" link via btcAPI
-  card.querySelector(".pc-key-link")?.addEventListener("click", () => btcAPI.openURL(info.keyUrl));
-
-  // Show/hide key
-  const showBtn  = card.querySelector(".pc-show-btn");
-  const keyInput = card.querySelector(".pc-key-input");
-  showBtn.addEventListener("click", () => {
-    keyInput.type       = keyInput.type === "password" ? "text" : "password";
-    showBtn.textContent = keyInput.type === "password" ? "Show" : "Hide";
-  });
-
-  // Test & load models
-  card.querySelector(".pc-test-btn").addEventListener("click", async () => {
-    const key     = keyInput.value.trim();
-    const keyStatusEl = card.querySelector(".pc-key-status");
-    if (!key) { keyStatusEl.textContent = "Enter an API key first."; keyStatusEl.className = "fetch-status status-error"; return; }
-    if (p.id === "gemini") {
-      const sels = [...card.querySelectorAll(".pc-gemini-slot-select")];
-      await fetchAndPopulate("gemini", key, { statusEl: card.querySelector(".pc-model-status"), selectEls: sels, currentValues: geminiModels.map(m => m || "") });
-      keyStatusEl.textContent = ""; keyStatusEl.className = "fetch-status";
-    } else {
-      await fetchAndPopulate(p.id, key, { statusEl: card.querySelector(".pc-model-status"), selectEls: [card.querySelector(".pc-model-select")], currentValues: [p.model || ""] });
-    }
-  });
-
-  // Refresh
+  // Refresh button
   card.querySelector(".pc-refresh-btn")?.addEventListener("click", async () => {
-    const key = keyInput.value.trim();
+    if (p.id === "ollama") {
+      const baseUrl  = card.querySelector(".pc-ollama-url-input").value.trim() || "http://localhost:11434";
+      const statusEl = card.querySelector(".pc-model-status");
+      const sel      = card.querySelector(".pc-model-select");
+      const btn      = card.querySelector(".pc-refresh-btn");
+      if (btn) { btn.disabled = true; btn.textContent = "Fetching…"; }
+      statusEl.textContent = "Fetching models…"; statusEl.className = "fetch-status status-loading";
+      try {
+        const models = await fetchOllamaModels(baseUrl);
+        sel.innerHTML = "";
+        models.forEach(m => { const opt = document.createElement("option"); opt.value = m.id; opt.textContent = m.label; sel.appendChild(opt); });
+        sel.value    = (p.model && models.find(m => m.id === p.model)) ? p.model : (models[0]?.id || "");
+        sel.disabled = false;
+        statusEl.textContent = `${models.length} model${models.length === 1 ? "" : "s"} found ✓`; statusEl.className = "fetch-status status-ok";
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`; statusEl.className = "fetch-status status-error";
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "↻ Refresh"; }
+      }
+      return;
+    }
+    const key = card.querySelector(".pc-key-input").value.trim();
     if (p.id === "gemini") {
       await fetchAndPopulate("gemini", key, { statusEl: card.querySelector(".pc-model-status"), refreshBtn: card.querySelector(".pc-refresh-btn"), selectEls: [...card.querySelectorAll(".pc-gemini-slot-select")], currentValues: geminiModels.map(m => m || "") });
     } else {
@@ -280,6 +312,16 @@ function buildCard(p, idx) {
 }
 
 async function saveCardEdit(card, idx, provider) {
+  if (provider.id === "ollama") {
+    const newUrl   = card.querySelector(".pc-ollama-url-input")?.value?.trim() || "http://localhost:11434";
+    const sel      = card.querySelector(".pc-model-select");
+    const newModel = (sel && !sel.disabled && sel.value) ? sel.value : provider.model;
+    configuredProviders[idx] = { ...provider, baseUrl: newUrl, model: newModel };
+    await saveProviders();
+    renderProviderCards();
+    return;
+  }
+
   const newKey = card.querySelector(".pc-key-input").value.trim();
   if (!newKey) {
     const st = card.querySelector(".pc-key-status");
@@ -344,29 +386,61 @@ function clearWizardStep2() {
   const g3 = document.getElementById("wizard-gemini-model-3");
   if (g2) { g2.innerHTML = "<option value=''>— none —</option>"; g2.disabled = true; }
   if (g3) { g3.innerHTML = "<option value=''>— none —</option>"; g3.disabled = true; }
+  const ollamaUrl = document.getElementById("wizard-ollama-url");
+  if (ollamaUrl) ollamaUrl.value = "http://localhost:11434";
 }
 
 function showWizardStep2(providerId) {
   wizardProvider = providerId;
-  const info = PROVIDER_INFO[providerId];
-  document.getElementById("wizard-provider-title").textContent = info.name;
-  document.getElementById("wizard-api-key").placeholder       = info.keyPlaceholder;
-  document.getElementById("wizard-gemini-extra").style.display = providerId === "gemini" ? "block" : "none";
+  const info     = PROVIDER_INFO[providerId];
+  const isOllama = providerId === "ollama";
 
-  // Wire the "Get key" link via btcAPI
+  document.getElementById("wizard-provider-title").textContent = info.name;
+  document.getElementById("wizard-api-key").placeholder        = info.keyPlaceholder;
+  document.getElementById("wizard-api-key-row").style.display  = isOllama ? "none" : "";
+  document.getElementById("wizard-gemini-extra").style.display = providerId === "gemini" ? "block" : "none";
+  document.getElementById("wizard-ollama-extra").style.display = isOllama ? "block" : "none";
+  document.getElementById("wizard-test-btn").textContent       = isOllama ? "Fetch Models" : "Test & Load Models";
+  document.getElementById("wizard-key-status").textContent     = "";
+
+  // Wire the "Get key" link via btcAPI (only relevant for non-Ollama)
   const keyLink = document.getElementById("wizard-key-link");
-  if (keyLink) {
+  if (keyLink && !isOllama) {
     keyLink.onclick = null;
     keyLink.addEventListener("click", () => btcAPI.openURL(info.keyUrl));
   }
 
   document.getElementById("wizard-step-1").style.display = "none";
   document.getElementById("wizard-step-2").style.display = "block";
-  document.getElementById("wizard-api-key").focus();
+  if (isOllama) document.getElementById("wizard-ollama-url").focus();
+  else          document.getElementById("wizard-api-key").focus();
 }
 
 async function wizardTestAndLoad() {
   if (!wizardProvider) return;
+
+  // Ollama: fetch models directly from /api/tags — no API key, no permission check needed on desktop
+  if (wizardProvider === "ollama") {
+    const baseUrl  = document.getElementById("wizard-ollama-url").value.trim() || "http://localhost:11434";
+    const statusEl = document.getElementById("wizard-key-status");
+    const modelSt  = document.getElementById("wizard-model-status");
+    const sel      = document.getElementById("wizard-model-select");
+    modelSt.textContent = "Fetching models…"; modelSt.className = "fetch-status status-loading";
+    statusEl.textContent = ""; statusEl.className = "fetch-status";
+    try {
+      const models = await fetchOllamaModels(baseUrl);
+      sel.innerHTML = "";
+      models.forEach(m => { const opt = document.createElement("option"); opt.value = m.id; opt.textContent = m.label; sel.appendChild(opt); });
+      sel.disabled        = false;
+      modelSt.textContent = `${models.length} model${models.length === 1 ? "" : "s"} found ✓`;
+      modelSt.className   = "fetch-status status-ok";
+      statusEl.textContent = "Ready ✓"; statusEl.className = "fetch-status status-ok";
+    } catch (err) {
+      modelSt.textContent = `Error: ${err.message}`; modelSt.className = "fetch-status status-error";
+    }
+    return;
+  }
+
   const apiKey   = document.getElementById("wizard-api-key").value.trim();
   const statusEl = document.getElementById("wizard-key-status");
   if (!apiKey) { statusEl.textContent = "Enter an API key first."; statusEl.className = "fetch-status status-error"; return; }
@@ -386,8 +460,25 @@ async function wizardTestAndLoad() {
 }
 
 async function saveWizardProvider() {
-  const apiKey   = document.getElementById("wizard-api-key").value.trim();
   const statusEl = document.getElementById("wizard-key-status");
+
+  // Ollama: no API key — save baseUrl + model directly
+  if (wizardProvider === "ollama") {
+    if (configuredProviders.find(p => p.id === "ollama")) {
+      statusEl.textContent = "Ollama is already configured — use Edit on its card to update it.";
+      statusEl.className   = "fetch-status status-error";
+      return;
+    }
+    const baseUrl = document.getElementById("wizard-ollama-url").value.trim() || "http://localhost:11434";
+    const model   = document.getElementById("wizard-model-select").value || "";
+    configuredProviders.push({ id: "ollama", apiKey: "", model, baseUrl });
+    await saveProviders();
+    hideWizard();
+    renderProviderCards();
+    return;
+  }
+
+  const apiKey = document.getElementById("wizard-api-key").value.trim();
   if (!apiKey) { statusEl.textContent = "Enter an API key first."; statusEl.className = "fetch-status status-error"; return; }
 
   if (configuredProviders.find(p => p.id === wizardProvider)) {
@@ -602,6 +693,13 @@ function applyProGates(isPro) {
   const activeView = document.getElementById("pro-active-view");
   if (lockedView) lockedView.style.display = isPro ? "none" : "";
   if (activeView) activeView.style.display = isPro ? ""     : "none";
+
+  // Ollama is Pro-only — disable its wizard button for non-Pro users
+  const ollamaBtn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
+  if (ollamaBtn) {
+    ollamaBtn.disabled = !isPro;
+    ollamaBtn.title    = isPro ? "" : "Pro feature — unlock Pro to use Ollama";
+  }
 }
 
 function initProSection() {

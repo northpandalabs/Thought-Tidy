@@ -33,7 +33,12 @@
     "https://api.anthropic.com/*",
     "https://generativelanguage.googleapis.com/*",
     "https://api.github.com/*",
-    "http://127.0.0.1:47391/*"
+    "http://127.0.0.1:47391/*",
+    "http://localhost:11434/*",
+    "http://127.0.0.1:11434/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*"
   ],
   "options_ui": {
     "page": "options/options.html",

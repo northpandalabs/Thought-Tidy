@@ -1,4 +1,4 @@
-const { callOpenAI, callClaude, callGemini, callAI, callAIWithFallback, isRetriable } = require("../lib/api");
+const { callOpenAI, callClaude, callGemini, callOllama, callAI, callAIWithFallback, isRetriable } = require("../lib/api");
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -171,6 +171,60 @@ describe("callGemini", () => {
   });
 });
 
+// ── callOllama ────────────────────────────────────────────────────────────────
+
+describe("callOllama", () => {
+  test("throws when no model is selected", async () => {
+    await expect(callOllama("http://localhost:11434", "", "Fix:", "hello"))
+      .rejects.toThrow("Ollama: no model selected");
+  });
+
+  test("calls the OpenAI-compatible completions endpoint on the base URL", async () => {
+    global.fetch = mockOk({ choices: [{ message: { content: "Fixed" } }] });
+    await callOllama("http://localhost:11434", "llama3.2:latest", "Fix:", "hello");
+    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:11434/v1/chat/completions");
+  });
+
+  test("strips trailing slash from base URL", async () => {
+    global.fetch = mockOk({ choices: [{ message: { content: "ok" } }] });
+    await callOllama("http://localhost:11434/", "llama3.2:latest", "Fix:", "text");
+    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:11434/v1/chat/completions");
+  });
+
+  test("defaults to localhost:11434 when baseUrl is falsy", async () => {
+    global.fetch = mockOk({ choices: [{ message: { content: "ok" } }] });
+    await callOllama(null, "llama3.2:latest", "Fix:", "text");
+    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:11434/v1/chat/completions");
+  });
+
+  test("sends system prompt and user text as messages", async () => {
+    global.fetch = mockOk({ choices: [{ message: { content: "ok" } }] });
+    await callOllama("http://localhost:11434", "llama3.2:latest", "My instruction:", "My text");
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.messages[0]).toEqual({ role: "system", content: "My instruction:" });
+    expect(body.messages[1]).toEqual({ role: "user",   content: "My text" });
+  });
+
+  test("returns trimmed response text", async () => {
+    global.fetch = mockOk({ choices: [{ message: { content: "  Clean result  " } }] });
+    const result = await callOllama("http://localhost:11434", "llama3.2:latest", "Fix:", "hello");
+    expect(result).toBe("Clean result");
+  });
+
+  test("throws Ollama-prefixed error on non-ok response", async () => {
+    global.fetch = mockFail(500, "model not found");
+    await expect(callOllama("http://localhost:11434", "llama3.2:latest", "Fix:", "hello"))
+      .rejects.toThrow("Ollama: model not found");
+  });
+
+  test("works with a remote base URL", async () => {
+    global.fetch = mockOk({ choices: [{ message: { content: "remote ok" } }] });
+    const result = await callOllama("http://192.168.1.50:11434", "mistral:latest", "Fix:", "hello");
+    expect(result).toBe("remote ok");
+    expect(global.fetch.mock.calls[0][0]).toBe("http://192.168.1.50:11434/v1/chat/completions");
+  });
+});
+
 // ── callAI (router) ───────────────────────────────────────────────────────────
 
 describe("callAI", () => {
@@ -327,5 +381,37 @@ describe("callAIWithFallback", () => {
       "Fix:", "text"
     );
     expect(result).toBe("ok");
+  });
+
+  test("routes to Ollama provider and returns result with usedProvider='ollama'", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "from ollama" } }] }) });
+    const p = [{ id: "ollama", apiKey: "", model: "llama3.2:latest", baseUrl: "http://localhost:11434" }];
+    const { result, usedProvider, usedModel } = await callAIWithFallback(p, [], {}, "Fix:", "text");
+    expect(result).toBe("from ollama");
+    expect(usedProvider).toBe("ollama");
+    expect(usedModel).toBe("llama3.2:latest");
+  });
+
+  test("Ollama falls back to next provider on retriable error", async () => {
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({ ok: false, statusText: "Service Unavailable", json: async () => ({ error: { message: "503 unavailable" } }) })
+      .mockResolvedValueOnce({ ok: true,  json: async () => ({ content: [{ text: "from claude" }] }) });
+    const p = [
+      { id: "ollama", apiKey: "", model: "llama3.2:latest", baseUrl: "http://localhost:11434" },
+      { id: "claude", apiKey: "sk-ant-x", model: "claude-haiku-4-5-20251001" }
+    ];
+    const { result, usedProvider } = await callAIWithFallback(p, [], {}, "Fix:", "text");
+    expect(result).toBe("from claude");
+    expect(usedProvider).toBe("claude");
+  });
+
+  test("Ollama short-circuits on non-retriable error without trying next provider", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, statusText: "Bad Request", json: async () => ({ error: { message: "400 bad request" } }) });
+    const p = [
+      { id: "ollama", apiKey: "", model: "llama3.2:latest", baseUrl: "http://localhost:11434" },
+      { id: "claude", apiKey: "sk-ant-x", model: "claude-haiku-4-5-20251001" }
+    ];
+    await expect(callAIWithFallback(p, [], {}, "Fix:", "text")).rejects.toThrow("Ollama: 400 bad request");
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });
