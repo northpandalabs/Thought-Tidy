@@ -54,7 +54,11 @@
   </div>
 
   <!-- Today's Activity -->
-  <div class="section history-section" id="history-section" style="display:none">
+  <div class="section history-section pro-gate" id="history-section" style="display:none">
+    <div class="pro-overlay" style="border-radius:0">
+      <span class="pro-lock-icon">🔒</span>
+      <p>Pro feature</p>
+    </div>
     <button class="history-toggle" id="history-toggle">Today — <span id="history-count">0</span> fixes</button>
     <div id="history-list" class="history-list" style="display:none"></div>
   </div>
@@ -67,6 +71,7 @@
   <script src="../lib/pricing.js"></script>
   <script src="../lib/api.js"></script>
   <script src="../lib/crypto-storage.js"></script>
+  <script src="../lib/license.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

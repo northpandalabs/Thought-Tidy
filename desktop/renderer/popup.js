@@ -11,8 +11,11 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "licenseEmail", "licenseKey"
 ];
+
+const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
 
 let settings = {};
 
@@ -73,9 +76,16 @@ function rebuildActionDropdown() {
   const storedActs = resolveActionSettings(settings.actionSettings || []);
   const cps        = settings.customPrompts || [];
 
+  const isPro = isProUnlocked(settings);
   storedActs.filter(a => a.enabled).forEach(a => {
     const opt = document.createElement("option");
-    opt.value = a.id; opt.textContent = a.label;
+    opt.value = a.id;
+    if (PRO_ACTION_IDS.has(a.id) && !isPro) {
+      opt.textContent = a.label + " (Pro)";
+      opt.disabled    = true;
+    } else {
+      opt.textContent = a.label;
+    }
     sel.appendChild(opt);
   });
   if (cps.length) {
@@ -87,10 +97,14 @@ function rebuildActionDropdown() {
       sel.appendChild(opt);
     });
   }
-  // Restore previous selection or fall back to first enabled action
+  // Restore previous selection; fall back to fix-spelling if stored action is Pro and user is not Pro
   const lastAction = prevValue || settings.lastAction || "";
-  sel.value = lastAction;
-  if (sel.value !== lastAction) sel.value = storedActs.find(a => a.enabled)?.id || "";
+  if (PRO_ACTION_IDS.has(lastAction) && !isPro) {
+    sel.value = "fix-spelling";
+  } else {
+    sel.value = lastAction;
+    if (sel.value !== lastAction) sel.value = storedActs.find(a => a.enabled)?.id || "";
+  }
 }
 
 function populateCustomActions() {
@@ -115,7 +129,8 @@ async function runProcess() {
   }
   systemPrompt = buildPromptWithProfile(systemPrompt, settings);
 
-  const count = actionVal === "fix-spelling"
+  const isPro  = isProUnlocked(settings);
+  const count  = actionVal === "fix-spelling" || !isPro
     ? 1
     : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
 
@@ -247,7 +262,8 @@ async function loadHistory() {
   const entries = purgeOldLog(raw.historyLog || []); // uses todayDate() internally
 
   const section = document.getElementById("history-section");
-  if (!entries.length) { if (section) section.style.display = "none"; return; }
+  const isPro   = isProUnlocked(settings);
+  if (!entries.length || !isPro) { if (section) section.style.display = "none"; return; }
 
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;

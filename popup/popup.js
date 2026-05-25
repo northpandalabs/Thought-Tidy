@@ -6,8 +6,11 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "licenseEmail", "licenseKey"
 ];
+
+const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
 
 let currentSettings = {};
 
@@ -17,7 +20,18 @@ async function init() {
   const variantsEl  = document.getElementById("variants");
   const variantsVal = document.getElementById("variants-val");
 
-  variantsEl.value    = currentSettings.variants || 1;
+  const isPro = isProUnlocked(currentSettings);
+  if (!isPro) {
+    variantsEl.max   = 1;
+    variantsEl.value = 1;
+    const badge = document.createElement("span");
+    badge.className   = "pro-badge-sm";
+    badge.textContent = "Pro";
+    variantsEl.insertAdjacentElement("afterend", badge);
+  } else {
+    variantsEl.max   = 4;
+    variantsEl.value = currentSettings.variants || 1;
+  }
   variantsVal.textContent = variantsEl.value;
 
   updateProviderStatus(currentSettings);
@@ -27,9 +41,16 @@ async function init() {
   const storedActs  = resolveActionSettings(currentSettings.actionSettings || []);
   const cps         = currentSettings.customPrompts || [];
 
+  const isPro = isProUnlocked(currentSettings);
   storedActs.filter(a => a.enabled).forEach(a => {
     const opt = document.createElement("option");
-    opt.value = a.id; opt.textContent = a.label;
+    opt.value = a.id;
+    if (PRO_ACTION_IDS.has(a.id) && !isPro) {
+      opt.textContent = a.label + " (Pro)";
+      opt.disabled    = true;
+    } else {
+      opt.textContent = a.label;
+    }
     actionSel.appendChild(opt);
   });
   if (cps.length) {
@@ -42,7 +63,11 @@ async function init() {
     });
   }
   const lastAction = currentSettings.lastAction || "";
-  actionSel.value  = actionSel.querySelector(`option[value="${lastAction}"]`) ? lastAction : (storedActs.find(a => a.enabled)?.id || "");
+  if (PRO_ACTION_IDS.has(lastAction) && !isPro) {
+    actionSel.value = "fix-spelling";
+  } else {
+    actionSel.value = actionSel.querySelector(`option[value="${lastAction}"]`) ? lastAction : (storedActs.find(a => a.enabled)?.id || "");
+  }
 
   // Setup CTA: shown when no providers configured
   const providers   = currentSettings.configuredProviders;
@@ -52,6 +77,7 @@ async function init() {
   if (ctaEl) ctaEl.style.display = (hasProvider || hasLegacyKey) ? "none" : "block";
 
   variantsEl.addEventListener("input", () => {
+    if (!isProUnlocked(currentSettings)) { variantsEl.value = 1; return; }
     variantsVal.textContent = variantsEl.value;
     browser.storage.local.set({ variants: variantsEl.value });
   });
@@ -212,7 +238,8 @@ async function loadHistory() {
   const entries = purgeOldLog(historyLog);
 
   const section = document.getElementById("history-section");
-  if (!entries.length) { if (section) section.style.display = "none"; return; }
+  const isPro   = isProUnlocked(currentSettings);
+  if (!entries.length || !isPro) { if (section) section.style.display = "none"; return; }
 
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;

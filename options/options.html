@@ -4,6 +4,49 @@
   <meta charset="utf-8">
   <title>Blur-to-Clear — Settings</title>
   <link rel="stylesheet" href="options.css">
+  <style>
+    /* Pro feature gate */
+    .pro-gate { position: relative; }
+    .pro-gate .pro-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(17, 17, 27, 0.84);
+      border-radius: 8px;
+      z-index: 20;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      padding: 32px;
+      backdrop-filter: blur(2px);
+    }
+    .pro-gate.locked .pro-overlay { display: flex; }
+    .pro-lock-icon { font-size: 28px; }
+    .pro-overlay p { color: #cdd6f4; font-size: 14px; margin: 0; }
+    .pro-overlay a { color: #b4befe; font-weight: 600; cursor: pointer; }
+    .pro-active-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: #1e1e2e;
+      border-radius: 8px; border: 1px solid #313244;
+    }
+    .pro-active-badge {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white; font-size: 12px; font-weight: 700;
+      padding: 4px 10px; border-radius: 100px;
+    }
+    .pro-active-email { color: #cdd6f4; font-size: 13px; }
+    .pro-status-msg { font-size: 13px; min-height: 18px; margin-top: 10px; }
+    .pro-status-msg.error   { color: #f38ba8; }
+    .pro-status-msg.success { color: #a6e3a1; }
+    .pro-badge-sm {
+      font-size: 11px; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      padding: 2px 7px; border-radius: 100px;
+      vertical-align: middle; margin-left: 6px;
+    }
+  </style>
 </head>
 <body>
   <div class="page">
@@ -122,8 +165,39 @@
       </div><!-- /provider-wizard -->
     </section>
 
+    <!-- Unlock Pro -->
+    <section id="pro-section">
+      <h2>⚡ Blur-to-Clear Pro</h2>
+      <div id="pro-locked-view">
+        <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment — no subscription.</p>
+        <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro — $10 one-time ↗</a>
+        <div class="field" style="margin-top:12px">
+          <label for="pro-email-input">Email used at purchase</label>
+          <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="pro-key-input">License Key</label>
+          <input type="text" id="pro-key-input" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off">
+        </div>
+        <button id="activate-pro-btn" class="btn-primary">Activate</button>
+        <div id="pro-status-msg" class="pro-status-msg"></div>
+      </div>
+      <div id="pro-active-view" style="display:none">
+        <div class="pro-active-row">
+          <span class="pro-active-badge">✓ Pro Active</span>
+          <span id="pro-active-email" class="pro-active-email"></span>
+          <button id="deactivate-pro-btn" class="revert-btn" style="margin-left:auto">Deactivate</button>
+        </div>
+      </div>
+    </section>
+
     <!-- Your Profile -->
-    <section id="profile-section">
+    <section id="profile-section" class="pro-gate">
+      <div class="pro-overlay">
+        <span class="pro-lock-icon">🔒</span>
+        <p>Pro feature</p>
+        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+      </div>
       <h2>
         👤 Your Profile
         <label class="toggle-label" style="margin-left:auto">
@@ -200,7 +274,12 @@
     </section>
 
     <!-- Edit Actions -->
-    <section id="actions-section">
+    <section id="actions-section" class="pro-gate">
+      <div class="pro-overlay">
+        <span class="pro-lock-icon">🔒</span>
+        <p>Pro feature</p>
+        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+      </div>
       <h2>
         Action List
         <button id="toggle-action-editor" class="link-btn" style="margin-left:auto">Edit Actions →</button>
@@ -213,7 +292,12 @@
     </section>
 
     <!-- Custom Prompts -->
-    <section>
+    <section id="custom-prompts-section" class="pro-gate">
+      <div class="pro-overlay">
+        <span class="pro-lock-icon">🔒</span>
+        <p>Pro feature</p>
+        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+      </div>
       <h2>My Custom Prompts</h2>
       <p class="hint" style="margin-bottom:14px">Saved prompts appear in the right-click menu under Blur-to-Clear (up to 8). Use these to build your own actions — Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
 
@@ -242,7 +326,12 @@
     </section>
 
     <!-- Today's History -->
-    <section id="history-viewer-section" style="display:none">
+    <section id="history-viewer-section" class="pro-gate" style="display:none">
+      <div class="pro-overlay">
+        <span class="pro-lock-icon">🔒</span>
+        <p>Pro feature</p>
+        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+      </div>
       <h2>
         Today's History
         <span class="section-count" id="history-viewer-count">0</span>
@@ -276,6 +365,7 @@
   <script src="../lib/prompts.js"></script>
   <script src="../lib/models.js"></script>
   <script src="../lib/crypto-storage.js"></script>
+  <script src="../lib/license.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

@@ -5,7 +5,8 @@ const STORAGE_KEYS = [
   "claudeKey", "claudeModel", "claudeModels", "claudeModelsLastFetched",
   "geminiKey", "geminiModel", "geminiModels", "geminiModelsLastFetched",
   "variants", "customPrompts", "actionSettings",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "licenseEmail", "licenseKey"
 ];
 
 // Model fetchers/testers loaded from lib/models.js
@@ -768,9 +769,76 @@ async function init() {
       notice.style.display = "block";
     }
   }
+
+  initProSection();
 }
 
 function getVal(id) { return document.getElementById(id)?.value ?? ""; }
 function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
+
+// ── Pro gate ───────────────────────────────────────────────────────────────────
+
+function applyProGates(isPro) {
+  ["profile-section", "actions-section", "custom-prompts-section", "history-viewer-section"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle("locked", !isPro);
+  });
+  const histEl = document.getElementById("history-viewer-section");
+  if (histEl) histEl.style.display = isPro ? "" : "none";
+
+  const lockedView = document.getElementById("pro-locked-view");
+  const activeView = document.getElementById("pro-active-view");
+  if (lockedView) lockedView.style.display = isPro ? "none" : "";
+  if (activeView) activeView.style.display = isPro ? ""     : "none";
+}
+
+function initProSection() {
+  cryptoGet(["licenseEmail", "licenseKey"]).then(s => {
+    const isPro = isProUnlocked(s);
+    applyProGates(isPro);
+    if (isPro) {
+      const emailEl = document.getElementById("pro-active-email");
+      if (emailEl) emailEl.textContent = s.licenseEmail;
+    }
+  });
+
+  document.getElementById("pro-buy-link")?.addEventListener("click", () => {
+    browser.tabs.create({ url: "https://panadauto.gumroad.com/l/blur-to-clear" });
+  });
+
+  document.querySelectorAll(".pro-unlock-link").forEach(a => {
+    a.addEventListener("click", () => {
+      document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth" });
+    });
+  });
+
+  document.getElementById("activate-pro-btn")?.addEventListener("click", async () => {
+    const email = document.getElementById("pro-email-input")?.value?.trim();
+    const key   = document.getElementById("pro-key-input")?.value?.trim();
+    const msgEl = document.getElementById("pro-status-msg");
+    const btn   = document.getElementById("activate-pro-btn");
+    if (!email || !key) { msgEl.textContent = "Enter your email and license key."; msgEl.className = "pro-status-msg error"; return; }
+    btn.disabled    = true;
+    btn.textContent = "Verifying…";
+    msgEl.textContent = ""; msgEl.className = "pro-status-msg";
+    const result = await verifyWithGumroad(email, key);
+    btn.disabled    = false;
+    btn.textContent = "Activate";
+    if (!result.valid) { msgEl.textContent = result.error; msgEl.className = "pro-status-msg error"; return; }
+    await cryptoSet({ licenseEmail: email, licenseKey: key });
+    syncWithDesktop().catch(() => {});
+    const emailEl = document.getElementById("pro-active-email");
+    if (emailEl) emailEl.textContent = email;
+    applyProGates(true);
+  });
+
+  document.getElementById("deactivate-pro-btn")?.addEventListener("click", async () => {
+    await browser.storage.local.remove(["licenseEmail", "licenseKey"]);
+    document.getElementById("pro-email-input").value = "";
+    document.getElementById("pro-key-input").value   = "";
+    applyProGates(false);
+  });
+}
 
 init();

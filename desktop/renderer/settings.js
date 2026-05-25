@@ -9,7 +9,8 @@ const STORAGE_KEYS = [
   "configuredProviders", "geminiModels",
   "provider", "openaiKey", "openaiModel", "claudeKey", "claudeModel", "geminiKey", "geminiModel",
   "variants", "customPrompts", "actionSettings",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "licenseEmail", "licenseKey"
 ];
 
 const FETCHERS = { openai: fetchOpenAIModels, claude: fetchClaudeModels, gemini: fetchGeminiModels };
@@ -585,6 +586,71 @@ async function save() {
 function getVal(id) { return document.getElementById(id)?.value ?? ""; }
 function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
 
+// ── Pro gate ───────────────────────────────────────────────────────────────────
+
+function applyProGates(isPro) {
+  ["profile-section", "actions-section", "custom-prompts-section", "history-viewer-section"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle("locked", !isPro);
+  });
+  // Show history section only when Pro (it starts display:none)
+  const histEl = document.getElementById("history-viewer-section");
+  if (histEl) histEl.style.display = isPro ? "" : "none";
+
+  const lockedView = document.getElementById("pro-locked-view");
+  const activeView = document.getElementById("pro-active-view");
+  if (lockedView) lockedView.style.display = isPro ? "none" : "";
+  if (activeView) activeView.style.display = isPro ? ""     : "none";
+}
+
+function initProSection() {
+  browser.storage.local.get(["licenseEmail", "licenseKey"]).then(s => {
+    const isPro = isProUnlocked(s);
+    applyProGates(isPro);
+    if (isPro) {
+      const emailEl = document.getElementById("pro-active-email");
+      if (emailEl) emailEl.textContent = s.licenseEmail;
+    }
+  });
+
+  document.getElementById("pro-buy-link")?.addEventListener("click", () => {
+    btcAPI.openURL("https://panadauto.gumroad.com/l/blur-to-clear");
+  });
+
+  document.querySelectorAll(".pro-unlock-link").forEach(a => {
+    a.addEventListener("click", () => {
+      document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth" });
+    });
+  });
+
+  document.getElementById("activate-pro-btn")?.addEventListener("click", async () => {
+    const email  = document.getElementById("pro-email-input")?.value?.trim();
+    const key    = document.getElementById("pro-key-input")?.value?.trim();
+    const msgEl  = document.getElementById("pro-status-msg");
+    const btn    = document.getElementById("activate-pro-btn");
+    if (!email || !key) { msgEl.textContent = "Enter your email and license key."; msgEl.className = "pro-status-msg error"; return; }
+    btn.disabled    = true;
+    btn.textContent = "Verifying…";
+    msgEl.textContent = ""; msgEl.className = "pro-status-msg";
+    const result = await verifyWithGumroad(email, key);
+    btn.disabled    = false;
+    btn.textContent = "Activate";
+    if (!result.valid) { msgEl.textContent = result.error; msgEl.className = "pro-status-msg error"; return; }
+    await browser.storage.local.set({ licenseEmail: email, licenseKey: key });
+    const emailEl = document.getElementById("pro-active-email");
+    if (emailEl) emailEl.textContent = email;
+    applyProGates(true);
+  });
+
+  document.getElementById("deactivate-pro-btn")?.addEventListener("click", async () => {
+    await browser.storage.local.remove(["licenseEmail", "licenseKey"]);
+    document.getElementById("pro-email-input").value = "";
+    document.getElementById("pro-key-input").value   = "";
+    applyProGates(false);
+  });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────────
 
 async function init() {
@@ -594,6 +660,7 @@ async function init() {
   if (typeof btcAPI !== "undefined" && btcAPI.getAppConfig) {
     const config = await btcAPI.getAppConfig();
     if (config.isTestBuild) {
+      window.__BTC_TEST_BUILD__ = true;
       const banner = document.getElementById("test-only-banner");
       if (banner) banner.style.display = "block";
     }
@@ -717,6 +784,8 @@ async function init() {
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
   });
+
+  initProSection();
 
   // Track unsaved changes — any input/change event on the page marks it dirty
   document.querySelector(".page").addEventListener("input",  () => { isDirty = true; });

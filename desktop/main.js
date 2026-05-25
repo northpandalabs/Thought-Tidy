@@ -19,13 +19,14 @@ const store = new Store({ name: "blur-to-clear-settings" });
 // values so migration and getters are safe to call repeatedly.
 
 const ENC_PREFIX = "enc1:";
-const _SENSITIVE = new Set(["openaiKey", "claudeKey", "geminiKey"]);
+const _SENSITIVE = new Set(["openaiKey", "claudeKey", "geminiKey", "licenseEmail", "licenseKey"]);
 const _SYNC_KEYS = new Set([
   "configuredProviders", "geminiModels",
   "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "licenseEmail", "licenseKey"
 ]);
 
 function _encVal(v) {
