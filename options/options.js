@@ -135,105 +135,187 @@ function buildCard(p, idx) {
   const info = PROVIDER_INFO[p.id] || { name: p.id, sub: "", keyPlaceholder: "", keyUrl: "#" };
   const isLast = idx === configuredProviders.length - 1;
 
-  let modelHtml = "";
+  const card = document.createElement("div");
+  card.className  = "provider-card";
+  card.dataset.idx = idx;
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+  const pcHeader = document.createElement("div");
+  pcHeader.className = "pc-header";
+
+  const pcInfo = document.createElement("div");
+  pcInfo.className = "pc-info";
+
+  const pcPriority = document.createElement("span");
+  pcPriority.className = "pc-priority";
+  pcPriority.textContent = idx + 1;
+
+  const pcNames = document.createElement("div");
+  pcNames.className = "pc-names";
+  const pcNameSp = document.createElement("span");
+  pcNameSp.className = "pc-name";
+  pcNameSp.textContent = info.name;
+  pcNames.appendChild(pcNameSp);
+
+  // Model display (read-only summary on card face)
   if (p.id === "gemini") {
     const slots = geminiModels.filter(Boolean);
     if (slots.length) {
       const labels = ["Primary", "Secondary", "Tertiary"];
-      modelHtml = `<div class="pc-model-list">${slots.map((m, i) =>
-        `<span class="pc-model-slot"><span class="pc-slot-label">${labels[i]}</span>${m}</span>`
-      ).join("")}</div>`;
+      const modelList = document.createElement("div");
+      modelList.className = "pc-model-list";
+      slots.forEach((m, i) => {
+        const slotSp = document.createElement("span");
+        slotSp.className = "pc-model-slot";
+        const lblSp = document.createElement("span");
+        lblSp.className = "pc-slot-label";
+        lblSp.textContent = labels[i];
+        slotSp.appendChild(lblSp);
+        slotSp.appendChild(document.createTextNode(m));
+        modelList.appendChild(slotSp);
+      });
+      pcNames.appendChild(modelList);
     } else {
-      modelHtml = `<span class="pc-model-none">No models — click Edit to set</span>`;
+      const none = document.createElement("span");
+      none.className = "pc-model-none";
+      none.textContent = "No models — click Edit to set";
+      pcNames.appendChild(none);
     }
   } else if (p.id === "ollama") {
     const baseUrlShort = (p.baseUrl || "localhost:11434").replace(/^https?:\/\//, "");
-    modelHtml = `<span class="pc-model">${p.model || "(no model)"} · <small>${baseUrlShort}</small></span>`;
+    const modelSp = document.createElement("span");
+    modelSp.className = "pc-model";
+    modelSp.textContent = (p.model || "(no model)") + " · ";
+    const small = document.createElement("small");
+    small.textContent = baseUrlShort;
+    modelSp.appendChild(small);
+    pcNames.appendChild(modelSp);
   } else {
-    modelHtml = `<span class="pc-model">${p.model || "(default)"}</span>`;
+    const modelSp = document.createElement("span");
+    modelSp.className = "pc-model";
+    modelSp.textContent = p.model || "(default)";
+    pcNames.appendChild(modelSp);
   }
 
-  const upBtn   = idx > 0    ? `<button class="pc-btn pc-up" data-idx="${idx}" title="Move up">↑</button>` : "";
-  const downBtn = !isLast    ? `<button class="pc-btn pc-down" data-idx="${idx}" title="Move down">↓</button>` : "";
+  pcInfo.append(pcPriority, pcNames);
 
-  let modelEditHtml = "";
+  const pcControls = document.createElement("div");
+  pcControls.className = "pc-controls";
+  if (idx > 0) {
+    const up = document.createElement("button");
+    up.className = "pc-btn pc-up"; up.dataset.idx = idx; up.title = "Move up"; up.textContent = "↑";
+    pcControls.appendChild(up);
+  }
+  if (!isLast) {
+    const dn = document.createElement("button");
+    dn.className = "pc-btn pc-down"; dn.dataset.idx = idx; dn.title = "Move down"; dn.textContent = "↓";
+    pcControls.appendChild(dn);
+  }
+  const pcEditBtn = document.createElement("button");
+  pcEditBtn.className = "pc-btn pc-edit-btn"; pcEditBtn.dataset.idx = idx; pcEditBtn.textContent = "Edit";
+  pcControls.appendChild(pcEditBtn);
+
+  pcHeader.append(pcInfo, pcControls);
+  card.appendChild(pcHeader);
+
+  // ── Edit panel ───────────────────────────────────────────────────────────────
+  const editPanel = document.createElement("div");
+  editPanel.className = "pc-edit-panel";
+  editPanel.style.display = "none";
+
+  // Key / URL field
+  if (p.id === "ollama") {
+    const field = document.createElement("div"); field.className = "field";
+    const lbl = document.createElement("label"); lbl.textContent = "Ollama Base URL";
+    const urlInput = document.createElement("input");
+    urlInput.type = "text"; urlInput.className = "pc-ollama-url-input";
+    urlInput.value = p.baseUrl || "http://localhost:11434";
+    urlInput.placeholder = "http://localhost:11434"; urlInput.autocomplete = "off";
+    const hint = document.createElement("p"); hint.className = "hint"; hint.style.marginTop = "4px";
+    hint.textContent = "Use http://localhost:11434 for local Ollama, or enter a remote address.";
+    field.append(lbl, urlInput, hint);
+    editPanel.appendChild(field);
+  } else {
+    const field = document.createElement("div"); field.className = "field";
+    const lbl = document.createElement("label"); lbl.textContent = "API Key ";
+    const link = document.createElement("a");
+    link.className = "api-link pc-key-link"; link.href = info.keyUrl;
+    link.target = "_blank"; link.rel = "noopener"; link.textContent = "Get key ↗";
+    lbl.appendChild(link);
+    const keyRow = document.createElement("div"); keyRow.className = "key-row";
+    const keyInput = document.createElement("input");
+    keyInput.type = "password"; keyInput.className = "pc-key-input";
+    keyInput.autocomplete = "off"; keyInput.placeholder = info.keyPlaceholder;
+    const showBtn = document.createElement("button");
+    showBtn.className = "show-btn pc-show-btn"; showBtn.textContent = "Show";
+    const testBtn = document.createElement("button");
+    testBtn.className = "pc-btn pc-test-btn"; testBtn.textContent = "Test & Load Models";
+    keyRow.append(keyInput, showBtn, testBtn);
+    const keyStatus = document.createElement("div"); keyStatus.className = "fetch-status pc-key-status";
+    field.append(lbl, keyRow, keyStatus);
+    editPanel.appendChild(field);
+  }
+
+  // Model edit field
   if (p.id === "gemini") {
-    modelEditHtml = `
-      <div class="field" style="margin-bottom:6px">
-        <label>Model Priority <span class="fetch-status pc-model-status"></span></label>
-        <button class="pc-btn pc-refresh-btn" style="margin-top:6px">↻ Refresh Model Lists</button>
-      </div>
-      ${["Primary", "Secondary", "Tertiary"].map((label, i) => `
-        <div class="field">
-          <label>${label} Model${i > 0 ? ' <span class="hint">(optional)</span>' : ''}</label>
-          <div class="model-select-row">
-            <select class="pc-gemini-slot-select" data-slot="${i}" disabled>
-              <option value="">${geminiModels[i] || "— click Refresh —"}</option>
-            </select>
-          </div>
-        </div>`).join("")}`;
+    const priorityField = document.createElement("div");
+    priorityField.className = "field"; priorityField.style.marginBottom = "6px";
+    const priorityLbl = document.createElement("label"); priorityLbl.textContent = "Model Priority ";
+    const modelStatus = document.createElement("span"); modelStatus.className = "fetch-status pc-model-status";
+    priorityLbl.appendChild(modelStatus);
+    const refreshBtn = document.createElement("button");
+    refreshBtn.className = "pc-btn pc-refresh-btn"; refreshBtn.style.marginTop = "6px";
+    refreshBtn.textContent = "↻ Refresh Model Lists";
+    priorityField.append(priorityLbl, refreshBtn);
+    editPanel.appendChild(priorityField);
+    ["Primary", "Secondary", "Tertiary"].forEach((label, i) => {
+      const slotField = document.createElement("div"); slotField.className = "field";
+      const slotLbl = document.createElement("label"); slotLbl.textContent = label + " Model";
+      if (i > 0) {
+        const optHint = document.createElement("span"); optHint.className = "hint"; optHint.textContent = " (optional)";
+        slotLbl.appendChild(optHint);
+      }
+      const selectRow = document.createElement("div"); selectRow.className = "model-select-row";
+      const sel = document.createElement("select");
+      sel.className = "pc-gemini-slot-select"; sel.dataset.slot = i; sel.disabled = true;
+      const opt = document.createElement("option"); opt.value = "";
+      opt.textContent = geminiModels[i] || "— click Refresh —";
+      sel.appendChild(opt);
+      selectRow.appendChild(sel);
+      slotField.append(slotLbl, selectRow);
+      editPanel.appendChild(slotField);
+    });
   } else {
-    modelEditHtml = `
-      <div class="field">
-        <label>Model <span class="fetch-status pc-model-status"></span></label>
-        <div class="model-select-row">
-          <select class="pc-model-select" disabled>
-            <option value="">${p.model || "— click Refresh to load models —"}</option>
-          </select>
-          <button class="pc-btn pc-refresh-btn">↻ Refresh</button>
-        </div>
-      </div>`;
+    const field = document.createElement("div"); field.className = "field";
+    const lbl = document.createElement("label"); lbl.textContent = "Model ";
+    const modelStatus = document.createElement("span"); modelStatus.className = "fetch-status pc-model-status";
+    lbl.appendChild(modelStatus);
+    const selectRow = document.createElement("div"); selectRow.className = "model-select-row";
+    const sel = document.createElement("select"); sel.className = "pc-model-select"; sel.disabled = true;
+    const opt = document.createElement("option"); opt.value = "";
+    opt.textContent = p.model || "— click Refresh to load models —";
+    sel.appendChild(opt);
+    const refreshBtn = document.createElement("button");
+    refreshBtn.className = "pc-btn pc-refresh-btn"; refreshBtn.textContent = "↻ Refresh";
+    selectRow.append(sel, refreshBtn);
+    field.append(lbl, selectRow);
+    editPanel.appendChild(field);
   }
 
-  // Build edit panel fields differently for Ollama (no API key)
-  const editKeyFieldHtml = p.id === "ollama"
-    ? `<div class="field">
-        <label>Ollama Base URL</label>
-        <input type="text" class="pc-ollama-url-input" value="${p.baseUrl || "http://localhost:11434"}"
-               placeholder="http://localhost:11434" autocomplete="off">
-        <p class="hint" style="margin-top:4px">Use http://localhost:11434 for local Ollama, or enter a remote address.</p>
-       </div>`
-    : `<div class="field">
-        <label>
-          API Key
-          <a class="api-link pc-key-link" href="${info.keyUrl}" target="_blank" rel="noopener">Get key ↗</a>
-        </label>
-        <div class="key-row">
-          <input type="password" class="pc-key-input" autocomplete="off" placeholder="${info.keyPlaceholder}">
-          <button class="show-btn pc-show-btn">Show</button>
-          <button class="pc-btn pc-test-btn">Test &amp; Load Models</button>
-        </div>
-        <div class="fetch-status pc-key-status"></div>
-       </div>`;
+  // Edit actions row
+  const editActions = document.createElement("div"); editActions.className = "pc-edit-actions";
+  const removeBtn = document.createElement("button");
+  removeBtn.className = "pc-btn pc-remove-btn"; removeBtn.textContent = "Remove";
+  const btnGroup = document.createElement("div"); btnGroup.style.cssText = "display:flex;gap:8px";
+  const cancelEditBtn = document.createElement("button");
+  cancelEditBtn.className = "pc-btn pc-cancel-edit-btn"; cancelEditBtn.textContent = "Cancel";
+  const saveEditBtn = document.createElement("button");
+  saveEditBtn.className = "pc-btn btn-primary pc-save-edit-btn"; saveEditBtn.textContent = "Save";
+  btnGroup.append(cancelEditBtn, saveEditBtn);
+  editActions.append(removeBtn, btnGroup);
+  editPanel.appendChild(editActions);
 
-  const card = document.createElement("div");
-  card.className  = "provider-card";
-  card.dataset.idx = idx;
-  card.innerHTML = `
-    <div class="pc-header">
-      <div class="pc-info">
-        <span class="pc-priority">${idx + 1}</span>
-        <div class="pc-names">
-          <span class="pc-name">${info.name}</span>
-          ${modelHtml}
-        </div>
-      </div>
-      <div class="pc-controls">
-        ${upBtn}${downBtn}
-        <button class="pc-btn pc-edit-btn" data-idx="${idx}">Edit</button>
-      </div>
-    </div>
-    <div class="pc-edit-panel" style="display:none">
-      ${editKeyFieldHtml}
-      ${modelEditHtml}
-      <div class="pc-edit-actions">
-        <button class="pc-btn pc-remove-btn">Remove</button>
-        <div style="display:flex;gap:8px">
-          <button class="pc-btn pc-cancel-edit-btn">Cancel</button>
-          <button class="pc-btn btn-primary pc-save-edit-btn">Save</button>
-        </div>
-      </div>
-    </div>`;
+  card.appendChild(editPanel);
 
   // Key value + show/hide + test (non-Ollama only)
   if (p.id !== "ollama") {
@@ -547,20 +629,29 @@ function renderActionEditor() {
     const row = document.createElement("div");
     row.className = `ae-row${!action.enabled ? " ae-disabled" : ""}`;
 
-    const ordHtml = `
-      <div class="ae-order">
-        <button class="ae-ord-btn ae-up"  ${idx === 0 ? "disabled" : ""}     title="Move up">▲</button>
-        <button class="ae-ord-btn ae-dn"  ${idx === actionSettings.length - 1 ? "disabled" : ""} title="Move down">▼</button>
-      </div>`;
+    const ordDiv = document.createElement("div"); ordDiv.className = "ae-order";
+    const upOrd = document.createElement("button");
+    upOrd.className = "ae-ord-btn ae-up"; upOrd.title = "Move up"; upOrd.textContent = "▲";
+    if (idx === 0) upOrd.disabled = true;
+    const dnOrd = document.createElement("button");
+    dnOrd.className = "ae-ord-btn ae-dn"; dnOrd.title = "Move down"; dnOrd.textContent = "▼";
+    if (idx === actionSettings.length - 1) dnOrd.disabled = true;
+    ordDiv.append(upOrd, dnOrd);
 
-    const checkHtml = `<input type="checkbox" class="ae-check" ${action.enabled ? "checked" : ""}
-      ${isOnlyOne ? "disabled title='At least one action must stay enabled'" : ""}>`;
+    const check = document.createElement("input");
+    check.type = "checkbox"; check.className = "ae-check"; check.checked = !!action.enabled;
+    if (isOnlyOne) { check.disabled = true; check.title = "At least one action must stay enabled"; }
 
-    const labelHtml = isLocked
-      ? `<span class="ae-label">${escHtml(action.label)}</span><span class="ae-lock-badge">built-in</span>`
-      : `<input class="ae-name-input" value="${escHtml(action.label)}" placeholder="Action name"><span class="ae-lock-badge"></span>`;
-
-    row.innerHTML = ordHtml + checkHtml + labelHtml;
+    const badge = document.createElement("span"); badge.className = "ae-lock-badge";
+    if (isLocked) {
+      const lbl = document.createElement("span"); lbl.className = "ae-label"; lbl.textContent = action.label;
+      badge.textContent = "built-in";
+      row.append(ordDiv, check, lbl, badge);
+    } else {
+      const inp = document.createElement("input");
+      inp.className = "ae-name-input"; inp.value = action.label; inp.placeholder = "Action name";
+      row.append(ordDiv, check, inp, badge);
+    }
 
     row.querySelector(".ae-up").addEventListener("click", () => {
       if (idx > 0) { [actionSettings[idx - 1], actionSettings[idx]] = [actionSettings[idx], actionSettings[idx - 1]]; renderActionEditor(); }
@@ -688,11 +779,15 @@ async function loadHistoryViewer() {
     const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
     const row  = document.createElement("div");
     row.className = "hv-entry";
-    row.innerHTML = `
-      <span class="hv-time">${time}</span>
-      <span class="hv-action">${e.action.replace(/-/g, " ")}</span>
-      <span class="hv-meta">${[e.provider, e.model].filter(Boolean).join(" · ")}</span>
-      <span class="hv-words">${e.inputLen || 0} → ${e.outputLen || 0} chars</span>`;
+    [
+      ["hv-time",   time],
+      ["hv-action", e.action.replace(/-/g, " ")],
+      ["hv-meta",   [e.provider, e.model].filter(Boolean).join(" · ")],
+      ["hv-words",  `${e.inputLen || 0} → ${e.outputLen || 0} chars`],
+    ].forEach(([cls, txt]) => {
+      const sp = document.createElement("span"); sp.className = cls; sp.textContent = txt;
+      row.appendChild(sp);
+    });
     list.appendChild(row);
   });
 

@@ -48,17 +48,19 @@ function buildEntry(e) {
   const costTxt = e.costUSD != null ? `~${formatCost(e.costUSD)}` : "—";
   const inputPreview = (e.inputText || "").replace(/\n+/g, " ").slice(0, 120);
 
-  el.innerHTML = `
-    <div class="he-summary">
-      <span class="he-time">${time}</span>
-      <span class="he-action">${actionLabel}</span>
-      <span class="he-meta">${meta}</span>
-      <span class="he-cost${e.costUSD == null ? " unknown" : ""}">${costTxt}</span>
-    </div>
-    <div class="he-preview">${inputPreview}${inputPreview.length < (e.inputText || "").length ? "…" : ""}</div>`;
-
-  const summary = el.querySelector(".he-summary");
-  const preview = el.querySelector(".he-preview");
+  const summary = document.createElement("div"); summary.className = "he-summary";
+  [
+    ["he-time",   time],
+    ["he-action", actionLabel],
+    ["he-meta",   meta],
+    [`he-cost${e.costUSD == null ? " unknown" : ""}`, costTxt],
+  ].forEach(([cls, txt]) => {
+    const sp = document.createElement("span"); sp.className = cls; sp.textContent = txt;
+    summary.appendChild(sp);
+  });
+  const preview = document.createElement("div"); preview.className = "he-preview";
+  preview.textContent = inputPreview + (inputPreview.length < (e.inputText || "").length ? "…" : "");
+  el.append(summary, preview);
 
   function expand() {
     el.classList.add("expanded");
@@ -88,10 +90,16 @@ function buildEntry(e) {
     // Token / cost row
     const tokenRow = document.createElement("div");
     tokenRow.className = "he-token-row";
-    tokenRow.innerHTML = `
-      In: <span>${(e.inputTokens || 0).toLocaleString()} tok</span>
-      Out: <span>${(e.outputTokens || 0).toLocaleString()} tok</span>
-      Est. cost: <span>${e.costUSD != null ? formatCost(e.costUSD) : "unknown model"}</span>`;
+    [
+      ["In:",       `${(e.inputTokens  || 0).toLocaleString()} tok`],
+      ["Out:",      `${(e.outputTokens || 0).toLocaleString()} tok`],
+      ["Est. cost:", e.costUSD != null ? formatCost(e.costUSD) : "unknown model"],
+    ].forEach(([lbl, val]) => {
+      tokenRow.appendChild(document.createTextNode(lbl + " "));
+      const sp = document.createElement("span"); sp.textContent = val;
+      tokenRow.appendChild(sp);
+      tokenRow.appendChild(document.createTextNode("  "));
+    });
     body.appendChild(tokenRow);
 
     // Actions row
