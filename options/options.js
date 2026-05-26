@@ -944,4 +944,7 @@ function initProSection() {
   });
 }
 
+const _yr = new Date().getFullYear();
+document.getElementById("copyright-year").textContent = _yr > 2026 ? `2026–${_yr}` : "2026";
+
 init();

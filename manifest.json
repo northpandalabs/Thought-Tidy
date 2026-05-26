@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Blur-to-Clear",
-  "version": "1.4.0",
-  "description": "ADHD-friendly AI writing assistant. Highlight any text, right-click, and instantly fix spelling, grammar, tone, or make it fully professional — using Claude, OpenAI, or Gemini. One click, zero friction.",
+  "version": "1.4.2",
+  "description": "ADHD-friendly AI writing assistant. Fix spelling, rewrite, or transform text in seconds — using OpenAI, Claude, Gemini, or local Ollama. One hotkey, zero friction.",
   "icons": {
     "128": "icons/icon.svg"
   },

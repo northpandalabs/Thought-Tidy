@@ -34,11 +34,13 @@ let isDirty             = false;
 
 function wireLinks() {
   const links = {
-    "link-github":      "https://github.com/Bheck890/Blur-to-Clear",
-    "link-issues":      "https://github.com/Bheck890/Blur-to-Clear/issues",
-    "link-license":     "https://opensource.org/licenses/MIT",
-    "link-author":      "https://github.com/Bheck890",
-    "link-footer-github": "https://github.com/Bheck890/Blur-to-Clear"
+    "link-github":         "https://github.com/Bheck890/Blur-to-Clear",
+    "link-issues":         "https://github.com/Bheck890/Blur-to-Clear/issues",
+    "link-license":        "https://github.com/Bheck890/Blur-to-Clear/blob/main/LICENSE",
+    "link-author":         "https://github.com/Bheck890",
+    "link-footer-github":  "https://github.com/Bheck890/Blur-to-Clear",
+    "link-footer-privacy": "https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/PRIVACY.md",
+    "link-footer-eula":    "https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/EULA.md"
   };
   for (const [id, url] of Object.entries(links)) {
     const el = document.getElementById(id);
@@ -753,6 +755,8 @@ function initProSection() {
 
 async function init() {
   wireLinks();
+  const _yr = new Date().getFullYear();
+  document.getElementById("copyright-year").textContent = _yr > 2026 ? `2026–${_yr}` : "2026";
 
   // TEST ONLY banner + version label + update notice via IPC
   if (typeof btcAPI !== "undefined" && btcAPI.getAppConfig) {
