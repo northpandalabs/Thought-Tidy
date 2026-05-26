@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Blur-to-Clear</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #fff;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    header { margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 24px; }
+    header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 8px; }
+    .meta { font-size: 0.875rem; color: #6b7280; }
+    .meta span { display: inline-block; margin-right: 16px; }
+    .highlight {
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 32px 0;
+      font-weight: 500;
+    }
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 40px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    h3 { font-size: 1rem; font-weight: 600; margin: 24px 0 8px; color: #374151; }
+    p { margin-bottom: 14px; }
+    ul { margin: 8px 0 14px 20px; }
+    ul li { margin-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.9rem; }
+    th { text-align: left; padding: 10px 12px; background: #f9fafb; border: 1px solid #e5e7eb; font-weight: 600; }
+    td { padding: 10px 12px; border: 1px solid #e5e7eb; vertical-align: top; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 36px 0; }
+    footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid #e5e7eb; font-size: 0.875rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Privacy Policy — Blur-to-Clear</h1>
+  <div class="meta">
+    <span>Effective date: 2026-05-25</span>
+    <span>Last updated: 2026-05-25</span>
+    <span>Contact: <a href="mailto:bheckservices@gmail.com">bheckservices@gmail.com</a></span>
+  </div>
+</header>
+
+<section>
+  <h2>Who we are</h2>
+  <p>Blur-to-Clear is an AI writing assistant browser extension and desktop application developed and operated by Brandon Heck ("we", "us", "our"). The source code is available at <a href="https://github.com/Bheck890/Blur-to-Clear" target="_blank" rel="noopener">github.com/Bheck890/Blur-to-Clear</a>.</p>
+</section>
+
+<section>
+  <h2>The short version</h2>
+  <div class="highlight">
+    We do not collect, store, or transmit your personal data or your text to our servers — because we don't have any servers.<br><br>
+    Your text goes directly from your device to whichever AI provider you configured (OpenAI, Anthropic, Google, or local Ollama). We never see it.
+  </div>
+</section>
+
+<section>
+  <h2>What data is involved and where it goes</h2>
+
+  <h3>1. Text you process</h3>
+  <p>When you run an action (Fix Grammar, Make Professional, etc.), your text is sent <strong>directly from your device</strong> to the AI provider you have configured. It passes through no Blur-to-Clear server. We cannot see it, log it, or access it.</p>
+  <p>The AI provider you use (OpenAI, Anthropic, Google) receives your text and their own privacy policy governs that transmission. Ollama runs entirely on your own machine — no text leaves your device at all.</p>
+
+  <h3>2. API keys</h3>
+  <p>Your AI provider API keys are stored <strong>locally on your device only</strong>, encrypted:</p>
+  <ul>
+    <li><strong>Desktop app</strong> — encrypted in your operating system's credential store (Windows Data Protection API / macOS Keychain / Linux Secret Service)</li>
+    <li><strong>Browser extension</strong> — encrypted with AES-256-GCM using a key stored in browser local storage</li>
+  </ul>
+  <p>API keys are never transmitted to us, never leave your device except to authenticate with their respective AI provider.</p>
+
+  <h3>3. Pro license verification</h3>
+  <p>When you activate a Pro license, we send your <strong>email address and license key</strong> to Gumroad's API solely to verify that the license is valid. This data is not stored on our servers. <a href="https://gumroad.com/privacy" target="_blank" rel="noopener">Gumroad's privacy policy</a> governs how Gumroad handles this data.</p>
+  <p>After verification, the email address and license key are stored <strong>locally on your device</strong> to avoid re-verifying on every launch. They are never sent to us.</p>
+
+  <h3>4. Usage history</h3>
+  <p>Every action you run is logged locally — timestamp, action name, provider, model, input/output length, and estimated cost. This data is stored <strong>on your device only</strong> and never transmitted anywhere. You can clear it at any time from Settings.</p>
+
+  <h3>5. Profile data</h3>
+  <p>Your name, role, writing style, and personal context (if you fill in the Profile section) are stored <strong>locally on your device only</strong>. This data is included in prompts sent to your AI provider when you use profile-based actions; it is not sent to us.</p>
+
+  <h3>6. Settings sync (extension + desktop)</h3>
+  <p>When both the browser extension and the desktop app are running simultaneously, settings are synced over your computer's loopback network address (127.0.0.1:47391). This sync never leaves your machine. It is protected by a random per-session token.</p>
+</section>
+
+<section>
+  <h2>What we do NOT collect</h2>
+  <ul>
+    <li>We do not collect analytics or usage statistics.</li>
+    <li>We do not collect crash reports or error logs.</li>
+    <li>We do not track which features you use.</li>
+    <li>We do not set cookies.</li>
+    <li>We do not use any third-party tracking or advertising SDKs.</li>
+    <li>We do not have user accounts (free tier requires none).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Third-party services</h2>
+  <table>
+    <thead>
+      <tr><th>Service</th><th>Purpose</th><th>Their privacy policy</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>OpenAI</strong></td>
+        <td>AI processing (if you configure it)</td>
+        <td><a href="https://openai.com/privacy" target="_blank" rel="noopener">openai.com/privacy</a></td>
+      </tr>
+      <tr>
+        <td><strong>Anthropic</strong></td>
+        <td>AI processing (if you configure it)</td>
+        <td><a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">anthropic.com/privacy</a></td>
+      </tr>
+      <tr>
+        <td><strong>Google</strong></td>
+        <td>AI processing (if you configure it)</td>
+        <td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td>
+      </tr>
+      <tr>
+        <td><strong>Ollama</strong></td>
+        <td>Local AI processing — no data leaves your device</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td><strong>Gumroad</strong></td>
+        <td>Payment processing and license verification</td>
+        <td><a href="https://gumroad.com/privacy" target="_blank" rel="noopener">gumroad.com/privacy</a></td>
+      </tr>
+      <tr>
+        <td><strong>GitHub</strong></td>
+        <td>Source code hosting</td>
+        <td><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub Privacy Statement</a></td>
+      </tr>
+    </tbody>
+  </table>
+  <p>We are not responsible for the data practices of these third-party services. You should review their privacy policies before providing them with your data.</p>
+</section>
+
+<section>
+  <h2>Children's privacy</h2>
+  <p>Blur-to-Clear is not directed at children under the age of 13 (or the applicable age of digital consent in your jurisdiction). We do not knowingly collect personal information from children.</p>
+</section>
+
+<section>
+  <h2>Your rights</h2>
+  <p>Because we do not collect or store your personal data on any server, there is no data held by us to access, correct, or delete. All locally stored data can be removed by:</p>
+  <ul>
+    <li><strong>Extension:</strong> Clearing the extension's storage via your browser's extension management page, or uninstalling the extension.</li>
+    <li><strong>Desktop app:</strong> Uninstalling the application removes all locally stored settings and history.</li>
+  </ul>
+  <p>If you have questions about data held by Gumroad in relation to a purchase, contact Gumroad directly at <a href="https://gumroad.com/privacy" target="_blank" rel="noopener">gumroad.com/privacy</a>.</p>
+</section>
+
+<section>
+  <h2>Data security</h2>
+  <p>All sensitive data stored locally (API keys, license credentials) is encrypted. API keys use AES-256-GCM encryption on the extension and OS-level credential stores on the desktop. No sensitive data is stored in plaintext.</p>
+</section>
+
+<section>
+  <h2>Changes to this policy</h2>
+  <p>We will update the effective date at the top of this document when changes are made. Material changes will be noted in the release notes. Continued use of Blur-to-Clear after a policy update constitutes acceptance of the updated policy.</p>
+</section>
+
+<section>
+  <h2>Contact</h2>
+  <p>Questions about this privacy policy: <a href="mailto:bheckservices@gmail.com">bheckservices@gmail.com</a></p>
+</section>
+
+<footer>
+  <p>© 2026 Brandon Heck · Blur-to-Clear · <a href="https://github.com/Bheck890/Blur-to-Clear" target="_blank" rel="noopener">GitHub</a> · <a href="eula.html">EULA</a></p>
+</footer>
+
+</body>
+</html>

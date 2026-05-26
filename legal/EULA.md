@@ -117,7 +117,7 @@ This Agreement shall be governed by and construed in accordance with applicable 
 
 ## 12. Entire Agreement
 
-This Agreement, together with the Privacy Policy (https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/PRIVACY.md) and the Software's LICENSE file, constitutes the entire agreement between you and us regarding the Software, and supersedes all prior agreements and understandings.
+This Agreement, together with the [Privacy Policy](https://bheck890.github.io/Blur-to-Clear/legal/privacy.html) and the Software's LICENSE file, constitutes the entire agreement between you and us regarding the Software, and supersedes all prior agreements and understandings.
 
 ---
 
