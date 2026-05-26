@@ -41,7 +41,6 @@ async function init() {
   const storedActs  = resolveActionSettings(currentSettings.actionSettings || []);
   const cps         = currentSettings.customPrompts || [];
 
-  const isPro = isProUnlocked(currentSettings);
   storedActs.filter(a => a.enabled).forEach(a => {
     const opt = document.createElement("option");
     opt.value = a.id;
