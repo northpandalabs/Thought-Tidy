@@ -151,7 +151,7 @@ competent jurisdiction.
 12. ENTIRE AGREEMENT
 
 This Agreement, together with the Privacy Policy at
-https://bheck890.github.io/Blur-to-Clear/legal/privacy.html and the
+https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/privacy.txt and the
 Software's LICENSE file, constitutes the entire agreement between the parties.
 
 ------------------------------------------------------------------------

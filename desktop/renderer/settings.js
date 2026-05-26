@@ -39,8 +39,8 @@ function wireLinks() {
     "link-license":        "https://github.com/Bheck890/Blur-to-Clear/blob/main/LICENSE",
     "link-author":         "https://github.com/Bheck890",
     "link-footer-github":  "https://github.com/Bheck890/Blur-to-Clear",
-    "link-footer-privacy": "https://bheck890.github.io/Blur-to-Clear/legal/privacy.html",
-    "link-footer-eula":    "https://bheck890.github.io/Blur-to-Clear/legal/eula.html"
+    "link-footer-privacy": "https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/privacy.txt",
+    "link-footer-eula":    "https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/eula.txt"
   };
   for (const [id, url] of Object.entries(links)) {
     const el = document.getElementById(id);
