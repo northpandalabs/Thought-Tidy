@@ -2,14 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
     branches: [main]
 
 jobs:
-  # ── Extension tests + builds ───────────────────────────────────────────────
+  # ── Extension tests + Firefox build ───────────────────────────────────────
   extensions:
-    name: Extensions (Chrome + Firefox)
+    name: Extensions (Firefox)
     runs-on: ubuntu-latest
 
     steps:
@@ -26,22 +26,8 @@ jobs:
       - name: Run tests with coverage
         run: npm test -- --coverage
 
-      - name: Build Chrome
-        run: npm run build:chrome
-
       - name: Build Firefox
         run: npm run build:firefox
-
-      - name: Validate Chrome manifest
-        run: |
-          node -e "
-            const m = require('./dist/chrome/manifest.json');
-            if (m.manifest_version !== 3) throw new Error('manifest_version must be 3, got ' + m.manifest_version);
-            const allowed = ['contextMenus','scripting','storage','activeTab','alarms'];
-            const bad = (m.permissions || []).filter(p => !allowed.includes(p));
-            if (bad.length) throw new Error('Unexpected permissions: ' + bad.join(', '));
-            console.log('Chrome manifest OK  version=' + m.manifest_version + '  permissions=' + (m.permissions||[]).join(','));
-          "
 
       - name: Validate Firefox manifest
         run: |
@@ -54,30 +40,17 @@ jobs:
             console.log('Firefox manifest OK  version=' + m.manifest_version + '  permissions=' + (m.permissions||[]).join(','));
           "
 
-      - name: Zip Chrome extension
-        run: cd dist/chrome && zip -r ../../blur-to-clear-chrome.zip . && cd ../..
-
-      - name: Zip Firefox extension
-        run: cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
-
-      - name: Upload Chrome zip
-        uses: actions/upload-artifact@v7
-        with:
-          name: blur-to-clear-chrome
-          path: blur-to-clear-chrome.zip
-          retention-days: 90
-
       - name: Upload Firefox zip
         uses: actions/upload-artifact@v7
         with:
-          name: blur-to-clear-firefox
-          path: blur-to-clear-firefox.zip
-          retention-days: 90
+          name: blur-to-clear-firefox-${{ github.sha }}
+          path: dist/firefox/
+          retention-days: 14
 
-  # ── Desktop tests ──────────────────────────────────────────────────────────
-  desktop-tests:
-    name: Desktop tests
-    runs-on: ubuntu-latest
+  # ── Desktop tests + Windows TEST ONLY build ───────────────────────────────
+  desktop:
+    name: Desktop (Windows)
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v6
@@ -94,41 +67,6 @@ jobs:
         run: npm test -- --coverage
         working-directory: desktop
 
-  # ── Desktop installers (Windows NSIS · macOS DMG · Linux deb) ────────────
-  desktop-installers:
-    name: Desktop installer (${{ matrix.os-label }})
-    needs: [desktop-tests]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            os-label: Windows
-            script: dist:win
-            artifact-name: blur-to-clear-installer-windows
-            artifact-path: desktop/dist-build/*.exe
-          - os: macos-latest
-            os-label: macOS
-            script: dist:mac
-            artifact-name: blur-to-clear-installer-mac
-            artifact-path: desktop/dist-build/*.dmg
-          - os: ubuntu-latest
-            os-label: Linux
-            script: dist:linux
-            artifact-name: blur-to-clear-installer-linux
-            artifact-path: |
-              desktop/dist-build/*.deb
-              desktop/dist-build/*.AppImage
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
       - name: Stamp build version with commit hash
         id: ver
         shell: bash
@@ -144,55 +82,6 @@ jobs:
           fs.writeFileSync('desktop/package.json', JSON.stringify(p, null, 2) + '\n');
           console.log('Stamped version:', p.version);
           EOF
-
-      - name: Install desktop dependencies
-        run: npm ci
-        working-directory: desktop
-
-      - name: Build installer
-        run: npm run ${{ matrix.script }}
-        working-directory: desktop
-
-      - name: Upload installer artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ matrix.artifact-name }}-${{ steps.ver.outputs.sha }}
-          path: ${{ matrix.artifact-path }}
-          retention-days: 90
-          if-no-files-found: error
-
-  # ── Desktop TEST ONLY build (Windows portable EXE) ────────────────────────
-  desktop-test-build:
-    name: Desktop TEST ONLY build (Windows)
-    runs-on: windows-latest
-    needs: [extensions, desktop-tests]
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - name: Stamp build version with commit hash
-        id: ver
-        shell: bash
-        run: |
-          SHA="${GITHUB_SHA:0:8}"
-          echo "sha=$SHA" >> $GITHUB_OUTPUT
-          node - << 'EOF'
-          const fs = require('fs');
-          const sha = process.env.GITHUB_SHA.slice(0, 8);
-          const p = JSON.parse(fs.readFileSync('desktop/package.json', 'utf8'));
-          const base = p.version.split('+')[0];
-          p.version = base + '+' + sha;
-          fs.writeFileSync('desktop/package.json', JSON.stringify(p, null, 2) + '\n');
-          console.log('Stamped version:', p.version);
-          EOF
-
-      - name: Install desktop dependencies
-        run: npm ci
-        working-directory: desktop
 
       - name: Build TEST ONLY portable EXE
         run: npm run dist:test
@@ -205,11 +94,11 @@ jobs:
           $exe = Get-ChildItem -Path "desktop/dist-build-test" -Filter "*.exe" | Select-Object -First 1
           if (-not $exe) { throw "No .exe found in desktop/dist-build-test" }
           Compress-Archive -Path $exe.FullName -DestinationPath "blur-to-clear-TEST-ONLY-$sha.zip"
-          Write-Host "Zipped: $($exe.Name) → blur-to-clear-TEST-ONLY-$sha.zip"
+          Write-Host "Zipped: $($exe.Name) -> blur-to-clear-TEST-ONLY-$sha.zip"
 
       - name: Upload TEST ONLY zip
         uses: actions/upload-artifact@v7
         with:
           name: blur-to-clear-TEST-ONLY-${{ steps.ver.outputs.sha }}
           path: blur-to-clear-TEST-ONLY-${{ steps.ver.outputs.sha }}.zip
-          retention-days: 90
+          retention-days: 14
