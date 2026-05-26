@@ -6,9 +6,59 @@ on:
       - 'v*'
 
 jobs:
-  # ── Extensions (single Linux runner, no native deps) ───────────────────────
+  # ── Tests: Firefox extension + Windows desktop only ───────────────────────
+  test-extensions:
+    name: Test extensions (Firefox)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Build Firefox
+        run: npm run build:firefox
+
+      - name: Validate Firefox manifest
+        run: |
+          node -e "
+            const m = require('./dist/firefox/manifest.json');
+            if (![2,3].includes(m.manifest_version)) throw new Error('manifest_version must be 2 or 3, got ' + m.manifest_version);
+            const allowed = ['contextMenus','scripting','storage','activeTab','alarms'];
+            const bad = (m.permissions || []).filter(p => !allowed.includes(p));
+            if (bad.length) throw new Error('Unexpected permissions: ' + bad.join(', '));
+            console.log('Firefox manifest OK  version=' + m.manifest_version + '  permissions=' + (m.permissions||[]).join(','));
+          "
+
+  test-desktop-windows:
+    name: Test desktop (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install desktop deps
+        run: npm ci
+        working-directory: desktop
+
+      - name: Run desktop tests
+        run: npm test
+        working-directory: desktop
+
+  # ── Extensions build + release ────────────────────────────────────────────
   extensions:
-    name: Build extensions
+    name: Build and release extensions
+    needs: [test-extensions]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,18 +76,13 @@ jobs:
           node - << 'EOF'
           const fs = require('fs');
           const tag = process.env.GITHUB_REF_NAME.replace(/^v/, '');
-          for (const f of ['package.json', 'desktop/package.json']) {
-            try {
-              const p = JSON.parse(fs.readFileSync(f, 'utf8'));
-              p.version = tag;
-              fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n');
-              console.log('Set', f, 'to', tag);
-            } catch (_) {}
-          }
+          const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          p.version = tag;
+          fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
+          console.log('Set package.json to', tag);
           EOF
 
       - run: npm ci
-      - run: npm test
       - run: npm run build
 
       - name: Zip Chrome
@@ -46,33 +91,39 @@ jobs:
       - name: Zip Firefox
         run: cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
 
-      - name: Attach to Release
+      - name: Attach to release
         uses: softprops/action-gh-release@v3
         with:
           files: |
             blur-to-clear-chrome.zip
             blur-to-clear-firefox.zip
-          generate_release_notes: true
 
-  # ── Desktop — one job per platform so we get native binaries ───────────────
+  # ── Desktop builds + release (one job per platform) ───────────────────────
   desktop:
-    name: Desktop (${{ matrix.os }})
+    name: Desktop (${{ matrix.os-label }})
+    needs: [test-desktop-windows]
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
-            artifact: blur-to-clear-windows
+            os-label: Windows
+            script: dist:win
             glob: "desktop/dist-build/*.exe"
           - os: macos-latest
-            artifact: blur-to-clear-mac
+            os-label: macOS
+            script: dist:mac
             glob: "desktop/dist-build/*.dmg"
           - os: ubuntu-latest
-            artifact: blur-to-clear-linux
-            glob: "desktop/dist-build/*.{AppImage,deb}"
+            os-label: Linux
+            script: dist:linux
+            glob: |
+              desktop/dist-build/*.deb
+              desktop/dist-build/*.AppImage
 
     steps:
       - uses: actions/checkout@v6
@@ -82,6 +133,7 @@ jobs:
           node-version: 22
 
       - name: Set release version from tag
+        shell: bash
         run: |
           node - << 'EOF'
           const fs = require('fs');
@@ -96,16 +148,14 @@ jobs:
         run: npm ci
         working-directory: desktop
 
-      - name: Build desktop app
-        run: npm run dist
+      - name: Build desktop installer
+        run: npm run ${{ matrix.script }}
         working-directory: desktop
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate installer artifact
         shell: bash
         run: |
-          shopt -s nullglob extglob
+          shopt -s nullglob
           files=(desktop/dist-build/*.exe desktop/dist-build/*.dmg desktop/dist-build/*.deb desktop/dist-build/*.AppImage)
           found=()
           for f in "${files[@]}"; do [ -f "$f" ] && found+=("$f"); done
@@ -116,11 +166,11 @@ jobs:
             mb=$(( $(wc -c < "$f") / 1048576 ))
             echo "Artifact: $(basename "$f") (${mb} MB)"
             if [ "$mb" -lt 30 ]; then
-              echo "ERROR: $(basename "$f") is only ${mb}MB — build may be broken"; exit 1
+              echo "ERROR: $(basename "$f") is only ${mb}MB — may be broken"; exit 1
             fi
           done
 
-      - name: Attach to Release
+      - name: Attach to release
         uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.glob }}
