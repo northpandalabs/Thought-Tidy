@@ -1,5 +1,5 @@
 // background.js — Blur-to-Clear event wiring (MV3 service worker)
-importScripts("browser-polyfill.js", "lib/build-flags.js", "lib/text.js", "lib/prompts.js", "lib/pricing.js", "lib/api.js", "lib/updater.js", "lib/crypto-storage.js");
+importScripts("browser-polyfill.js", "lib/build-flags.js", "lib/text.js", "lib/prompts.js", "lib/pricing.js", "lib/license.js", "lib/api.js", "lib/updater.js", "lib/crypto-storage.js");
 
 const DYN_SEP = "dyn-sep";
 const DYN_MAX = 8;
@@ -154,10 +154,13 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   const settings = await cryptoGet([
     ...PROVIDER_STORAGE_KEYS,
     "variants", "customPrompts",
-    "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled"
+    "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+    "licenseEmail", "licenseKey"
   ]);
 
-  const variants = menuId === "fix-spelling" ? 1 : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
+  const variants = menuId === "fix-spelling" || !isProUnlocked(settings)
+    ? 1
+    : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
 
   let systemPrompt;
   if (menuId.startsWith("dyn-")) {

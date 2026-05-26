@@ -31,13 +31,11 @@
   "host_permissions": [
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
-    "https://generativelanguage.googleapis.com/*",
-    "https://api.github.com/*",
-    "http://127.0.0.1:47391/*",
-    "http://localhost:11434/*",
-    "http://127.0.0.1:11434/*"
+    "https://generativelanguage.googleapis.com/*"
   ],
   "optional_host_permissions": [
+    "https://api.github.com/*",
+    "http://127.0.0.1:47391/*",
     "http://*/*"
   ],
   "options_ui": {

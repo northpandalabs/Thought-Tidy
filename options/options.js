@@ -16,8 +16,7 @@ const TESTERS  = { openai: testOpenAI,        claude: testClaude,        gemini:
 const PROVIDER_INFO = {
   openai: { name: "ChatGPT (OpenAI)",   sub: "GPT-4o, o1, o3…",         keyPlaceholder: "sk-…",    keyUrl: "https://platform.openai.com/api-keys" },
   claude: { name: "Claude (Anthropic)", sub: "Haiku, Sonnet, Opus…",     keyPlaceholder: "sk-ant-…",keyUrl: "https://console.anthropic.com/settings/keys" },
-  gemini: { name: "Gemini (Google)",    sub: "2.0 Flash, 1.5 Pro…",      keyPlaceholder: "AIza…",   keyUrl: "https://aistudio.google.com/app/apikey" },
-  ollama: { name: "Ollama (Local AI)",  sub: "llama3, mistral, phi4…",   keyPlaceholder: "",        keyUrl: "" }
+  gemini: { name: "Gemini (Google)",    sub: "2.0 Flash, 1.5 Pro…",      keyPlaceholder: "AIza…",   keyUrl: "https://aistudio.google.com/app/apikey" }
 };
 
 // ── In-memory provider state ───────────────────────────────────────────────────
@@ -842,6 +841,11 @@ async function init() {
   configuredProviders = s.configuredProviders || [];
   geminiModels        = s.geminiModels || [null, null, null];
 
+  // Ollama is desktop-only — remove any legacy extension-side Ollama entries
+  const preLen = configuredProviders.length;
+  configuredProviders = configuredProviders.filter(p => p.id !== "ollama");
+  if (configuredProviders.length !== preLen) saveProviders();
+
   renderProviderCards();
 
   // Wizard wiring
@@ -983,11 +987,15 @@ function applyProGates(isPro) {
   if (lockedView) lockedView.style.display = isPro ? "none" : "";
   if (activeView) activeView.style.display = isPro ? ""     : "none";
 
-  // Ollama is Pro-only — disable its wizard button for non-Pro users
-  const ollamaBtn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
-  if (ollamaBtn) {
-    ollamaBtn.disabled = !isPro;
-    ollamaBtn.title    = isPro ? "" : "Pro feature. Unlock Pro to use Ollama.";
+  // Variants (Pro-only) — cap at 1 and reset if needed
+  const variantsInput   = document.getElementById("variants");
+  const variantsDisplay = document.getElementById("variants-display");
+  if (variantsInput) {
+    variantsInput.max = isPro ? 4 : 1;
+    if (!isPro && parseInt(variantsInput.value) > 1) {
+      variantsInput.value = 1;
+      if (variantsDisplay) variantsDisplay.textContent = 1;
+    }
   }
 }
 
