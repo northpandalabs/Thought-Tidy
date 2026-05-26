@@ -21,7 +21,7 @@
   "build": {
     "appId": "com.brainfixai.blurtoclear",
     "productName": "Blur-to-Clear",
-    "copyright": "Copyright © 2025 BrainFix AI",
+    "copyright": "Copyright © 2026 Brandon Heck",
     "directories": {
       "output": "dist-build"
     },
@@ -61,8 +61,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "BHeck",
-      "repo": "BrainFix-AI"
+      "owner": "Bheck890",
+      "repo": "Blur-to-Clear"
     }
   },
   "jest": {
