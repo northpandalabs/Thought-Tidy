@@ -63,36 +63,36 @@
     ${If} $BTC_INST_VER != "${VERSION}"
       ; ── Upgrade scenario ──────────────────────────────────────
       ${NSD_CreateRadioButton} 0 36u 100% 14u \
-        "Upgrade to ${VERSION}  —  install the latest version"
+        "Upgrade to ${VERSION}: install the latest version"
       Pop $BTC_RB_UPDATE
       ${NSD_SetState} $BTC_RB_UPDATE ${BST_CHECKED}
 
       ${NSD_CreateRadioButton} 0 56u 100% 14u \
-        "Repair  —  reinstall files, keep your settings"
+        "Repair: reinstall files, keep your settings"
       Pop $BTC_RB_REPAIR
 
       ${NSD_CreateRadioButton} 0 74u 100% 14u \
-        "Modify  —  add or remove optional features"
+        "Modify: add or remove optional features"
       Pop $BTC_RB_MODIFY
 
       ${NSD_CreateRadioButton} 0 92u 100% 14u \
-        "Uninstall  —  remove $(^Name) from this computer"
+        "Uninstall: remove $(^Name) from this computer"
       Pop $BTC_RB_UNINSTALL
     ${Else}
       ; ── Same version scenario ─────────────────────────────────
       StrCpy $BTC_RB_UPDATE ""   ; no upgrade option
 
       ${NSD_CreateRadioButton} 0 36u 100% 14u \
-        "Repair  —  reinstall files, keep your settings"
+        "Repair: reinstall files, keep your settings"
       Pop $BTC_RB_REPAIR
       ${NSD_SetState} $BTC_RB_REPAIR ${BST_CHECKED}
 
       ${NSD_CreateRadioButton} 0 54u 100% 14u \
-        "Modify  —  add or remove optional features"
+        "Modify: add or remove optional features"
       Pop $BTC_RB_MODIFY
 
       ${NSD_CreateRadioButton} 0 72u 100% 14u \
-        "Uninstall  —  remove $(^Name) from this computer"
+        "Uninstall: remove $(^Name) from this computer"
       Pop $BTC_RB_UNINSTALL
     ${EndIf}
 

@@ -83,7 +83,7 @@
 
       <!-- Empty state -->
       <div id="no-providers-state" style="display:none">
-        <p class="hint" style="margin-bottom:14px">No AI providers configured yet. Add one to get started — you only need one API key.</p>
+        <p class="hint" style="margin-bottom:14px">No AI providers configured yet. Add one to get started. You only need one API key.</p>
       </div>
 
       <!-- Configured provider cards (rendered by JS) -->
@@ -184,8 +184,8 @@
     <section id="pro-section">
       <h2>⚡ Blur-to-Clear Pro</h2>
       <div id="pro-locked-view">
-        <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment — no subscription.</p>
-        <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro — $10 one-time ↗</a>
+        <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
+        <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro ($10 one-time) ↗</a>
         <div class="field" style="margin-top:12px">
           <label for="pro-email-input">Email used at purchase</label>
           <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off">
@@ -221,7 +221,7 @@
         </label>
       </h2>
       <p class="hint profile-intro">
-        Tell the AI who you are. When enabled, this gets prepended to every action — so instead of generic output,
+        Tell the AI who you are. When enabled, this gets prepended to every action, so instead of generic output,
         it writes <em>your</em> words, in <em>your</em> voice, with <em>your</em> context.
         The <strong>👤 Sound Like Me</strong> action uses this most heavily.
       </p>
@@ -245,11 +245,11 @@
       <div class="field">
         <label for="profileContext">
           Personal Context
-          <span class="label-hint">— your bio, what you do, who you write to, common topics. The more you give, the less generic the output.</span>
+          <span class="label-hint">Your bio, what you do, who you write to, common topics. The more you give, the less generic the output.</span>
         </label>
         <textarea id="profileContext" rows="6" placeholder="I run a small roofing company in Texas called Bailey's Roofing. I write quotes, follow-up emails, and job updates to residential customers who aren't technical. I want to sound friendly and trustworthy, not corporate. Common topics: storm damage, insurance claims, timelines, pricing."></textarea>
         <div class="context-actions">
-          <span class="hint">Paste anything — a bio, a company description, writing samples, a list of your common phrases.</span>
+          <span class="hint">Paste anything: a bio, a company description, writing samples, a list of your common phrases.</span>
           <button id="load-context-url-btn" class="link-btn" title="Load context from a URL you maintain">Load from URL…</button>
         </div>
       </div>
@@ -258,7 +258,7 @@
         <div class="field">
           <label for="contextUrl">
             Context URL
-            <span class="label-hint">— a public URL that returns plain text (GitHub Gist raw, personal site, etc.)</span>
+            <span class="label-hint">A public URL that returns plain text (GitHub Gist raw, personal site, etc.)</span>
           </label>
           <div class="key-row">
             <input type="text" id="contextUrl" placeholder="https://gist.githubusercontent.com/you/abc123/raw/context.txt">
@@ -314,7 +314,7 @@
         <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
       </div>
       <h2>My Custom Prompts</h2>
-      <p class="hint" style="margin-bottom:14px">Saved prompts appear in the right-click menu under Blur-to-Clear (up to 8). Use these to build your own actions — Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
+      <p class="hint" style="margin-bottom:14px">Saved prompts appear in the right-click menu under Blur-to-Clear (up to 8). Use these to build your own actions: Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
 
       <div id="custom-prompts-list"></div>
 

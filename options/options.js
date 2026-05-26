@@ -429,7 +429,7 @@ async function wizardTestAndLoad() {
         const origin  = baseUrl.replace(/\/$/, "") + "/*";
         const granted = await browser.permissions.request({ origins: [origin] });
         if (!granted) {
-          statusEl.textContent = "Permission denied — browser blocked access to " + baseUrl;
+          statusEl.textContent = "Permission denied. Browser blocked access to " + baseUrl;
           statusEl.className   = "fetch-status status-error";
           return;
         }
@@ -479,7 +479,7 @@ async function wizardTestAndLoad() {
     statusEl.textContent = "Key valid ✓";
     statusEl.className   = "fetch-status status-ok";
   } else {
-    statusEl.textContent = "Key validation failed — check key and retry.";
+    statusEl.textContent = "Key validation failed. Check key and retry.";
     statusEl.className   = "fetch-status status-error";
   }
 }
@@ -490,7 +490,7 @@ async function saveWizardProvider() {
   // Ollama: no API key — save baseUrl + model directly
   if (wizardProvider === "ollama") {
     if (configuredProviders.find(p => p.id === "ollama")) {
-      statusEl.textContent = "Ollama is already configured — use Edit on its card to update it.";
+      statusEl.textContent = "Ollama is already configured. Use Edit on its card to update it.";
       statusEl.className   = "fetch-status status-error";
       return;
     }
@@ -512,7 +512,7 @@ async function saveWizardProvider() {
 
   if (configuredProviders.find(p => p.id === wizardProvider)) {
     const name = PROVIDER_INFO[wizardProvider]?.name || wizardProvider;
-    statusEl.textContent = `${name} is already configured — use Edit on its card to update it.`;
+    statusEl.textContent = `${name} is already configured. Use Edit on its card to update it.`;
     statusEl.className   = "fetch-status status-error";
     return;
   }
@@ -716,7 +716,7 @@ async function save() {
   if (lastAction && !lastAction.startsWith("custom-") && !enabledIds.has(lastAction)) {
     const first    = actionSettings.find(a => a.enabled);
     resolvedAction = first?.id || "";
-    resetMsg       = ` Note: your last action was disabled — switched to "${first?.label || resolvedAction}".`;
+    resetMsg       = ` Note: your last action was disabled. Switched to "${first?.label || resolvedAction}".`;
     await browser.storage.local.set({ lastAction: resolvedAction });
   }
 
@@ -860,7 +860,7 @@ async function init() {
     const notice = document.getElementById("update-notice");
     const link   = document.getElementById("update-link");
     if (notice && link) {
-      link.textContent = `Version ${updateAvailable.version} available — Download from GitHub ↗`;
+      link.textContent = `Version ${updateAvailable.version} available. Download from GitHub ↗`;
       link.href        = updateAvailable.url;
       notice.style.display = "block";
     }
@@ -892,7 +892,7 @@ function applyProGates(isPro) {
   const ollamaBtn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
   if (ollamaBtn) {
     ollamaBtn.disabled = !isPro;
-    ollamaBtn.title    = isPro ? "" : "Pro feature — unlock Pro to use Ollama";
+    ollamaBtn.title    = isPro ? "" : "Pro feature. Unlock Pro to use Ollama.";
   }
 }
 

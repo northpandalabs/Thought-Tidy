@@ -458,7 +458,7 @@ async function wizardTestAndLoad() {
     currentValues: []
   });
   if (working) { statusEl.textContent = "Key valid ✓"; statusEl.className = "fetch-status status-ok"; }
-  else         { statusEl.textContent = "Key validation failed — check key and retry."; statusEl.className = "fetch-status status-error"; }
+  else         { statusEl.textContent = "Key validation failed. Check key and retry."; statusEl.className = "fetch-status status-error"; }
 }
 
 async function saveWizardProvider() {
@@ -467,7 +467,7 @@ async function saveWizardProvider() {
   // Ollama: no API key — save baseUrl + model directly
   if (wizardProvider === "ollama") {
     if (configuredProviders.find(p => p.id === "ollama")) {
-      statusEl.textContent = "Ollama is already configured — use Edit on its card to update it.";
+      statusEl.textContent = "Ollama is already configured. Use Edit on its card to update it.";
       statusEl.className   = "fetch-status status-error";
       return;
     }
@@ -485,7 +485,7 @@ async function saveWizardProvider() {
 
   if (configuredProviders.find(p => p.id === wizardProvider)) {
     const name = PROVIDER_INFO[wizardProvider]?.name || wizardProvider;
-    statusEl.textContent = `${name} is already configured — use Edit on its card to update it.`;
+    statusEl.textContent = `${name} is already configured. Use Edit on its card to update it.`;
     statusEl.className   = "fetch-status status-error";
     return;
   }
@@ -655,7 +655,7 @@ async function save() {
   if (lastAction && !lastAction.startsWith("custom-") && !enabledIds.has(lastAction)) {
     const first    = actionSettings.find(a => a.enabled);
     resolvedAction = first?.id || "";
-    resetMsg       = ` Note: your last action was disabled — switched to "${first?.label || resolvedAction}".`;
+    resetMsg       = ` Note: your last action was disabled. Switched to "${first?.label || resolvedAction}".`;
     await browser.storage.local.set({ lastAction: resolvedAction });
   }
 
@@ -700,7 +700,7 @@ function applyProGates(isPro) {
   const ollamaBtn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
   if (ollamaBtn) {
     ollamaBtn.disabled = !isPro;
-    ollamaBtn.title    = isPro ? "" : "Pro feature — unlock Pro to use Ollama";
+    ollamaBtn.title    = isPro ? "" : "Pro feature. Unlock Pro to use Ollama.";
   }
 }
 
@@ -777,7 +777,7 @@ async function init() {
       const notice = document.getElementById("update-notice");
       const link   = document.getElementById("update-link");
       if (notice && link) {
-        link.textContent = `Version ${config.updateAvailable.version} available — Download from GitHub ↗`;
+        link.textContent = `Version ${config.updateAvailable.version} available. Download from GitHub ↗`;
         link.addEventListener("click", () => btcAPI.openURL(config.updateAvailable.url));
         notice.style.display = "block";
       }

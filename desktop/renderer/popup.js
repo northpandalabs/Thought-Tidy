@@ -253,7 +253,7 @@ function updateFooter() {
       : (p.model || "");
     badge.textContent = model ? `${label} · ${model}` : label;
   } else {
-    badge.textContent = "No provider — open Settings";
+    badge.textContent = "No provider. Open Settings";
   }
 }
 

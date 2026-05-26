@@ -127,7 +127,7 @@ async function runFromSelection() {
     });
 
     if (!selectedText) {
-      status.textContent = "No text selected on the page — highlight text first.";
+      status.textContent = "No text selected on the page. Highlight text first.";
       status.style.display = "block";
       return;
     }
@@ -229,7 +229,7 @@ function updateProviderStatus(settings) {
     text.textContent = "API key set";
   } else {
     dot.className    = "dot dot-bad";
-    text.textContent = "No providers configured — open Settings";
+    text.textContent = "No providers configured. Open Settings";
   }
 }
 
