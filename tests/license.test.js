@@ -58,7 +58,7 @@ describe("verifyWithGumroad", () => {
   test("returns valid:false with network error when fetch throws", async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error("Network failure"));
     const result = await verifyWithGumroad("user@example.com", "ABC-123");
-    expect(result).toEqual({ valid: false, error: "Could not reach Gumroad — check your connection" });
+    expect(result).toEqual({ valid: false, error: "Could not reach Gumroad. Check your connection." });
   });
 
   test("email comparison is case-insensitive", async () => {
