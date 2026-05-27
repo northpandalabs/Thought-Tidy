@@ -52,7 +52,7 @@ const thumbnail = `<svg width="600" height="600" xmlns="http://www.w3.org/2000/s
 <!-- App name -->
 <text x="300" y="258"
   font-family="'Segoe UI', system-ui, sans-serif"
-  font-size="48" font-weight="700" fill="#ffffff" text-anchor="middle">Blur-to-Clear</text>
+  font-size="48" font-weight="700" fill="#ffffff" text-anchor="middle">Thought Tidy</text>
 
 <!-- Divider -->
 <rect x="210" y="274" width="180" height="2" rx="1" fill="#313244"/>
@@ -139,7 +139,7 @@ const cover = `<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg"
 <!-- App name -->
 <text x="58" y="205"
   font-family="'Segoe UI', system-ui, sans-serif"
-  font-size="64" font-weight="700" fill="#ffffff">Blur-to-Clear</text>
+  font-size="64" font-weight="700" fill="#ffffff">Thought Tidy</text>
 
 <!-- Tagline -->
 <text x="58" y="250"
@@ -216,7 +216,7 @@ const cover = `<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg"
   <!-- Logo in titlebar -->
   <rect x="728" y="63" width="15" height="15" rx="3" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
   <rect x="734" y="69" width="15" height="15" rx="3" fill="none" stroke="#4f46e5" stroke-width="1.5" opacity="0.55"/>
-  <text x="756" y="79" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#a6adc8">Blur-to-Clear</text>
+  <text x="756" y="79" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#a6adc8">Thought Tidy</text>
 
   <!-- Close btn -->
   <rect x="1176" y="60" width="32" height="28" rx="6" fill="#1e1e2e"/>

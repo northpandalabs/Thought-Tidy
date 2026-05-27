@@ -12,7 +12,7 @@ const RELEASES_PAGE = 'https://github.com/BHeck/BrainFix-AI/releases/latest';
 function fetchLatestRelease() {
   return new Promise((resolve, reject) => {
     const req = https.get(RELEASES_URL, {
-      headers: { 'User-Agent': 'blur-to-clear-updater', 'Accept': 'application/vnd.github+json' }
+      headers: { 'User-Agent': 'thought-tidy-updater', 'Accept': 'application/vnd.github+json' }
     }, res => {
       let body = '';
       res.on('data', c => { body += c; });

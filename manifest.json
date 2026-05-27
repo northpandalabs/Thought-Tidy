@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Blur-to-Clear",
+  "name": "Thought Tidy",
   "version": "1.4.5",
   "description": "ADHD-friendly AI writing assistant. Fix spelling, rewrite, or transform text in seconds. Works with OpenAI, Claude, Gemini, or local Ollama. One hotkey, zero friction.",
   "icons": {
@@ -8,7 +8,7 @@
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Blur-to-Clear",
+    "default_title": "Thought Tidy",
     "default_icon": "icons/icon.svg"
   },
   "background": {

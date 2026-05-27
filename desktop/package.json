@@ -1,7 +1,7 @@
 {
-  "name": "blur-to-clear-desktop",
+  "name": "thought-tidy-desktop",
   "version": "1.4.5",
-  "description": "Blur-to-Clear — AI writing assistant desktop app (tray + global hotkey)",
+  "description": "Thought Tidy — AI writing assistant desktop app (tray + global hotkey)",
   "main": "main.js",
   "private": true,
   "scripts": {
@@ -19,9 +19,9 @@
     "test:coverage": "jest --coverage"
   },
   "build": {
-    "appId": "com.brainfixai.blurtoclear",
-    "productName": "Blur-to-Clear",
-    "copyright": "Copyright © 2026 Brandon Heck",
+    "appId": "com.northpandalabs.thoughttidy",
+    "productName": "Thought Tidy",
+    "copyright": "Copyright © 2026 Panda Automation LLC (NorthPanda Labs)",
     "directories": {
       "output": "dist-build"
     },
@@ -56,13 +56,13 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Blur-to-Clear",
+      "shortcutName": "Thought Tidy",
       "include": "build/installer.nsh"
     },
     "publish": {
       "provider": "github",
       "owner": "Bheck890",
-      "repo": "Blur-to-Clear"
+      "repo": "Thought Tidy"
     }
   },
   "jest": {

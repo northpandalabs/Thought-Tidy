@@ -86,17 +86,17 @@ jobs:
       - run: npm run build
 
       - name: Zip Chrome
-        run: cd dist/chrome && zip -r ../../blur-to-clear-chrome.zip . && cd ../..
+        run: cd dist/chrome && zip -r ../../thought-tidy-chrome.zip . && cd ../..
 
       - name: Zip Firefox
-        run: cd dist/firefox && zip -r ../../blur-to-clear-firefox.zip . && cd ../..
+        run: cd dist/firefox && zip -r ../../thought-tidy-firefox.zip . && cd ../..
 
       - name: Attach to release
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            blur-to-clear-chrome.zip
-            blur-to-clear-firefox.zip
+            thought-tidy-chrome.zip
+            thought-tidy-firefox.zip
 
   # ── Desktop builds + release (one job per platform) ───────────────────────
   desktop:

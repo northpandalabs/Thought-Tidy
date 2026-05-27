@@ -1,5 +1,5 @@
-appId: com.bheck890.blur-to-clear
-productName: Blur-to-Clear
+appId: com.northpandalabs.thoughttidy
+productName: Thought Tidy
 
 directories:
   output: dist-build

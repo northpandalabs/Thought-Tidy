@@ -4,15 +4,16 @@ Effective date: 2026-05-25
 Last updated: 2026-05-25
 Contact: bheckservices@gmail.com
 
-By installing or using Blur-to-Clear ("Software"), you agree to be bound by
+By installing or using Thought Tidy ("Software"), you agree to be bound by
 these terms. If you do not agree, do not install or use the Software.
 
 ------------------------------------------------------------------------
 
 1. PARTIES
 
-This Agreement is between you ("User", "you") and Brandon Heck ("Licensor",
-"we", "us"), the developer and owner of Blur-to-Clear.
+This Agreement is between you ("User", "you") and Panda Automation LLC
+("Licensor", "we", "us"), operating as NorthPanda Labs, the developer and
+owner of Thought Tidy.
 
 ------------------------------------------------------------------------
 
@@ -40,7 +41,7 @@ You may NOT:
 
 - Create a competing product. Use the Software, its source code, or any
   substantial portion thereof to build, operate, or distribute a product or
-  service that competes with Blur-to-Clear, whether commercial or not.
+  service that competes with Thought Tidy, whether commercial or not.
 
 - Sell or sublicense. Sell, sublicense, rent, lease, or otherwise transfer
   the Software or your license rights to any third party.
@@ -135,7 +136,7 @@ The webextension-polyfill library is used under the Mozilla Public License
 2.0. Other dependencies are listed in package.json.
 
 The Software's source code is available at
-https://github.com/Bheck890/Blur-to-Clear under a proprietary license.
+https://github.com/Bheck890/Thought Tidy under a proprietary license.
 Nothing in this Agreement grants rights beyond those specified in that license.
 
 ------------------------------------------------------------------------
@@ -151,7 +152,7 @@ competent jurisdiction.
 12. ENTIRE AGREEMENT
 
 This Agreement, together with the Privacy Policy at
-https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/privacy.txt and the
+https://github.com/Bheck890/Thought Tidy/blob/main/legal/privacy.txt and the
 Software's LICENSE file, constitutes the entire agreement between the parties.
 
 ------------------------------------------------------------------------
@@ -159,4 +160,4 @@ Software's LICENSE file, constitutes the entire agreement between the parties.
 13. CONTACT
 
 Questions: bheckservices@gmail.com
-GitHub: https://github.com/Bheck890/Blur-to-Clear
+GitHub: https://github.com/Bheck890/Thought Tidy

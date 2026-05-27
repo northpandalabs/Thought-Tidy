@@ -43,7 +43,7 @@ jobs:
       - name: Upload Firefox zip
         uses: actions/upload-artifact@v7
         with:
-          name: blur-to-clear-firefox-${{ github.sha }}
+          name: thought-tidy-firefox-${{ github.sha }}
           path: dist/firefox/
           retention-days: 14
 
@@ -93,12 +93,12 @@ jobs:
           $sha = "${{ steps.ver.outputs.sha }}"
           $exe = Get-ChildItem -Path "desktop/dist-build-test" -Filter "*.exe" | Select-Object -First 1
           if (-not $exe) { throw "No .exe found in desktop/dist-build-test" }
-          Compress-Archive -Path $exe.FullName -DestinationPath "blur-to-clear-TEST-ONLY-$sha.zip"
-          Write-Host "Zipped: $($exe.Name) -> blur-to-clear-TEST-ONLY-$sha.zip"
+          Compress-Archive -Path $exe.FullName -DestinationPath "thought-tidy-TEST-ONLY-$sha.zip"
+          Write-Host "Zipped: $($exe.Name) -> thought-tidy-TEST-ONLY-$sha.zip"
 
       - name: Upload TEST ONLY zip
         uses: actions/upload-artifact@v7
         with:
-          name: blur-to-clear-TEST-ONLY-${{ steps.ver.outputs.sha }}
-          path: blur-to-clear-TEST-ONLY-${{ steps.ver.outputs.sha }}.zip
+          name: thought-tidy-TEST-ONLY-${{ steps.ver.outputs.sha }}
+          path: thought-tidy-TEST-ONLY-${{ steps.ver.outputs.sha }}.zip
           retention-days: 14

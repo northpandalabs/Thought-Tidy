@@ -8,9 +8,10 @@ Contact: bheckservices@gmail.com
 
 WHO WE ARE
 
-Blur-to-Clear is an AI writing assistant browser extension and desktop
-application developed by Brandon Heck. Source code:
-https://github.com/Bheck890/Blur-to-Clear
+Thought Tidy is an AI writing assistant browser extension and desktop
+application developed by NorthPanda Labs, a product of Panda Automation LLC.
+Source code:
+https://github.com/Bheck890/Thought Tidy
 
 ------------------------------------------------------------------------
 
@@ -30,7 +31,7 @@ WHAT DATA IS INVOLVED AND WHERE IT GOES
 
 When you run an action (Fix Grammar, Make Professional, etc.), your text is
 sent directly from your device to the AI provider you have configured. It
-passes through no Blur-to-Clear server. We cannot see it, log it, or
+passes through no Thought Tidy server. We cannot see it, log it, or
 access it.
 
 Ollama runs entirely on your own machine -- no text leaves your device at all.
@@ -100,7 +101,7 @@ We are not responsible for the data practices of these services.
 
 CHILDREN'S PRIVACY
 
-Blur-to-Clear is not directed at children under 13. We do not knowingly
+Thought Tidy is not directed at children under 13. We do not knowingly
 collect personal information from children.
 
 ------------------------------------------------------------------------

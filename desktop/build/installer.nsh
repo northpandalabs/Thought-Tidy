@@ -1,4 +1,4 @@
-; installer.nsh — Blur-to-Clear custom NSIS installer logic
+; installer.nsh — Thought Tidy custom NSIS installer logic
 ;
 ; Maintenance page:
 ;   Fresh install  → page is skipped (Abort in btcMaintCreate)
@@ -168,8 +168,8 @@ Install this feature?"
 
   btc_qc_install:
     WriteRegStr HKCU "Software\${APP_ID}\Features" "QuickCommands" "1"
-    CreateDirectory "$APPDATA\Blur-to-Clear"
-    FileOpen $R7 "$APPDATA\Blur-to-Clear\quick-commands.json" w
+    CreateDirectory "$APPDATA\Thought Tidy"
+    FileOpen $R7 "$APPDATA\Thought Tidy\quick-commands.json" w
     FileWrite $R7 '[$\r$\n'
     FileWrite $R7 '  { "name": "Email Reply",   "prompt": "Write a professional, concise reply to this email." },$\r$\n'
     FileWrite $R7 '  { "name": "Slack Message", "prompt": "Rewrite this as a short, casual Slack message." },$\r$\n'
@@ -180,7 +180,7 @@ Install this feature?"
 
   btc_qc_remove:
     DeleteRegValue HKCU "Software\${APP_ID}\Features" "QuickCommands"
-    Delete "$APPDATA\Blur-to-Clear\quick-commands.json"
+    Delete "$APPDATA\Thought Tidy\quick-commands.json"
 
   btc_qc_done:
 !macroend
@@ -189,6 +189,6 @@ Install this feature?"
 
 !macro customUnInstall
   DeleteRegKey HKCU "Software\${APP_ID}\Features"
-  Delete "$APPDATA\Blur-to-Clear\quick-commands.json"
-  RMDir  "$APPDATA\Blur-to-Clear"
+  Delete "$APPDATA\Thought Tidy\quick-commands.json"
+  RMDir  "$APPDATA\Thought Tidy"
 !macroend

@@ -1,4 +1,4 @@
-// settings.js — Blur-to-Clear desktop settings renderer
+// settings.js — Thought Tidy desktop settings renderer
 // Shares provider management logic with the extension options.js via the storage shim.
 // browser.storage.local calls go through storage-shim.js → btcAPI → electron-store.
 
@@ -715,7 +715,7 @@ function initProSection() {
   });
 
   document.getElementById("pro-buy-link")?.addEventListener("click", () => {
-    btcAPI.openURL("https://panadauto.gumroad.com/l/blur-to-clear");
+    btcAPI.openURL("https://panadauto.gumroad.com/l/thought-tidy");
   });
 
   document.querySelectorAll(".pro-unlock-link").forEach(a => {

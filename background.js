@@ -1,4 +1,4 @@
-// background.js — Blur-to-Clear event wiring (MV3 service worker)
+// background.js — Thought Tidy event wiring (MV3 service worker)
 importScripts("browser-polyfill.js", "lib/build-flags.js", "lib/text.js", "lib/prompts.js", "lib/pricing.js", "lib/license.js", "lib/api.js", "lib/updater.js", "lib/crypto-storage.js");
 
 const DYN_SEP = "dyn-sep";
@@ -41,7 +41,7 @@ browser.runtime.onInstalled.addListener(async () => {
   await migrateExtensionKeys();
   await syncWithDesktop();
 
-  browser.contextMenus.create({ id: "ai-root", title: "Blur-to-Clear", contexts: ["selection"] });
+  browser.contextMenus.create({ id: "ai-root", title: "Thought Tidy", contexts: ["selection"] });
   browser.contextMenus.create({ id: "see-history", title: "📋  See History", contexts: ["all"] });
 
   // TEST ONLY label — top of submenu, only in test builds

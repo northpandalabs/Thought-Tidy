@@ -1,4 +1,4 @@
-// main.js — Blur-to-Clear desktop app (Electron main process)
+// main.js — Thought Tidy desktop app (Electron main process)
 // Tray icon + global hotkey + popup + settings windows
 
 const {
@@ -11,7 +11,7 @@ const Store = require("electron-store");
 const { registerAll } = require("./ipc-handlers");
 const { todayDate, purgeOldLog } = require("../lib/text");
 
-const store = new Store({ name: "blur-to-clear-settings" });
+const store = new Store({ name: "thought-tidy-settings" });
 
 // ── OS keychain encryption (Electron safeStorage) ──────────────────────────────
 // safeStorage uses DPAPI on Windows, Keychain on macOS — keys are never stored
@@ -185,7 +185,7 @@ function openHistory() {
     width:    860,
     height:   700,
     minWidth: 600,
-    title:    "Blur-to-Clear — History",
+    title:    "Thought Tidy — History",
     icon:     APP_ICON,
     webPreferences: {
       preload:          path.join(__dirname, "preload.js"),
@@ -209,7 +209,7 @@ function openSettings() {
     width:    780,
     height:   720,
     minWidth: 600,
-    title:    "Blur-to-Clear — Settings",
+    title:    "Thought Tidy — Settings",
     icon:     APP_ICON,
     webPreferences: {
       preload:          path.join(__dirname, "preload.js"),
@@ -257,7 +257,7 @@ function buildTrayMenu() {
     { type:  "separator" },
     { label: "Settings…",              click: openSettings },
     { type:  "separator" },
-    { label: "Quit Blur-to-Clear",     role: "quit" }
+    { label: "Quit Thought Tidy",     role: "quit" }
   );
   return Menu.buildFromTemplate(items);
 }
@@ -265,7 +265,7 @@ function buildTrayMenu() {
 async function quickAction(action) {
   const text = clipboard.readText().trim();
   if (!text) {
-    new Notification({ title: "Blur-to-Clear", body: "Clipboard is empty." }).show();
+    new Notification({ title: "Thought Tidy", body: "Clipboard is empty." }).show();
     return;
   }
 
@@ -303,9 +303,9 @@ async function quickAction(action) {
     store.set("historyFull", historyFull.slice(-500));
 
     updateTrayTooltip();
-    new Notification({ title: "Blur-to-Clear", body: "Done — result copied to clipboard." }).show();
+    new Notification({ title: "Thought Tidy", body: "Done — result copied to clipboard." }).show();
   } catch (err) {
-    const n = new Notification({ title: "Blur-to-Clear — Error", body: err.message + " — Click to open Settings." });
+    const n = new Notification({ title: "Thought Tidy — Error", body: err.message + " — Click to open Settings." });
     n.on("click", openSettings);
     n.show();
   }
@@ -313,7 +313,7 @@ async function quickAction(action) {
 
 async function quickCustomAction(idx) {
   const text = clipboard.readText().trim();
-  if (!text) { new Notification({ title: "Blur-to-Clear", body: "Clipboard is empty." }).show(); return; }
+  if (!text) { new Notification({ title: "Thought Tidy", body: "Clipboard is empty." }).show(); return; }
   try {
     const { buildPromptWithProfile } = require("./lib-node/prompts");
     const { callAIWithFallback }     = require("./lib-node/api");
@@ -348,9 +348,9 @@ async function quickCustomAction(idx) {
     store.set("historyFull", historyFull.slice(-500));
 
     updateTrayTooltip();
-    new Notification({ title: "Blur-to-Clear", body: "Done — result copied to clipboard." }).show();
+    new Notification({ title: "Thought Tidy", body: "Done — result copied to clipboard." }).show();
   } catch (err) {
-    const n = new Notification({ title: "Blur-to-Clear — Error", body: err.message + " — Click to open Settings." });
+    const n = new Notification({ title: "Thought Tidy — Error", body: err.message + " — Click to open Settings." });
     n.on("click", openSettings);
     n.show();
   }
@@ -359,7 +359,7 @@ async function quickCustomAction(idx) {
 function updateTrayTooltip() {
   if (!tray) return;
   const count = purgeOldLog(store.get("historyLog") || []).length;
-  tray.setToolTip(count > 0 ? `Blur-to-Clear · ${count} fix${count === 1 ? "" : "es"} today` : "Blur-to-Clear");
+  tray.setToolTip(count > 0 ? `Thought Tidy · ${count} fix${count === 1 ? "" : "es"} today` : "Thought Tidy");
 }
 
 function createTray() {
@@ -373,7 +373,7 @@ function createTray() {
   }
 
   tray = new Tray(icon);
-  tray.setToolTip("Blur-to-Clear");
+  tray.setToolTip("Thought Tidy");
   tray.setContextMenu(buildTrayMenu());
 
   // Left-click / primary click opens the popup
@@ -400,7 +400,7 @@ function smartOpenPopup() {
 // ── App lifecycle ──────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
-  app.setName("Blur-to-Clear");
+  app.setName("Thought Tidy");
 
   // Migrate plaintext keys to OS keychain encryption, then wrap the store
   migrateToEncryptedKeys(store);

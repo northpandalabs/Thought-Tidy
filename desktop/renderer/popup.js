@@ -1,4 +1,4 @@
-// popup.js — Blur-to-Clear desktop popup renderer
+// popup.js — Thought Tidy desktop popup renderer
 // Uses storage-shim.js (provides `browser` compat) + btcAPI (via preload)
 
 /* global browser, btcAPI, callAI, buildPromptWithProfile, MENU_PROMPTS, wordCount */
