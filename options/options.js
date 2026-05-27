@@ -1036,7 +1036,7 @@ function initProSection() {
   });
 
   document.getElementById("pro-buy-link")?.addEventListener("click", () => {
-    browser.tabs.create({ url: "https://panadauto.gumroad.com/l/thought-tidy" });
+    browser.tabs.create({ url: "https://northpandalabs.gumroad.com/l/thought-tidy" });
   });
 
   document.querySelectorAll(".pro-unlock-link").forEach(a => {

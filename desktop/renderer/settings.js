@@ -741,7 +741,7 @@ function initProSection() {
   });
 
   document.getElementById("pro-buy-link")?.addEventListener("click", () => {
-    btcAPI.openURL("https://panadauto.gumroad.com/l/thought-tidy");
+    btcAPI.openURL("https://northpandalabs.gumroad.com/l/thought-tidy");
   });
 
   document.querySelectorAll(".pro-unlock-link").forEach(a => {
