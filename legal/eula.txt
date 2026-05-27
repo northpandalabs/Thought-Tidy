@@ -2,7 +2,7 @@ END-USER LICENSE AGREEMENT -- BLUR-TO-CLEAR
 
 Effective date: 2026-05-25
 Last updated: 2026-05-25
-Contact: bheckservices@gmail.com
+Contact: northpandalabs@gmail.com
 
 By installing or using Thought Tidy ("Software"), you agree to be bound by
 these terms. If you do not agree, do not install or use the Software.
@@ -82,7 +82,7 @@ Pro licenses are one-time purchases through Gumroad. All payment processing
 is handled by Gumroad.
 
 Refund policy: If a Pro license does not work as described within 30 days of
-purchase, contact bheckservices@gmail.com for a full refund. We reserve the
+purchase, contact northpandalabs@gmail.com for a full refund. We reserve the
 right to refuse refunds for abuse of this policy.
 
 ------------------------------------------------------------------------
@@ -159,5 +159,5 @@ Software's LICENSE file, constitutes the entire agreement between the parties.
 
 13. CONTACT
 
-Questions: bheckservices@gmail.com
+Questions: northpandalabs@gmail.com
 GitHub: https://github.com/Bheck890/Thought Tidy

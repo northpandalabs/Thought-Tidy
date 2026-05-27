@@ -1,6 +1,6 @@
 {
   "name": "thought-tidy",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "ADHD-friendly AI writing assistant — Chrome and Firefox extension",
   "private": true,
   "scripts": {
