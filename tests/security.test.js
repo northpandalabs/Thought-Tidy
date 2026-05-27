@@ -131,6 +131,50 @@ describe("browser extension security principles", () => {
     );
   });
 
+  test("fetch() only calls permitted external hosts", () => {
+    // Any new external host must be explicitly reviewed and added to ALLOWED_HOSTS.
+    // 127.0.0.1 is the local sync server; no port restriction enforced here.
+    const ALLOWED_HOSTS = [
+      "api.openai.com",
+      "api.anthropic.com",
+      "generativelanguage.googleapis.com",
+      "api.gumroad.com",
+      "127.0.0.1",
+      "localhost",
+    ];
+    const hits = [];
+    for (const file of src) {
+      const rel   = path.relative(ROOT, file);
+      const lines = fs.readFileSync(file, "utf8").split("\n");
+      lines.forEach((line, i) => {
+        const m = line.match(/fetch\s*\(\s*['"`]https?:\/\/([^/'"` ]+)/);
+        if (!m) return;
+        const host = m[1].split(":")[0]; // strip optional port
+        if (!ALLOWED_HOSTS.includes(host)) {
+          hits.push(`${rel}:${i + 1}  →  ${line.trim()}`);
+        }
+      });
+    }
+    failWithHits("fetch() to unlisted host found", hits);
+  });
+
+  test("console.log/error do not log API key values", () => {
+    // Logging key field names alongside their values would expose secrets in DevTools.
+    // Pattern: console.log( ... keyFieldName ... ) on the same line as the value variable.
+    const KEY_FIELDS = /(?:openaiKey|claudeKey|geminiKey|licenseKey|apiKey|api_key)/i;
+    const hits = [];
+    for (const file of src) {
+      const rel   = path.relative(ROOT, file);
+      const lines = fs.readFileSync(file, "utf8").split("\n");
+      lines.forEach((line, i) => {
+        if (/console\.(log|error|warn)\s*\(/.test(line) && KEY_FIELDS.test(line)) {
+          hits.push(`${rel}:${i + 1}  →  ${line.trim()}`);
+        }
+      });
+    }
+    failWithHits("Possible API key logged to console found", hits);
+  });
+
   // ── storage security ────────────────────────────────────────────────────────
 
   test("API keys stored in storage.local, not storage.sync", () => {
