@@ -237,8 +237,7 @@ async function loadHistory() {
   const entries = purgeOldLog(historyLog);
 
   const section = document.getElementById("history-section");
-  const isPro   = isProUnlocked(currentSettings);
-  if (!entries.length || !isPro) { if (section) section.style.display = "none"; return; }
+  if (!entries.length) { if (section) section.style.display = "none"; return; }
 
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;

@@ -615,6 +615,7 @@ async function saveWizardProvider() {
 // ── Action Settings Editor ─────────────────────────────────────────────────────
 
 let actionSettings = [];
+let currentIsPro = false;
 
 function renderActionEditor() {
   const list = document.getElementById("action-list");
@@ -640,6 +641,7 @@ function renderActionEditor() {
     const check = document.createElement("input");
     check.type = "checkbox"; check.className = "ae-check"; check.checked = !!action.enabled;
     if (isOnlyOne) { check.disabled = true; check.title = "At least one action must stay enabled"; }
+    else if (!currentIsPro) { check.disabled = true; check.title = "Pro feature — upgrade to enable/disable actions"; }
 
     const badge = document.createElement("span"); badge.className = "ae-lock-badge";
     if (isLocked) {
@@ -649,6 +651,7 @@ function renderActionEditor() {
     } else {
       const inp = document.createElement("input");
       inp.className = "ae-name-input"; inp.value = action.label; inp.placeholder = "Action name";
+      if (!currentIsPro) { inp.readOnly = true; inp.title = "Pro feature — upgrade to rename actions"; }
       row.append(ordDiv, check, inp, badge);
     }
 
@@ -714,9 +717,16 @@ function renderCustomPrompts() {
     };
     const actionsDiv = document.createElement("div");
     actionsDiv.className = "cp-actions";
-    actionsDiv.append(mkBtn("cp-edit", "Edit"), mkBtn("cp-delete", "Delete"));
-    if (i > 0)                        actionsDiv.appendChild(mkBtn("cp-up",   "↑"));
-    if (i < customPrompts.length - 1) actionsDiv.appendChild(mkBtn("cp-down", "↓"));
+    if (currentIsPro) {
+      actionsDiv.append(mkBtn("cp-edit", "Edit"), mkBtn("cp-delete", "Delete"));
+      if (i > 0)                        actionsDiv.appendChild(mkBtn("cp-up",   "↑"));
+      if (i < customPrompts.length - 1) actionsDiv.appendChild(mkBtn("cp-down", "↓"));
+    } else {
+      const hint = document.createElement("span");
+      hint.className = "cp-pro-hint";
+      hint.textContent = "Upgrade to Pro to edit";
+      actionsDiv.appendChild(hint);
+    }
 
     const item = document.createElement("div");
     item.className = "cp-item";
@@ -725,34 +735,47 @@ function renderCustomPrompts() {
     list.appendChild(item);
   });
 
-  list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", () => {
-    customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id);
-    renderCustomPrompts();
-  }));
-  list.querySelectorAll(".cp-edit").forEach(btn => btn.addEventListener("click", () => {
-    const p = customPrompts.find(x => x.id === btn.dataset.id);
-    if (!p) return;
-    document.getElementById("new-prompt-name").value = p.name;
-    document.getElementById("new-prompt-text").value = p.prompt;
-    customPrompts = customPrompts.filter(x => x.id !== p.id);
-    renderCustomPrompts();
-    document.getElementById("add-prompt-form").scrollIntoView({ behavior: "smooth" });
-  }));
-  list.querySelectorAll(".cp-up").forEach(btn => btn.addEventListener("click", () => {
-    const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
-    if (idx > 0) { [customPrompts[idx - 1], customPrompts[idx]] = [customPrompts[idx], customPrompts[idx - 1]]; renderCustomPrompts(); }
-  }));
-  list.querySelectorAll(".cp-down").forEach(btn => btn.addEventListener("click", () => {
-    const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
-    if (idx < customPrompts.length - 1) { [customPrompts[idx], customPrompts[idx + 1]] = [customPrompts[idx + 1], customPrompts[idx]]; renderCustomPrompts(); }
-  }));
+  if (currentIsPro) {
+    list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", () => {
+      customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id);
+      renderCustomPrompts();
+    }));
+    list.querySelectorAll(".cp-edit").forEach(btn => btn.addEventListener("click", () => {
+      const p = customPrompts.find(x => x.id === btn.dataset.id);
+      if (!p) return;
+      document.getElementById("new-prompt-name").value = p.name;
+      document.getElementById("new-prompt-text").value = p.prompt;
+      customPrompts = customPrompts.filter(x => x.id !== p.id);
+      renderCustomPrompts();
+      document.getElementById("add-prompt-form").scrollIntoView({ behavior: "smooth" });
+    }));
+    list.querySelectorAll(".cp-up").forEach(btn => btn.addEventListener("click", () => {
+      const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
+      if (idx > 0) { [customPrompts[idx - 1], customPrompts[idx]] = [customPrompts[idx], customPrompts[idx - 1]]; renderCustomPrompts(); }
+    }));
+    list.querySelectorAll(".cp-down").forEach(btn => btn.addEventListener("click", () => {
+      const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
+      if (idx < customPrompts.length - 1) { [customPrompts[idx], customPrompts[idx + 1]] = [customPrompts[idx + 1], customPrompts[idx]]; renderCustomPrompts(); }
+    }));
+  }
+
+  // Hide add form for free users once they've used their 1 prompt slot
+  const addForm = document.getElementById("add-prompt-form");
+  if (addForm) {
+    const maxPrompts = currentIsPro ? 8 : 1;
+    addForm.style.display = customPrompts.length >= maxPrompts ? "none" : "";
+  }
 }
 
 function addPrompt() {
   const name   = document.getElementById("new-prompt-name").value.trim();
   const prompt = document.getElementById("new-prompt-text").value.trim();
   if (!name || !prompt) { alert("Enter both a name and an instruction."); return; }
-  if (customPrompts.length >= 8) { alert("Maximum 8 custom prompts."); return; }
+  const maxPrompts = currentIsPro ? 8 : 1;
+  if (customPrompts.length >= maxPrompts) {
+    alert(currentIsPro ? "Maximum 8 custom prompts." : "Free tier allows 1 custom prompt. Upgrade to Pro for more.");
+    return;
+  }
   customPrompts.push({ id: uid(), name, prompt });
   renderCustomPrompts();
   document.getElementById("new-prompt-name").value = "";
@@ -974,13 +997,16 @@ function setVal(id, v) { const el = document.getElementById(id); if (el) el.valu
 // ── Pro gate ───────────────────────────────────────────────────────────────────
 
 function applyProGates(isPro) {
-  ["profile-section", "actions-section", "custom-prompts-section", "history-viewer-section"].forEach(id => {
+  currentIsPro = isPro;
+  ["profile-section", "history-viewer-section"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.toggle("locked", !isPro);
   });
   const histEl = document.getElementById("history-viewer-section");
   if (histEl) histEl.style.display = isPro ? "" : "none";
+  renderActionEditor();
+  renderCustomPrompts();
 
   const lockedView = document.getElementById("pro-locked-view");
   const activeView = document.getElementById("pro-active-view");

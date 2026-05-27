@@ -190,5 +190,6 @@ Install this feature?"
 !macro customUnInstall
   DeleteRegKey HKCU "Software\${APP_ID}\Features"
   Delete "$APPDATA\Thought Tidy\quick-commands.json"
+  Delete "$APPDATA\Thought Tidy\thought-tidy-settings.json"
   RMDir  "$APPDATA\Thought Tidy"
 !macroend

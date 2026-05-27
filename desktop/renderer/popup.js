@@ -262,8 +262,7 @@ async function loadHistory() {
   const entries = purgeOldLog(raw.historyLog || []); // uses todayDate() internally
 
   const section = document.getElementById("history-section");
-  const isPro   = isProUnlocked(settings);
-  if (!entries.length || !isPro) { if (section) section.style.display = "none"; return; }
+  if (!entries.length) { if (section) section.style.display = "none"; return; }
 
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;
