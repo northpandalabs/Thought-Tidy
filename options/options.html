@@ -58,20 +58,16 @@
     <div class="page-header">
       <h1>✦ Thought Tidy</h1>
       <p class="tagline">
-        Built for ADHD brains, fast thinkers, and anyone who knows exactly what they mean
+        Built for fast thinkers and anyone who knows exactly what they mean
         but struggles to make it look that way on screen.<br>
         Highlight text → right-click → AI fixes it. <strong>Your key. Your provider. Your data. Zero subscription.</strong>
       </p>
       <div class="links-row">
-        <a href="https://github.com/Bheck890/Thought Tidy" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+        <a href="https://github.com/northpandalabs/Thought-Tidy" target="_blank" rel="noopener">Source Available</a>
         <span class="sep">·</span>
-        <a href="https://github.com/Bheck890/Thought Tidy/fork" target="_blank" rel="noopener">Fork it</a>
-        <span class="sep">·</span>
-        <a href="https://github.com/Bheck890/Thought Tidy/issues" target="_blank" rel="noopener">Report an issue</a>
-        <span class="sep">·</span>
-        <a href="https://github.com/Bheck890/Thought Tidy/blob/main/LICENSE" target="_blank" rel="noopener">BSL License</a>
+        <a href="https://github.com/northpandalabs/Thought-Tidy/issues" target="_blank" rel="noopener">Report an issue</a>
       </div>
-      <div class="built-by">Built by <a href="https://github.com/Bheck890" target="_blank" rel="noopener">Bheck890</a> · Source available · No servers, no tracking</div>
+      <div class="built-by">Built by <a href="https://northpandalabs.com" target="_blank" rel="noopener">North Panda Labs</a> · No servers, no tracking</div>
     </div>
 
     <!-- AI Providers -->
@@ -170,7 +166,7 @@
       <h2>⚡ Thought Tidy Pro</h2>
       <div id="pro-locked-view">
         <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
-        <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro ($10 one-time) ↗</a>
+        <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro ↗</a>
         <div class="field" style="margin-top:12px">
           <label for="pro-email-input">Email used at purchase</label>
           <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off">
@@ -196,7 +192,7 @@
       <div class="pro-overlay">
         <span class="pro-lock-icon">🔒</span>
         <p>Pro feature</p>
-        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+        <p><a class="pro-unlock-link" style="cursor:pointer">Unlock Pro to use this section ↗</a></p>
       </div>
       <h2>
         👤 Your Profile
@@ -260,6 +256,10 @@
           </p>
         </div>
       </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="profile-save-btn">Save</button>
+        <span class="section-save-status" id="profile-save-status"></span>
+      </div>
     </section>
 
     <!-- Behavior -->
@@ -267,9 +267,16 @@
       <h2>Behavior</h2>
       <div class="field">
         <label for="variants">Suggestions per request: <strong id="variants-display">1</strong></label>
-        <input type="range" id="variants" min="1" max="4" value="1">
+        <input type="range" id="variants" min="1" max="1" value="1">
         <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
         <p class="hint">Fix Spelling is always 1. Other actions call the AI multiple times so you can compare versions.</p>
+        <p id="variants-pro-hint" class="hint" style="display:none; margin-top:4px">
+          Multiple suggestions is a <a id="variants-gumroad-link" style="cursor:pointer; color:#b4befe;">Pro feature ↗</a>
+        </p>
+      </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="behavior-save-btn">Save</button>
+        <span class="section-save-status" id="behavior-save-status"></span>
       </div>
     </section>
 
@@ -283,16 +290,15 @@
       <div id="action-editor-panel" style="display:none; margin-top:12px">
         <p class="hint" style="margin-bottom:10px">Built-in actions (grey lock) can't be renamed. At least one action must stay active.</p>
         <div id="action-list" class="ae-list"></div>
+        <div class="section-save-row" style="margin-top:10px">
+          <button class="section-save-btn" id="actions-save-btn">Save Order</button>
+          <span class="section-save-status" id="actions-save-status"></span>
+        </div>
       </div>
     </section>
 
     <!-- Custom Prompts -->
-    <section id="custom-prompts-section" class="pro-gate">
-      <div class="pro-overlay">
-        <span class="pro-lock-icon">🔒</span>
-        <p>Pro feature</p>
-        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
-      </div>
+    <section id="custom-prompts-section">
       <h2>My Custom Prompts</h2>
       <p class="hint" style="margin-bottom:14px">Saved prompts appear in the right-click menu under Thought Tidy (up to 8). Use these to build your own actions: Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
 
@@ -325,7 +331,7 @@
       <div class="pro-overlay">
         <span class="pro-lock-icon">🔒</span>
         <p>Pro feature</p>
-        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+        <p><a class="pro-unlock-link" style="cursor:pointer">Unlock Pro to use this section ↗</a></p>
       </div>
       <h2>
         Today's History
@@ -337,8 +343,28 @@
       <div id="history-viewer-list" class="hv-list"></div>
     </section>
 
+    <!-- Desktop Sync -->
+    <section id="sync-section">
+      <h2>Desktop Sync</h2>
+      <p class="hint" style="margin-bottom:12px">Syncs your settings with the Thought Tidy desktop app when it's running on the same machine.</p>
+      <div class="field">
+        <label class="toggle-label">
+          <input type="checkbox" id="syncEnabled">
+          <span class="toggle-text">Enable desktop sync</span>
+        </label>
+      </div>
+      <p class="hint" style="margin-top:8px">
+        Requires the Thought Tidy desktop app to be open. Sync is local-only by default.
+        For remote sync, the desktop app requires user authentication.
+      </p>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="sync-save-btn">Save</button>
+        <span class="section-save-status" id="sync-save-status"></span>
+      </div>
+    </section>
+
     <div class="footer">
-      <button id="save-btn">Save Settings</button>
+      <button id="save-btn">Save All Settings</button>
       <button id="revert-btn" class="revert-btn">Revert Changes</button>
       <span id="save-status"></span>
     </div>
@@ -348,10 +374,10 @@
     </div>
 
     <div class="page-credit">
-      © <span id="copyright-year"></span> NorthPanda Labs · Thought Tidy ·
-      <a href="https://github.com/Bheck890/Thought Tidy" target="_blank" rel="noopener">⭐ Star on GitHub</a> ·
-      <a href="https://github.com/Bheck890/Thought Tidy/blob/main/legal/privacy.txt" target="_blank" rel="noopener">Privacy Policy</a> ·
-      <a href="https://github.com/Bheck890/Thought Tidy/blob/main/legal/eula.txt" target="_blank" rel="noopener">EULA</a>
+      © <span id="copyright-year"></span> North Panda Labs · Thought Tidy ·
+      <a href="https://github.com/northpandalabs/Thought-Tidy" target="_blank" rel="noopener">Source Available</a> ·
+      <a href="https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/privacy.txt" target="_blank" rel="noopener">Privacy Policy</a> ·
+      <a href="https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/eula.txt" target="_blank" rel="noopener">EULA</a>
     </div>
 
   </div>

@@ -599,6 +599,35 @@ input[type="range"] { width: 100%; accent-color: #89b4fa; cursor: pointer; margi
 .hv-meta   { color: #6c7086; font-size: 11.5px; white-space: nowrap; }
 .hv-words  { color: #45475a; font-size: 11px; white-space: nowrap; }
 
+/* ── Per-section save ────────────────────────────────────────── */
+.section-save-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #313244;
+}
+
+.section-save-btn {
+  background: #313244;
+  color: #cdd6f4;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  padding: 6px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.section-save-btn:hover { background: #45475a; border-color: #6c7086; }
+
+.section-save-status {
+  font-size: 12px;
+  min-height: 16px;
+}
+.section-save-status.ok  { color: #a6e3a1; }
+.section-save-status.err { color: #f38ba8; }
+
 /* ── Footer ──────────────────────────────────────────────────── */
 .footer {
   display: flex;

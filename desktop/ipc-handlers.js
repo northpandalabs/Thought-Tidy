@@ -25,6 +25,13 @@ function makeStoreSetHandler(store) {
   };
 }
 
+function makeStoreDeleteHandler(store) {
+  return function storeDelete(_, keys) {
+    const arr = Array.isArray(keys) ? keys : [keys];
+    arr.forEach(k => { if (typeof store.delete === "function") store.delete(k); });
+  };
+}
+
 function makeClipboardReadHandler(clipboard) {
   return () => clipboard.readText();
 }
@@ -39,6 +46,7 @@ function makeClipboardWriteHandler(clipboard) {
 function registerAll(ipcMain, { store, clipboard, openSettings, openHistory, closePopup, openURL }) {
   ipcMain.handle("store-get",       makeStoreGetHandler(store));
   ipcMain.handle("store-set",       makeStoreSetHandler(store));
+  ipcMain.handle("store-delete",    makeStoreDeleteHandler(store));
   ipcMain.handle("read-clipboard",  makeClipboardReadHandler(clipboard));
   ipcMain.handle("write-clipboard", makeClipboardWriteHandler(clipboard));
   ipcMain.handle("open-settings",   () => openSettings());
@@ -50,6 +58,7 @@ function registerAll(ipcMain, { store, clipboard, openSettings, openHistory, clo
 module.exports = {
   makeStoreGetHandler,
   makeStoreSetHandler,
+  makeStoreDeleteHandler,
   makeClipboardReadHandler,
   makeClipboardWriteHandler,
   registerAll

@@ -162,11 +162,11 @@ describe("registerAll", () => {
       openURL:      jest.fn()
     });
     expect(registered).toEqual(expect.arrayContaining([
-      "store-get", "store-set",
+      "store-get", "store-set", "store-delete",
       "read-clipboard", "write-clipboard",
       "open-settings", "open-history", "close-popup", "open-url"
     ]));
-    expect(registered).toHaveLength(8);
+    expect(registered).toHaveLength(9);
   });
 
   test("open-settings handler calls the provided callback", () => {

@@ -36,6 +36,10 @@
     ],
     "extraResources": [
       {
+        "from": "../lib",
+        "to": "lib"
+      },
+      {
         "from": "../icons",
         "to": "icons"
       }
@@ -61,8 +65,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "Bheck890",
-      "repo": "Thought Tidy"
+      "owner": "northpandalabs",
+      "repo": "Thought-Tidy"
     }
   },
   "jest": {

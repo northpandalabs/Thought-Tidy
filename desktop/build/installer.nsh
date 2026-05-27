@@ -5,7 +5,9 @@
 ;   Same version   → Repair (default) / Modify / Uninstall
 ;   Newer version  → Upgrade (default) / Repair / Modify / Uninstall
 ;
-; Optional feature: "AI Quick Commands" preset pack (add/remove demo)
+; Features page (inline checkbox, no popup):
+;   Shown before install on both fresh install and upgrade/modify.
+;   Replaces the old MessageBox prompt that appeared after files were written.
 
 ; ── customHeader ─────────────────────────────────────────────────────────────
 ; Guards with !ifndef BUILD_UNINSTALLER so Var/Function/Page declarations are
@@ -22,7 +24,10 @@
   Var BTC_RB_MODIFY     ; HWND of "Modify" radio
   Var BTC_RB_UNINSTALL  ; HWND of "Uninstall" radio
 
-  ; ── Page: Create ───────────────────────────────────────────────
+  Var BTC_CB_QUICKCMDS  ; HWND of the AI Quick Commands checkbox
+  Var BTC_QC_ENABLED    ; "1" if the feature should be installed, "0" if not
+
+  ; ── Maintenance page: Create ───────────────────────────────────
   Function btcMaintCreate
     ; Look for per-user install first, then per-machine
     ReadRegStr $BTC_UNINST_STR HKCU \
@@ -99,7 +104,7 @@
     nsDialogs::Show
   FunctionEnd
 
-  ; ── Page: Leave (user clicked Next) ────────────────────────────
+  ; ── Maintenance page: Leave (user clicked Next) ────────────────
   Function btcMaintLeave
     ; Upgrade selected?
     ${If} $BTC_RB_UPDATE != ""
@@ -118,7 +123,7 @@
     ; Modify selected?
     ${NSD_GetState} $BTC_RB_MODIFY $R0
     ${If} $R0 == ${BST_CHECKED}
-      Return     ; proceed — customInstall will prompt for features
+      Return     ; proceed — feature checkboxes shown on next page
     ${EndIf}
 
     ; Uninstall selected?
@@ -129,8 +134,47 @@
     ${EndIf}
   FunctionEnd
 
-  ; Insert the maintenance page before the normal installer pages
+  ; ── Features page: Create ──────────────────────────────────────
+  ; Shown inline in the installer — no popup. Runs before files are written.
+  Function btcFeaturesCreate
+    nsDialogs::Create 1018
+    Pop $0
+
+    ${NSD_CreateLabel} 0 0 100% 24u \
+      "Select optional features to install with Thought Tidy:"
+    Pop $0
+
+    ; Default the checkbox from the existing registry value (for upgrades/modifies)
+    ReadRegStr $R9 HKCU "Software\${APP_ID}\Features" "QuickCommands"
+    ${If} $R9 == "1"
+      StrCpy $R9 ${BST_CHECKED}
+    ${Else}
+      StrCpy $R9 ${BST_UNCHECKED}
+    ${EndIf}
+
+    ${NSD_CreateCheckbox} 10u 30u 100% 14u \
+      "AI Quick Commands — adds Email Reply, Slack, and LinkedIn Post prompt presets"
+    Pop $BTC_CB_QUICKCMDS
+    ${NSD_SetState} $BTC_CB_QUICKCMDS $R9
+
+    nsDialogs::Show
+  FunctionEnd
+
+  ; ── Features page: Leave (user clicked Next) ───────────────────
+  ; Saves checkbox state into BTC_QC_ENABLED so customInstall can read it.
+  Function btcFeaturesLeave
+    ${NSD_GetState} $BTC_CB_QUICKCMDS $R0
+    ${If} $R0 == ${BST_CHECKED}
+      StrCpy $BTC_QC_ENABLED "1"
+    ${Else}
+      StrCpy $BTC_QC_ENABLED "0"
+    ${EndIf}
+  FunctionEnd
+
+  ; Insert the maintenance page first, then the features page.
+  ; Both come before the standard installer pages (directory, install, finish).
   Page Custom btcMaintCreate btcMaintLeave
+  Page Custom btcFeaturesCreate btcFeaturesLeave
 
   !endif  ; BUILD_UNINSTALLER
 !macroend
@@ -141,32 +185,16 @@
 !macroend
 
 ; ── Optional feature: AI Quick Commands ──────────────────────────────────────
-; Runs after files are installed. Asks Yes/No per feature.
-; Remembers current state via registry so re-running shows the right default.
+; Reads BTC_QC_ENABLED set by the features page (no popup).
+; Falls back to "install" on silent installs (/S flag) where pages are skipped.
 
 !macro customInstall
-  ReadRegStr $R8 HKCU "Software\${APP_ID}\Features" "QuickCommands"
-
-  ${If} $R8 == "1"
-    StrCpy $R6 "Optional Feature: AI Quick Commands$\n$\n\
-This feature is already installed.$\n\
-It adds sample prompt presets to your tray Quick Fix menu:$\n\
-  - Email Reply$\n\
-  - Slack Message$\n\
-  - LinkedIn Post$\n$\n\
-Keep this feature?"
-  ${Else}
-    StrCpy $R6 "Optional Feature: AI Quick Commands$\n$\n\
-Adds sample prompt presets to your tray Quick Fix menu:$\n\
-  - Email Reply$\n\
-  - Slack Message$\n\
-  - LinkedIn Post$\n$\n\
-Install this feature?"
+  ; On silent install BTC_QC_ENABLED is empty — default to installing the feature
+  ${If} $BTC_QC_ENABLED == ""
+    StrCpy $BTC_QC_ENABLED "1"
   ${EndIf}
 
-  MessageBox MB_YESNO|MB_ICONQUESTION "$R6" /SD IDYES IDYES btc_qc_install IDNO btc_qc_remove
-
-  btc_qc_install:
+  ${If} $BTC_QC_ENABLED == "1"
     WriteRegStr HKCU "Software\${APP_ID}\Features" "QuickCommands" "1"
     CreateDirectory "$APPDATA\Thought Tidy"
     FileOpen $R7 "$APPDATA\Thought Tidy\quick-commands.json" w
@@ -176,13 +204,10 @@ Install this feature?"
     FileWrite $R7 '  { "name": "LinkedIn Post", "prompt": "Turn this into a polished LinkedIn post." }$\r$\n'
     FileWrite $R7 ']'
     FileClose $R7
-    Goto btc_qc_done
-
-  btc_qc_remove:
+  ${Else}
     DeleteRegValue HKCU "Software\${APP_ID}\Features" "QuickCommands"
     Delete "$APPDATA\Thought Tidy\quick-commands.json"
-
-  btc_qc_done:
+  ${EndIf}
 !macroend
 
 ; ── Clean up feature data on uninstall ───────────────────────────────────────

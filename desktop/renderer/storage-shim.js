@@ -13,7 +13,8 @@ const browser = {
         if (typeof keys === "string") return { [keys]: result };
         return result;
       },
-      set(data) { return btcAPI.setSettings(data); }
+      set(data) { return btcAPI.setSettings(data); },
+      remove(keys) { return btcAPI.deleteSettings(keys); }
     }
   },
   runtime: {

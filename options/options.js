@@ -6,8 +6,14 @@ const STORAGE_KEYS = [
   "geminiKey", "geminiModel", "geminiModels", "geminiModelsLastFetched",
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey"
+  "licenseEmail", "licenseKey", "syncEnabled"
 ];
+
+const GUMROAD_URL = "https://northpandalabs.gumroad.com/l/thought-tidy";
+
+function openGumroad() {
+  browser.tabs.create({ url: GUMROAD_URL });
+}
 
 // Model fetchers/testers loaded from lib/models.js
 const FETCHERS = { openai: fetchOpenAIModels, claude: fetchClaudeModels, gemini: fetchGeminiModels };
@@ -450,6 +456,22 @@ function showWizard() {
   document.getElementById("wizard-step-1").style.display   = "block";
   document.getElementById("wizard-step-2").style.display   = "none";
   document.getElementById("add-provider-btn").style.display = "none";
+
+  // Disable provider buttons that are already configured
+  document.querySelectorAll(".wizard-provider-btn").forEach(btn => {
+    const alreadyAdded = configuredProviders.some(p => p.id === btn.dataset.provider);
+    btn.disabled = alreadyAdded;
+    const sub = btn.querySelector(".wp-sub");
+    if (sub) {
+      if (alreadyAdded) {
+        sub.textContent = "Already configured — Edit on card";
+      } else {
+        const info = PROVIDER_INFO[btn.dataset.provider];
+        if (info) sub.textContent = info.sub;
+      }
+    }
+  });
+
   clearWizardStep2();
 }
 
@@ -837,6 +859,7 @@ async function save() {
     await browser.storage.local.set({ lastAction: resolvedAction });
   }
 
+  const syncEnabled = document.getElementById("syncEnabled")?.checked !== false;
   await cryptoSet({
     variants:       getVal("variants"),
     customPrompts,
@@ -847,7 +870,8 @@ async function save() {
     profileContext: getVal("profileContext"),
     profileEnabled: document.getElementById("profileEnabled")?.checked || false
   });
-  syncWithDesktop().catch(() => {});
+  await browser.storage.local.set({ syncEnabled });
+  if (syncEnabled) syncWithDesktop().catch(() => {});
   const status = document.getElementById("save-status");
   status.textContent = "Saved!" + resetMsg;
   status.className   = "status-ok";
@@ -970,6 +994,20 @@ async function init() {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
   });
 
+  // Per-section save buttons
+  document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);
+  document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
+  document.getElementById("actions-save-btn")?.addEventListener("click", saveActions);
+  document.getElementById("sync-save-btn")?.addEventListener("click", saveSyncSetting);
+
+  // Variants Gumroad link for free users
+  document.getElementById("variants-gumroad-link")?.addEventListener("click", openGumroad);
+
+  // Desktop sync toggle
+  const syncEnabled = await browser.storage.local.get("syncEnabled");
+  const syncEl = document.getElementById("syncEnabled");
+  if (syncEl) syncEl.checked = syncEnabled.syncEnabled !== false;
+
   // TEST ONLY banner
   if (typeof BUILD_FLAGS !== "undefined" && BUILD_FLAGS.testBuild) {
     const banner = document.getElementById("test-only-banner");
@@ -994,6 +1032,51 @@ async function init() {
 function getVal(id) { return document.getElementById(id)?.value ?? ""; }
 function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
 
+// ── Per-section saves ──────────────────────────────────────────────────────────
+
+function showSectionStatus(elId, msg, isErr) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = "section-save-status " + (isErr ? "err" : "ok");
+  setTimeout(() => { el.textContent = ""; el.className = "section-save-status"; }, 2500);
+}
+
+async function saveBehavior() {
+  await cryptoSet({ variants: getVal("variants") });
+  showSectionStatus("behavior-save-status", "Saved!");
+}
+
+async function saveProfile() {
+  await cryptoSet({
+    profileName:    getVal("profileName"),
+    profileRole:    getVal("profileRole"),
+    profileStyle:   getVal("profileStyle"),
+    profileContext: getVal("profileContext"),
+    profileEnabled: document.getElementById("profileEnabled")?.checked || false
+  });
+  syncWithDesktop().catch(() => {});
+  showSectionStatus("profile-save-status", "Saved!");
+}
+
+async function saveActions() {
+  const { lastAction = "" } = await browser.storage.local.get("lastAction");
+  const enabledIds = new Set(actionSettings.filter(a => a.enabled).map(a => a.id));
+  if (lastAction && !lastAction.startsWith("custom-") && !enabledIds.has(lastAction)) {
+    const first = actionSettings.find(a => a.enabled);
+    await browser.storage.local.set({ lastAction: first?.id || "" });
+  }
+  await cryptoSet({ actionSettings });
+  showSectionStatus("actions-save-status", "Saved!");
+}
+
+async function saveSyncSetting() {
+  const enabled = document.getElementById("syncEnabled")?.checked || false;
+  await browser.storage.local.set({ syncEnabled: enabled });
+  if (enabled) syncWithDesktop().catch(() => {});
+  showSectionStatus("sync-save-status", "Saved!");
+}
+
 // ── Pro gate ───────────────────────────────────────────────────────────────────
 
 function applyProGates(isPro) {
@@ -1016,6 +1099,7 @@ function applyProGates(isPro) {
   // Variants (Pro-only) — cap at 1 and reset if needed
   const variantsInput   = document.getElementById("variants");
   const variantsDisplay = document.getElementById("variants-display");
+  const variantsHint    = document.getElementById("variants-pro-hint");
   if (variantsInput) {
     variantsInput.max = isPro ? 4 : 1;
     if (!isPro && parseInt(variantsInput.value) > 1) {
@@ -1023,6 +1107,7 @@ function applyProGates(isPro) {
       if (variantsDisplay) variantsDisplay.textContent = 1;
     }
   }
+  if (variantsHint) variantsHint.style.display = isPro ? "none" : "block";
 }
 
 function initProSection() {
@@ -1035,14 +1120,10 @@ function initProSection() {
     }
   });
 
-  document.getElementById("pro-buy-link")?.addEventListener("click", () => {
-    browser.tabs.create({ url: "https://northpandalabs.gumroad.com/l/thought-tidy" });
-  });
+  document.getElementById("pro-buy-link")?.addEventListener("click", openGumroad);
 
   document.querySelectorAll(".pro-unlock-link").forEach(a => {
-    a.addEventListener("click", () => {
-      document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth" });
-    });
+    a.addEventListener("click", openGumroad);
   });
 
   document.getElementById("activate-pro-btn")?.addEventListener("click", async () => {

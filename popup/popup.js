@@ -24,9 +24,14 @@ async function init() {
   if (!isPro) {
     variantsEl.max   = 1;
     variantsEl.value = 1;
-    const badge = document.createElement("span");
+    const badge = document.createElement("a");
     badge.className   = "pro-badge-sm";
-    badge.textContent = "Pro";
+    badge.textContent = "Pro ↗";
+    badge.style.cursor = "pointer";
+    badge.title = "Upgrade to Pro for multiple suggestions";
+    badge.addEventListener("click", () => {
+      browser.tabs.create({ url: "https://northpandalabs.gumroad.com/l/thought-tidy" });
+    });
     variantsEl.insertAdjacentElement("afterend", badge);
   } else {
     variantsEl.max   = 4;

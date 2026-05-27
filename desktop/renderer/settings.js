@@ -34,13 +34,11 @@ let isDirty             = false;
 
 function wireLinks() {
   const links = {
-    "link-github":         "https://github.com/Bheck890/Blur-to-Clear",
-    "link-issues":         "https://github.com/Bheck890/Blur-to-Clear/issues",
-    "link-license":        "https://github.com/Bheck890/Blur-to-Clear/blob/main/LICENSE",
-    "link-author":         "https://github.com/Bheck890",
-    "link-footer-github":  "https://github.com/Bheck890/Blur-to-Clear",
-    "link-footer-privacy": "https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/privacy.txt",
-    "link-footer-eula":    "https://github.com/Bheck890/Blur-to-Clear/blob/main/legal/eula.txt"
+    "link-github":         "https://github.com/northpandalabs/Thought-Tidy",
+    "link-issues":         "https://github.com/northpandalabs/Thought-Tidy/issues",
+    "link-footer-github":  "https://github.com/northpandalabs/Thought-Tidy",
+    "link-footer-privacy": "https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/privacy.txt",
+    "link-footer-eula":    "https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/eula.txt"
   };
   for (const [id, url] of Object.entries(links)) {
     const el = document.getElementById(id);

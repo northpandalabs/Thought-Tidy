@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // Settings store
   getSettings:    (keys)     => ipcRenderer.invoke("store-get", keys),
   setSettings:    (data)     => ipcRenderer.invoke("store-set", data),
+  deleteSettings: (keys)     => ipcRenderer.invoke("store-delete", keys),
 
   // Clipboard
   readClipboard:  ()         => ipcRenderer.invoke("read-clipboard"),

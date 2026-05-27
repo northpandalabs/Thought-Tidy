@@ -70,6 +70,9 @@ function makeEncryptingStore(raw) {
         raw.set("syncMeta", { lastChanged: new Date().toISOString() });
       }
     },
+    delete(key) {
+      raw.delete(key);
+    },
     get store() {
       const s = { ...raw.store };
       for (const k of _SENSITIVE) { if (k in s) s[k] = _decVal(s[k]); }
