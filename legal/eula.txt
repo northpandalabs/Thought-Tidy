@@ -136,7 +136,7 @@ The webextension-polyfill library is used under the Mozilla Public License
 2.0. Other dependencies are listed in package.json.
 
 The Software's source code is available at
-https://github.com/Bheck890/Thought Tidy under a proprietary license.
+https://github.com/northpandalabs/Thought Tidy under a proprietary license.
 Nothing in this Agreement grants rights beyond those specified in that license.
 
 ------------------------------------------------------------------------
@@ -152,7 +152,7 @@ competent jurisdiction.
 12. ENTIRE AGREEMENT
 
 This Agreement, together with the Privacy Policy at
-https://github.com/Bheck890/Thought Tidy/blob/main/legal/privacy.txt and the
+https://github.com/northpandalabs/Thought Tidy/blob/main/legal/privacy.txt and the
 Software's LICENSE file, constitutes the entire agreement between the parties.
 
 ------------------------------------------------------------------------
@@ -160,4 +160,4 @@ Software's LICENSE file, constitutes the entire agreement between the parties.
 13. CONTACT
 
 Questions: northpandalabs@gmail.com
-GitHub: https://github.com/Bheck890/Thought Tidy
+GitHub: https://github.com/northpandalabs/Thought-Tidy

@@ -11,7 +11,7 @@ WHO WE ARE
 Thought Tidy is an AI writing assistant browser extension and desktop
 application developed by NorthPanda Labs, a product of Panda Automation LLC.
 Source code:
-https://github.com/Bheck890/Thought Tidy
+https://github.com/northpandalabs/Thought Tidy
 
 ------------------------------------------------------------------------
 
