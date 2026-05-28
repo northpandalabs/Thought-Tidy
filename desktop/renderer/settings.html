@@ -114,19 +114,15 @@
     <div class="page-header">
       <h1>⧉ Thought Tidy <span style="font-size:13px;font-weight:400;color:#6c7086">Desktop</span></h1>
       <p class="tagline">
-        ADHD-friendly AI writing assistant, running as a tray app.<br>
+        Built for fast thinkers, running as a tray app.<br>
         Press <strong>Ctrl+Shift+Space</strong> (or Cmd+Shift+Space on Mac) anywhere to open the popup.
       </p>
       <div class="links-row">
-        <a id="link-github">⭐ Star on GitHub</a>
+        <a id="link-github">Source Available</a>
         <span class="sep">·</span>
         <a id="link-issues">Report an issue</a>
-        <span class="sep">·</span>
-        <a id="link-license">MIT License</a>
       </div>
-      <div class="built-by">
-        Built by <a id="link-author">Bheck890</a> · Open source · No money wanted, just a ⭐ if it helped you
-      </div>
+      <div class="built-by">Built by <a id="link-author">North Panda Labs</a> · No servers, no tracking</div>
     </div>
 
     <div class="desktop-note">
@@ -313,6 +309,10 @@
           <div class="fetch-status" id="context-url-status"></div>
         </div>
       </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="profile-save-btn">Save</button>
+        <span class="section-save-status" id="profile-save-status"></span>
+      </div>
     </section>
 
     <!-- Behavior -->
@@ -323,6 +323,10 @@
         <input type="range" id="variants" min="1" max="4" value="1">
         <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
         <p class="hint">Fix Spelling is always 1. Other actions generate multiple versions so you can compare.</p>
+      </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="behavior-save-btn">Save</button>
+        <span class="section-save-status" id="behavior-save-status"></span>
       </div>
     </section>
 
@@ -336,6 +340,10 @@
       <div id="action-editor-panel" style="display:none; margin-top:12px">
         <p class="hint" style="margin-bottom:10px">Built-in actions (grey lock) can't be renamed. At least one action must stay active.</p>
         <div id="action-list" class="ae-list"></div>
+        <div class="section-save-row">
+          <button class="section-save-btn" id="actions-save-btn">Save Order</button>
+          <span class="section-save-status" id="actions-save-status"></span>
+        </div>
       </div>
     </section>
 
@@ -404,8 +412,8 @@
     </div>
 
     <div class="page-credit">
-      © <span id="copyright-year"></span> NorthPanda Labs · Thought Tidy Desktop · <span id="app-version-label"></span> ·
-      <a id="link-footer-github">⭐ Star on GitHub</a> ·
+      © <span id="copyright-year"></span> North Panda Labs · Thought Tidy Desktop · <span id="app-version-label"></span> ·
+      <a id="link-footer-github">Source Available</a> ·
       <a id="link-footer-privacy" style="cursor:pointer">Privacy Policy</a> ·
       <a id="link-footer-eula" style="cursor:pointer">EULA</a>
     </div>

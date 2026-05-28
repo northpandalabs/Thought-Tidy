@@ -9,7 +9,8 @@ const STORAGE_KEYS = [
   "licenseEmail", "licenseKey", "syncEnabled"
 ];
 
-const GUMROAD_URL = "https://northpandalabs.gumroad.com/l/thought-tidy";
+const GUMROAD_URL    = "https://northpandalabs.gumroad.com/l/thought-tidy";
+const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
 
 function openGumroad() {
   browser.tabs.create({ url: GUMROAD_URL });
@@ -130,6 +131,7 @@ function renderProviderCards() {
     return;
   }
   noState.style.display = "none";
+  if (addBtn) addBtn.style.display = configuredProviders.length < Object.keys(PROVIDER_INFO).length ? "inline-block" : "none";
 
   configuredProviders.forEach((p, idx) => {
     container.appendChild(buildCard(p, idx));
@@ -651,13 +653,16 @@ function renderActionEditor() {
     const row = document.createElement("div");
     row.className = `ae-row${!action.enabled ? " ae-disabled" : ""}`;
 
+    const isProAction = PRO_ACTION_IDS.has(action.id);
     const ordDiv = document.createElement("div"); ordDiv.className = "ae-order";
     const upOrd = document.createElement("button");
-    upOrd.className = "ae-ord-btn ae-up"; upOrd.title = "Move up"; upOrd.textContent = "▲";
-    if (idx === 0) upOrd.disabled = true;
+    upOrd.className = "ae-ord-btn ae-up"; upOrd.textContent = "▲";
+    upOrd.disabled = idx === 0 || (!currentIsPro && isProAction);
+    upOrd.title = (!currentIsPro && isProAction) ? "Pro feature — upgrade to reorder Pro actions" : "Move up";
     const dnOrd = document.createElement("button");
-    dnOrd.className = "ae-ord-btn ae-dn"; dnOrd.title = "Move down"; dnOrd.textContent = "▼";
-    if (idx === actionSettings.length - 1) dnOrd.disabled = true;
+    dnOrd.className = "ae-ord-btn ae-dn"; dnOrd.textContent = "▼";
+    dnOrd.disabled = idx === actionSettings.length - 1 || (!currentIsPro && isProAction);
+    dnOrd.title = (!currentIsPro && isProAction) ? "Pro feature — upgrade to reorder Pro actions" : "Move down";
     ordDiv.append(upOrd, dnOrd);
 
     const check = document.createElement("input");

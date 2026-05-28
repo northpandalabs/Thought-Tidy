@@ -13,6 +13,9 @@ const STORAGE_KEYS = [
   "licenseEmail", "licenseKey"
 ];
 
+const GUMROAD_URL    = "https://northpandalabs.gumroad.com/l/thought-tidy";
+const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
+
 const FETCHERS = { openai: fetchOpenAIModels, claude: fetchClaudeModels, gemini: fetchGeminiModels };
 const TESTERS  = { openai: testOpenAI,        claude: testClaude,        gemini: testGemini };
 
@@ -36,6 +39,7 @@ function wireLinks() {
   const links = {
     "link-github":         "https://github.com/northpandalabs/Thought-Tidy",
     "link-issues":         "https://github.com/northpandalabs/Thought-Tidy/issues",
+    "link-author":         "https://github.com/northpandalabs",
     "link-footer-github":  "https://github.com/northpandalabs/Thought-Tidy",
     "link-footer-privacy": "https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/privacy.txt",
     "link-footer-eula":    "https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/eula.txt"
@@ -138,6 +142,7 @@ function renderProviderCards() {
     return;
   }
   noState.style.display = "none";
+  if (addBtn) addBtn.style.display = configuredProviders.length < Object.keys(PROVIDER_INFO).length ? "inline-block" : "none";
   configuredProviders.forEach((p, idx) => container.appendChild(buildCard(p, idx)));
 }
 
@@ -517,10 +522,14 @@ function renderActionEditor() {
     const row = document.createElement("div");
     row.className = `ae-row${!action.enabled ? " ae-disabled" : ""}`;
 
+    const isProAction = PRO_ACTION_IDS.has(action.id);
+    const upDisabled  = idx === 0 || (!currentIsPro && isProAction);
+    const dnDisabled  = idx === actionSettings.length - 1 || (!currentIsPro && isProAction);
+    const proMoveTitle = !currentIsPro && isProAction ? " title='Pro feature — upgrade to reorder Pro actions'" : "";
     const ordHtml = `
       <div class="ae-order">
-        <button class="ae-ord-btn ae-up" ${idx === 0 ? "disabled" : ""}                     title="Move up">▲</button>
-        <button class="ae-ord-btn ae-dn" ${idx === actionSettings.length - 1 ? "disabled" : ""} title="Move down">▼</button>
+        <button class="ae-ord-btn ae-up" ${upDisabled ? "disabled" : ""}${proMoveTitle} title="Move up">▲</button>
+        <button class="ae-ord-btn ae-dn" ${dnDisabled ? "disabled" : ""}${proMoveTitle} title="Move down">▼</button>
       </div>`;
     const checkDisabled = isOnlyOne || !currentIsPro;
     const checkTitle = isOnlyOne ? "At least one action must stay enabled" : (!currentIsPro ? "Pro feature — upgrade to enable/disable actions" : "");
@@ -588,7 +597,7 @@ function renderCustomPrompts() {
     item.append(meta, textDiv, actions); list.appendChild(item);
   });
   if (currentIsPro) {
-    list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", () => { customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id); renderCustomPrompts(); }));
+    list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", async () => { customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id); await browser.storage.local.set({ customPrompts }); renderCustomPrompts(); }));
     list.querySelectorAll(".cp-edit").forEach(btn => btn.addEventListener("click", () => {
       const p = customPrompts.find(x => x.id === btn.dataset.id); if (!p) return;
       document.getElementById("new-prompt-name").value = p.name;
@@ -614,7 +623,7 @@ function renderCustomPrompts() {
   }
 }
 
-function addPrompt() {
+async function addPrompt() {
   const name   = document.getElementById("new-prompt-name").value.trim();
   const prompt = document.getElementById("new-prompt-text").value.trim();
   if (!name || !prompt) { alert("Enter both a name and an instruction."); return; }
@@ -624,6 +633,7 @@ function addPrompt() {
     return;
   }
   customPrompts.push({ id: uid(), name, prompt });
+  await browser.storage.local.set({ customPrompts });
   renderCustomPrompts();
   document.getElementById("new-prompt-name").value = "";
   document.getElementById("new-prompt-text").value = "";
@@ -663,6 +673,42 @@ async function loadHistoryViewer() {
     await browser.storage.local.set({ historyLog: hl.filter(e => e.date !== today) });
     section.style.display = "none";
   }, { once: true });
+}
+
+// ── Per-section saves ──────────────────────────────────────────────────────────
+
+function showSaveStatus(elId, msg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ""; }, 2000);
+}
+
+async function saveProfile() {
+  await browser.storage.local.set({
+    profileName:    getVal("profileName"),
+    profileRole:    getVal("profileRole"),
+    profileStyle:   getVal("profileStyle"),
+    profileContext: getVal("profileContext"),
+    profileEnabled: document.getElementById("profileEnabled")?.checked || false,
+  });
+  showSaveStatus("profile-save-status", "Saved!");
+}
+
+async function saveBehavior() {
+  await browser.storage.local.set({ variants: getVal("variants") });
+  showSaveStatus("behavior-save-status", "Saved!");
+}
+
+async function saveActionOrder() {
+  const { lastAction = "" } = await browser.storage.local.get("lastAction");
+  const enabledIds = new Set(actionSettings.filter(a => a.enabled).map(a => a.id));
+  if (lastAction && !lastAction.startsWith("custom-") && !enabledIds.has(lastAction)) {
+    const first = actionSettings.find(a => a.enabled);
+    await browser.storage.local.set({ lastAction: first?.id || "" });
+  }
+  await browser.storage.local.set({ actionSettings });
+  showSaveStatus("actions-save-status", "Saved!");
 }
 
 // ── Save / revert ──────────────────────────────────────────────────────────────
@@ -743,9 +789,7 @@ function initProSection() {
   });
 
   document.querySelectorAll(".pro-unlock-link").forEach(a => {
-    a.addEventListener("click", () => {
-      document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth" });
-    });
+    a.addEventListener("click", () => btcAPI.openURL(GUMROAD_URL));
   });
 
   document.getElementById("activate-pro-btn")?.addEventListener("click", async () => {
@@ -910,6 +954,11 @@ async function init() {
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
   });
+
+  // Per-section save buttons
+  document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
+  document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);
+  document.getElementById("actions-save-btn")?.addEventListener("click", saveActionOrder);
 
   initProSection();
 

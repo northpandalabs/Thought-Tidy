@@ -32,7 +32,7 @@ describe("Provider management — duplicate detection", () => {
     const providers = [
       { id: "openai", apiKey: "sk-a", model: "gpt-4o-mini" },
       { id: "claude", apiKey: "sk-b", model: "claude-haiku-3" },
-      { id: "gemini", apiKey: "AIza", model: "gemini-2.0-flash" },
+      { id: "gemini", apiKey: "AIza", model: "gemini-2.5-flash-lite" },
     ];
     expect(alreadyConfigured(providers, "openai")).toBe(true);
     expect(alreadyConfigured(providers, "claude")).toBe(true);
@@ -525,7 +525,7 @@ describe("callClaude — error handling", () => {
 
 describe("callGemini — error handling", () => {
   test("empty API key throws immediately", async () => {
-    await expect(callGemini("", "gemini-2.0-flash", "Fix:", "text"))
+    await expect(callGemini("", "gemini-2.5-flash-lite", "Fix:", "text"))
       .rejects.toThrow("Gemini API key not set");
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -537,7 +537,7 @@ describe("callGemini — error handling", () => {
         candidates: [{ content: { parts: [{ text: "Fixed!" }] } }]
       })
     });
-    await callGemini("AIza-test", "gemini-2.0-flash", "Fix:", "text");
+    await callGemini("AIza-test", "gemini-2.5-flash-lite", "Fix:", "text");
     const url = global.fetch.mock.calls[0][0];
     expect(url).toContain("AIza-test");
   });
@@ -661,4 +661,124 @@ describe("Custom prompt ID resolution (dyn-N ↔ custom-N)", () => {
     expect(normalize("dyn-7")).toBe("custom-7");
     expect(normalize("fix-spelling")).toBe("fix-spelling");
   });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 10. LIVE API TESTS
+// Set these env vars in CI secrets to enable (tests are skipped when absent):
+//   OPENAI_API_KEY  — OpenAI live calls
+//   GOOGLE_API_KEY  — Gemini live calls
+//   CLAUDE_API_KEY  — Claude live calls
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const OPENAI_KEY = process.env.OPENAI_API_KEY;
+const GOOGLE_KEY = process.env.GOOGLE_API_KEY;
+const CLAUDE_KEY = process.env.CLAUDE_API_KEY;
+
+const describeIf = (cond) => cond ? describe : describe.skip;
+
+// Top-level beforeEach (line ~477) replaces global.fetch with jest.fn() for unit tests.
+// Live API suites need the real fetch — save it before any mock can overwrite it.
+const _realFetch = global.fetch;
+
+function useLiveFetch() {
+  let saved;
+  beforeEach(() => { saved = global.fetch; global.fetch = _realFetch; });
+  afterEach(() => { global.fetch = saved; });
+}
+
+describeIf(!!OPENAI_KEY)("Live API — OpenAI (requires OPENAI_API_KEY env var)", () => {
+  useLiveFetch();
+  test("fix-spelling returns non-empty corrected text", async () => {
+    const result = await callOpenAI(OPENAI_KEY, "gpt-4o-mini", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
+  }, 20000);
+
+  test("improve returns longer or equal text", async () => {
+    const input  = "Bad writing.";
+    const result = await callOpenAI(OPENAI_KEY, "gpt-4o-mini", MENU_PROMPTS["improve"], input);
+    expect(result.length).toBeGreaterThan(0);
+  }, 20000);
+
+  test("brain-dump returns structured output", async () => {
+    const input  = "need email thing... remind boss... meeting tues... budget stuff";
+    const result = await callOpenAI(OPENAI_KEY, "gpt-4o-mini", MENU_PROMPTS["brain-dump"], input);
+    expect(result.length).toBeGreaterThan(input.length);
+  }, 20000);
+
+  test("profile-injected prompt reaches the model", async () => {
+    const settings = { profileEnabled: true, profileName: "Test", profileRole: "QA" };
+    const prompt   = buildPromptWithProfile(MENU_PROMPTS["fix-spelling"], settings);
+    expect(prompt).toContain("Test");
+    const result = await callOpenAI(OPENAI_KEY, "gpt-4o-mini", prompt, "pleese fixx ths");
+    expect(result.length).toBeGreaterThan(0);
+  }, 20000);
+
+  test("callAIWithFallback end-to-end with OpenAI", async () => {
+    const providers = [{ id: "openai", apiKey: OPENAI_KEY, model: "gpt-4o-mini" }];
+    const { result, usedProvider, usedModel } = await callAIWithFallback(
+      providers, null, {}, MENU_PROMPTS["fix-spelling"], "ths is wrng"
+    );
+    expect(result.length).toBeGreaterThan(0);
+    expect(usedProvider).toBe("openai");
+    expect(usedModel).toBeTruthy();
+  }, 20000);
+});
+
+describeIf(!!GOOGLE_KEY)("Live API — Gemini (requires GOOGLE_API_KEY env var)", () => {
+  useLiveFetch();
+  test("fix-spelling returns non-empty corrected text", async () => {
+    const result = await callGemini(GOOGLE_KEY, "gemini-2.5-flash-lite", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
+  }, 20000);
+
+  test("callAIWithFallback end-to-end with Gemini", async () => {
+    const providers = [{ id: "gemini", apiKey: GOOGLE_KEY, model: "gemini-2.5-flash-lite" }];
+    const { result, usedProvider } = await callAIWithFallback(
+      providers, ["gemini-2.5-flash-lite", null, null], {}, MENU_PROMPTS["improve"], "Bad writing."
+    );
+    expect(result.length).toBeGreaterThan(0);
+    expect(usedProvider).toBe("gemini");
+  }, 20000);
+
+  test("shorten prompt returns shorter text", async () => {
+    const input  = "This is a very long piece of text that goes on and on and repeats itself quite a lot with a lot of redundant words.";
+    const result = await callGemini(GOOGLE_KEY, "gemini-2.5-flash-lite", MENU_PROMPTS["shorten"], input);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.length).toBeLessThan(input.length * 1.5);
+  }, 20000);
+});
+
+describeIf(!!CLAUDE_KEY)("Live API — Claude (requires CLAUDE_API_KEY env var)", () => {
+  useLiveFetch();
+  test("fix-spelling returns non-empty corrected text", async () => {
+    const result = await callClaude(CLAUDE_KEY, "claude-haiku-4-5-20251001", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
+  }, 20000);
+
+  test("callAIWithFallback end-to-end with Claude", async () => {
+    const providers = [{ id: "claude", apiKey: CLAUDE_KEY, model: "claude-haiku-4-5-20251001" }];
+    const { result, usedProvider } = await callAIWithFallback(
+      providers, null, {}, MENU_PROMPTS["fix-spelling"], "wrng speling"
+    );
+    expect(result.length).toBeGreaterThan(0);
+    expect(usedProvider).toBe("claude");
+  }, 20000);
+});
+
+describeIf(!!(OPENAI_KEY && GOOGLE_KEY))("Live API — fallback chain (requires OPENAI_API_KEY + GOOGLE_API_KEY)", () => {
+  useLiveFetch();
+  test("uses OpenAI first when both providers configured", async () => {
+    const providers = [
+      { id: "openai", apiKey: OPENAI_KEY, model: "gpt-4o-mini" },
+      { id: "gemini", apiKey: GOOGLE_KEY, model: "gemini-2.5-flash-lite" },
+    ];
+    const { usedProvider } = await callAIWithFallback(
+      providers, ["gemini-2.5-flash-lite", null, null], {}, MENU_PROMPTS["fix-spelling"], "tst input"
+    );
+    expect(usedProvider).toBe("openai");
+  }, 20000);
 });

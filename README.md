@@ -2,10 +2,9 @@
 
 **AI writing assistant for people who are great at getting ideas out — but not at spelling them.**
 
-Built for ADHD brains, fast thinkers, and anyone who knows exactly what they mean but struggles to make it look that way on screen. Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
+Built for fast thinkers and anyone who knows exactly what they mean but struggles to make it look that way on screen. Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
 
-> Built by **[Bheck890](https://github.com/Bheck890)**. Open source, MIT licensed. Fork it, improve it, make it yours.  
-> If this helped you — ⭐ **[star the repo](https://github.com/Bheck890/Thought Tidy)** and share it. That's all I ask.
+> Built by **[North Panda Labs](https://github.com/northpandalabs)**. Source available — see LICENSE.
 
 ---
 
@@ -363,9 +362,9 @@ Yes — PRs, issues, and forks are welcome. The codebase is plain HTML/CSS/JS wi
 
 ## Built by
 
-**Bailey Heck (Bheck890)** — [github.com/Bheck890](https://github.com/Bheck890)
+**North Panda Labs** — [github.com/northpandalabs](https://github.com/northpandalabs)
 
-I built this because I needed it. If you're forking or sharing it, keep the credit in the README. That's the deal.
+Built because we needed it. Source available under the project LICENSE.
 
 ---
 

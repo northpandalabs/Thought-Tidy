@@ -1,7 +1,7 @@
 {
   "name": "thought-tidy",
   "version": "1.4.6",
-  "description": "ADHD-friendly AI writing assistant — Chrome and Firefox extension",
+  "description": "AI writing assistant for fast thinkers — Chrome and Firefox extension",
   "private": true,
   "scripts": {
     "test":           "jest",
@@ -25,6 +25,7 @@
   },
   "jest": {
     "reporters": ["default", "./scripts/commitReporter.js"],
+    "globalSetup": "./scripts/loadEnv.js",
     "testEnvironment": "node",
     "testMatch": ["**/tests/**/*.test.js"],
     "testPathIgnorePatterns": ["node_modules", "desktop/"],
