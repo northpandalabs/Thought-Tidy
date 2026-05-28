@@ -516,20 +516,51 @@ function renderActionEditor() {
   list.innerHTML = "";
   const enabledCount = actionSettings.filter(a => a.enabled).length;
 
-  actionSettings.forEach((action, idx) => {
-    const isLocked  = LOCKED_ACTIONS.has(action.id);
-    const isOnlyOne = action.enabled && enabledCount === 1;
+  const freeActs = actionSettings.filter(a => !PRO_ACTION_IDS.has(a.id));
+  const proActs  = actionSettings.filter(a =>  PRO_ACTION_IDS.has(a.id));
+  const toRender = currentIsPro ? actionSettings : [...freeActs, ...proActs];
+
+  let dividerInserted = false;
+
+  toRender.forEach((action) => {
+    const realIdx    = actionSettings.indexOf(action);
+    const isLocked   = LOCKED_ACTIONS.has(action.id);
+    const isOnlyOne  = action.enabled && enabledCount === 1;
+    const isProAction = PRO_ACTION_IDS.has(action.id);
+
+    // Insert divider before first Pro action for free users
+    if (!currentIsPro && isProAction && !dividerInserted && proActs.length > 0) {
+      dividerInserted = true;
+      const divider = document.createElement("div");
+      divider.className = "ae-pro-divider";
+      divider.style.cssText = "font-size:11px; color:#6c7086; padding:4px 0; margin:4px 0; border-top:1px solid #313244; text-align:center;";
+      divider.textContent = "— Pro features (upgrade to reorder) —";
+      list.appendChild(divider);
+    }
+
     const row = document.createElement("div");
     row.className = `ae-row${!action.enabled ? " ae-disabled" : ""}`;
 
-    const isProAction = PRO_ACTION_IDS.has(action.id);
-    const upDisabled  = idx === 0 || (!currentIsPro && isProAction);
-    const dnDisabled  = idx === actionSettings.length - 1 || (!currentIsPro && isProAction);
-    const proMoveTitle = !currentIsPro && isProAction ? " title='Pro feature — upgrade to reorder Pro actions'" : "";
+    let upDisabled, dnDisabled, upTitle, dnTitle;
+    if (!currentIsPro && isProAction) {
+      upDisabled = true; dnDisabled = true;
+      upTitle = "Pro feature — upgrade to reorder Pro actions";
+      dnTitle = "Pro feature — upgrade to reorder Pro actions";
+    } else if (!currentIsPro) {
+      const freeIdx = freeActs.indexOf(action);
+      upDisabled = freeIdx === 0;
+      dnDisabled = freeIdx === freeActs.length - 1;
+      upTitle = "Move up"; dnTitle = "Move down";
+    } else {
+      upDisabled = realIdx === 0;
+      dnDisabled = realIdx === actionSettings.length - 1;
+      upTitle = "Move up"; dnTitle = "Move down";
+    }
+
     const ordHtml = `
       <div class="ae-order">
-        <button class="ae-ord-btn ae-up" ${upDisabled ? "disabled" : ""}${proMoveTitle} title="Move up">▲</button>
-        <button class="ae-ord-btn ae-dn" ${dnDisabled ? "disabled" : ""}${proMoveTitle} title="Move down">▼</button>
+        <button class="ae-ord-btn ae-up" ${upDisabled ? "disabled" : ""} title="${upTitle}">▲</button>
+        <button class="ae-ord-btn ae-dn" ${dnDisabled ? "disabled" : ""} title="${dnTitle}">▼</button>
       </div>`;
     const checkDisabled = isOnlyOne || !currentIsPro;
     const checkTitle = isOnlyOne ? "At least one action must stay enabled" : (!currentIsPro ? "Pro feature — upgrade to enable/disable actions" : "");
@@ -542,21 +573,39 @@ function renderActionEditor() {
     row.innerHTML = ordHtml + checkHtml + labelHtml;
 
     row.querySelector(".ae-up").addEventListener("click", () => {
-      if (idx > 0) { [actionSettings[idx - 1], actionSettings[idx]] = [actionSettings[idx], actionSettings[idx - 1]]; renderActionEditor(); }
+      if (currentIsPro) {
+        if (realIdx > 0) { [actionSettings[realIdx - 1], actionSettings[realIdx]] = [actionSettings[realIdx], actionSettings[realIdx - 1]]; renderActionEditor(); }
+      } else {
+        const freeIdx = freeActs.indexOf(action);
+        if (freeIdx > 0) {
+          const prevReal = actionSettings.indexOf(freeActs[freeIdx - 1]);
+          [actionSettings[prevReal], actionSettings[realIdx]] = [actionSettings[realIdx], actionSettings[prevReal]];
+          renderActionEditor();
+        }
+      }
     });
     row.querySelector(".ae-dn").addEventListener("click", () => {
-      if (idx < actionSettings.length - 1) { [actionSettings[idx], actionSettings[idx + 1]] = [actionSettings[idx + 1], actionSettings[idx]]; renderActionEditor(); }
+      if (currentIsPro) {
+        if (realIdx < actionSettings.length - 1) { [actionSettings[realIdx], actionSettings[realIdx + 1]] = [actionSettings[realIdx + 1], actionSettings[realIdx]]; renderActionEditor(); }
+      } else {
+        const freeIdx = freeActs.indexOf(action);
+        if (freeIdx < freeActs.length - 1) {
+          const nextReal = actionSettings.indexOf(freeActs[freeIdx + 1]);
+          [actionSettings[realIdx], actionSettings[nextReal]] = [actionSettings[nextReal], actionSettings[realIdx]];
+          renderActionEditor();
+        }
+      }
     });
     row.querySelector(".ae-check").addEventListener("change", (e) => {
       if (!e.target.checked && actionSettings.filter(a => a.enabled).length <= 1) {
         e.target.checked = true; return;
       }
-      actionSettings[idx].enabled = e.target.checked;
+      actionSettings[realIdx].enabled = e.target.checked;
       renderActionEditor();
     });
     if (!isLocked) {
       row.querySelector(".ae-name-input").addEventListener("input", (e) => {
-        actionSettings[idx].label = e.target.value;
+        actionSettings[realIdx].label = e.target.value;
       });
     }
     list.appendChild(row);
@@ -615,11 +664,24 @@ function renderCustomPrompts() {
     }));
   }
 
-  // Hide add form for free users once they've used their 1 prompt slot
   const addForm = document.getElementById("add-prompt-form");
   if (addForm) {
     const maxPrompts = currentIsPro ? 8 : 1;
     addForm.style.display = customPrompts.length >= maxPrompts ? "none" : "";
+
+    let warn = document.getElementById("free-prompt-warning");
+    if (!currentIsPro && addForm.style.display !== "none") {
+      if (!warn) {
+        warn = document.createElement("p");
+        warn.id = "free-prompt-warning";
+        warn.style.cssText = "color:#f9e2af; background:rgba(249,226,175,0.07); border:1px solid rgba(249,226,175,0.18); border-radius:6px; padding:8px 10px; margin-bottom:12px; font-size:12px; line-height:1.5;";
+        warn.textContent = "⚠ Free tier: you get 1 custom prompt. Once added it is permanent — you cannot edit or delete it until you upgrade to Pro.";
+        addForm.insertBefore(warn, addForm.firstChild);
+      }
+      warn.style.display = "block";
+    } else if (warn) {
+      warn.style.display = "none";
+    }
   }
 }
 
@@ -765,6 +827,19 @@ function applyProGates(isPro) {
   const activeView = document.getElementById("pro-active-view");
   if (lockedView) lockedView.style.display = isPro ? "none" : "";
   if (activeView) activeView.style.display = isPro ? ""     : "none";
+
+  // Variants (Pro-only above 1)
+  const variantsInput   = document.getElementById("variants");
+  const variantsDisplay = document.getElementById("variants-display");
+  const variantsHint    = document.getElementById("variants-pro-hint");
+  if (variantsInput) {
+    variantsInput.max = isPro ? 4 : 1;
+    if (!isPro && parseInt(variantsInput.value) > 1) {
+      variantsInput.value = 1;
+      if (variantsDisplay) variantsDisplay.textContent = 1;
+    }
+  }
+  if (variantsHint) variantsHint.style.display = isPro ? "none" : "block";
 
   // Ollama is Pro-only — disable its wizard button for non-Pro users
   const ollamaBtn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
@@ -959,6 +1034,7 @@ async function init() {
   document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
   document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);
   document.getElementById("actions-save-btn")?.addEventListener("click", saveActionOrder);
+  document.getElementById("variants-gumroad-link")?.addEventListener("click", () => btcAPI.openURL(GUMROAD_URL));
 
   initProSection();
 

@@ -320,9 +320,12 @@
       <h2>Behavior</h2>
       <div class="field">
         <label for="variants">Suggestions per request: <strong id="variants-display">1</strong></label>
-        <input type="range" id="variants" min="1" max="4" value="1">
+        <input type="range" id="variants" min="1" max="1" value="1">
         <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
         <p class="hint">Fix Spelling is always 1. Other actions generate multiple versions so you can compare.</p>
+        <p id="variants-pro-hint" class="hint" style="display:none; margin-top:4px">
+          Multiple suggestions is a <a id="variants-gumroad-link" style="cursor:pointer; color:#b4befe;">Pro feature ↗</a>
+        </p>
       </div>
       <div class="section-save-row">
         <button class="section-save-btn" id="behavior-save-btn">Save</button>

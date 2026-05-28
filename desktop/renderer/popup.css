@@ -233,6 +233,13 @@ select:focus { border-color: var(--accent); }
   color: var(--red);
   background: rgba(243,139,168,0.07);
 }
+.result-text[contenteditable="true"] {
+  cursor: text;
+  outline: none;
+}
+.result-text[contenteditable="true"]:focus {
+  border-color: var(--accent);
+}
 
 .result-actions {
   display: flex;

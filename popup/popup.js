@@ -105,9 +105,10 @@ async function init() {
   });
 
   document.getElementById("replace-input").addEventListener("click", () => {
-    const result = document.getElementById("replace-input").dataset.result || "";
+    const result = document.getElementById("result-text").innerText || "";
     document.getElementById("input-text").value = result;
     document.getElementById("result-area").style.display = "none";
+    document.getElementById("result-text").contentEditable = "false";
   });
 
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
@@ -207,11 +208,11 @@ function showResult(text, error) {
     textEl.className   = "result-text result-error";
     document.getElementById("result-actions").style.display = "none";
   } else {
-    textEl.textContent = text;
-    textEl.className   = "result-text";
+    textEl.textContent     = text;
+    textEl.className       = "result-text";
+    textEl.contentEditable = "true";
+    textEl.spellcheck      = false;
     document.getElementById("result-actions").style.display = "flex";
-    // Replace-in-input: store the current result so the button handler can use it
-    document.getElementById("replace-input").dataset.result = text;
   }
 }
 

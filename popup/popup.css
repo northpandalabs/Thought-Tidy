@@ -145,6 +145,13 @@ select:focus { border-color: #89b4fa; }
   color: #f38ba8;
   background: rgba(243,139,168,0.08);
 }
+.result-text[contenteditable="true"] {
+  cursor: text;
+  outline: none;
+}
+.result-text[contenteditable="true"]:focus {
+  border-color: #89b4fa;
+}
 
 .result-actions {
   display: flex;

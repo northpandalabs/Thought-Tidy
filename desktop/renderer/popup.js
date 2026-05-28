@@ -25,12 +25,14 @@ async function init() {
   settings = await browser.storage.local.get(STORAGE_KEYS);
   updateFooter();
   populateCustomActions();
+  document.getElementById("input-text").focus();
 
   // Refresh settings + UI each time the popup is shown
   btcAPI.onPopupOpened(async () => {
     settings = await browser.storage.local.get(STORAGE_KEYS);
     updateFooter();
     rebuildActionDropdown();
+    document.getElementById("input-text").focus();
   });
 
   // Wire controls
@@ -52,8 +54,7 @@ async function init() {
   });
 
   document.getElementById("input-text").addEventListener("keydown", (e) => {
-    // Ctrl/Cmd + Enter triggers Run
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       runProcess();
     }
@@ -64,7 +65,14 @@ async function init() {
   // Escape hides the popup
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") btcAPI.closePopup();
+    // Block Ctrl+/- zoom — popup is a fixed-size window
+    if (e.ctrlKey && (e.key === "+" || e.key === "-" || e.key === "=" || e.key === "0")) {
+      e.preventDefault();
+    }
   });
+  document.addEventListener("wheel", (e) => {
+    if (e.ctrlKey) e.preventDefault();
+  }, { passive: false });
 }
 
 // ── Actions ────────────────────────────────────────────────────────────────────
@@ -97,13 +105,13 @@ function rebuildActionDropdown() {
       sel.appendChild(opt);
     });
   }
-  // Restore previous selection; fall back to fix-spelling if stored action is Pro and user is not Pro
   const lastAction = prevValue || settings.lastAction || "";
   if (PRO_ACTION_IDS.has(lastAction) && !isPro) {
-    sel.value = "fix-spelling";
+    sel.value = storedActs.find(a => a.enabled && !PRO_ACTION_IDS.has(a.id))?.id || "";
   } else {
     sel.value = lastAction;
-    if (sel.value !== lastAction) sel.value = storedActs.find(a => a.enabled)?.id || "";
+    // Empty string or unrecognised value — fall back to first enabled action
+    if (!sel.value || sel.value !== lastAction) sel.value = storedActs.find(a => a.enabled)?.id || "";
   }
 }
 
@@ -213,8 +221,10 @@ function showResult(results, error) {
     }
 
     const box = document.createElement("div");
-    box.className   = "result-text";
-    box.textContent = text;
+    box.className       = "result-text";
+    box.contentEditable = "true";
+    box.spellcheck      = false;
+    box.textContent     = text;
     slot.appendChild(box);
 
     const actions = document.createElement("div");
@@ -223,7 +233,7 @@ function showResult(results, error) {
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "Copy";
     copyBtn.addEventListener("click", async () => {
-      await btcAPI.writeClipboard(text);
+      await btcAPI.writeClipboard(box.innerText);
       copyBtn.textContent = "Copied!";
       setTimeout(() => (copyBtn.textContent = "Copy"), 1600);
     });
@@ -232,7 +242,7 @@ function showResult(results, error) {
     copyCloseBtn.className   = "copy-close-btn";
     copyCloseBtn.textContent = "Copy & Close";
     copyCloseBtn.addEventListener("click", async () => {
-      await btcAPI.writeClipboard(text);
+      await btcAPI.writeClipboard(box.innerText);
       btcAPI.closePopup();
     });
 
