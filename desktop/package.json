@@ -85,7 +85,7 @@
       "ipc-handlers.js",
       "!lib-node/updater.js"
     ],
-    "coverageReporters": ["text", "lcov"],
+    "coverageReporters": ["text", "lcov", "html"],
     "coverageThreshold": {
       "global": {
         "lines": 70,

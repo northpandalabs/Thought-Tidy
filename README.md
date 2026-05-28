@@ -1,8 +1,8 @@
 # Thought Tidy
 
-**AI writing assistant for people who are great at getting ideas out — but not at spelling them.**
+**AI writing assistant for fast thinkers — people who know exactly what they mean but struggle to make it look that way on screen.**
 
-Built for fast thinkers and anyone who knows exactly what they mean but struggles to make it look that way on screen. Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
+Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
 
 > Built by **[North Panda Labs](https://github.com/northpandalabs)**. Source available — see LICENSE.
 
@@ -10,7 +10,7 @@ Built for fast thinkers and anyone who knows exactly what they mean but struggle
 
 ## Downloads
 
-> Always get the latest stable build from the **[Releases page](https://github.com/BHeck/BrainFix-AI/releases/latest)**.
+> Always get the latest stable build from the **[Releases page](https://github.com/northpandalabs/Thought-Tidy/releases/latest)**.
 
 | Platform | File |
 | --- | --- |
@@ -21,6 +21,32 @@ Built for fast thinkers and anyone who knows exactly what they mean but struggle
 | Linux Desktop | `thought-tidy_x.x.x_amd64.deb` or `Thought Tidy-x.x.x.AppImage` |
 
 > **CI test builds** — every push to `main` also produces a TEST ONLY Windows portable `.exe` (no installer) available as a GitHub Actions artifact. Test builds display **⚠ TEST ONLY** banners in the settings page and tray menu — they are not stable releases.
+
+---
+
+## Free vs Pro
+
+Thought Tidy has a **free tier** that works immediately with your own API key, and an optional **one-time Pro upgrade** from [North Panda Labs](https://northpandalabs.gumroad.com/l/thought-tidy).
+
+| Feature | Free | Pro |
+| --- | --- | --- |
+| Fix Spelling & Grammar | ✓ | ✓ |
+| Make Professional | ✓ | ✓ |
+| Sound Human | ✓ | ✓ |
+| Brain Dump → Clear Text | ✓ | ✓ |
+| Today's activity history | ✓ | ✓ |
+| Reorder built-in actions | ✓ | ✓ |
+| 1 custom prompt | ✓ | ✓ |
+| Sound Like Me (Your Profile) | — | ✓ |
+| Improve Writing | — | ✓ |
+| Make Formal / Casual | — | ✓ |
+| Shorten / Expand | — | ✓ |
+| Unlimited custom prompts | — | ✓ |
+| Full history (all time) | — | ✓ |
+| Multi-provider fallback | — | ✓ |
+| Ollama (local AI, zero API cost) | — | ✓ |
+
+Google Gemini has a free API tier — you can use the free tier of Thought Tidy at **zero cost**.
 
 ---
 
@@ -36,6 +62,8 @@ Built for fast thinkers and anyone who knows exactly what they mean but struggle
 | **Run locally** | Load unpacked / temporary add-on | `cd desktop && npm start` |
 
 Both share the same `lib/` folder — `api.js`, `prompts.js`, `models.js`, `text.js` — zero duplication.
+
+The desktop app also syncs with the browser extension — enable **Desktop Sync** in settings to share your profile and custom prompts across both.
 
 ---
 
@@ -60,25 +88,25 @@ Right-click any selected text on any webpage:
 
 | Action | What it actually does |
 | --- | --- |
-| **👤 Sound Like Me** | Rewrites in *your* voice using your saved profile — not generic AI, not formal, just you but clear |
+| **👤 Sound Like Me** | Rewrites in *your* voice using your saved profile — not generic AI, not formal, just you but clear *(Pro)* |
 | **✓ Fix Spelling & Grammar** | Cleans up mistakes without changing anything else |
 | **★ Make Professional** | Full grammar fix + ensures your full meaning comes through — sounds confident and articulate |
 | **💬 Sound Human** | Takes stiff or AI-sounding text and makes it feel like a real person wrote it |
 | **🧠 Brain Dump → Clear Text** | You vomit your thoughts, it organizes everything into clean readable text without losing a word |
-| **↑ Improve Writing** | Better clarity and flow, keeps your voice |
-| Make Formal / Casual | Shift the tone either direction |
-| Shorten / Expand | Adjust the length |
-| **⚡ Your Custom Prompts** | Build your own named actions — Email Reply, Slack Message, LinkedIn Post, anything |
+| **↑ Improve Writing** | Better clarity and flow, keeps your voice *(Pro)* |
+| Make Formal / Casual | Shift the tone either direction *(Pro)* |
+| Shorten / Expand | Adjust the length *(Pro)* |
+| **⚡ Your Custom Prompts** | 1 free, unlimited with Pro — Email Reply, Slack Message, LinkedIn Post, anything |
 
 ---
 
 ## The "Sound Like Me" difference
 
-This is the feature that makes it personal instead of generic.
+This is the Pro feature that makes it personal instead of generic.
 
 In Settings, fill out your profile:
 
-- **Your name** — Bailey
+- **Your name** — what you go by
 - **Your role** — roofing contractor, developer, student, whatever
 - **Your writing style** — "I write casually. Short sentences. Say 'gonna'. Use em-dashes."
 - **Personal context** — your company, who you write to, common topics, anything the AI should know
@@ -97,13 +125,13 @@ They're not the same tool. Grammarly corrects as you type. This rewrites on dema
 | --- | --- | --- |
 | Corrects as you type | ✓ | — |
 | Rewrites whole passages | limited | ✓ |
-| Knows who YOU are | — | ✓ (Your Profile) |
+| Knows who YOU are | — | ✓ Pro (Your Profile) |
 | Brain dump → organized text | — | ✓ |
-| Custom prompt actions | — | ✓ (up to 8, named) |
+| Custom prompt actions | — | ✓ (1 free, unlimited Pro) |
 | Works on any webpage | ✓ | ✓ |
 | Privacy | their servers | your provider only |
 | Monthly cost | $12–15/mo | fractions of a cent per fix |
-| Open source | — | ✓ MIT |
+| Source available | — | ✓ |
 | Your data | stored by Grammarly | goes only to Claude/OpenAI/Gemini |
 
 Use Grammarly for inline typo correction if you want it. Use this for everything else.
@@ -186,7 +214,7 @@ Or just `npm run dist` to build for the current platform.
 
 ### Install from the Windows installer
 
-1. Run `npm run dist:win` — output is `dist-build/Thought Tidy Setup 1.4.0.exe`
+1. Run `npm run dist:win` — output is `dist-build/Thought Tidy Setup 1.4.6.exe`
 2. Double-click the `.exe` → choose an install directory → click **Install**
 3. A shortcut is added to your Desktop and Start Menu
 4. The app starts in the system tray automatically
@@ -260,7 +288,7 @@ The installed app checks for updates on launch and every 4 hours. When a new ver
 
 ### Versioning
 
-Before uploading, bump the `version` field in both `package.json` and `manifest.json` to match (e.g. `"1.4.0"`). Both stores reject re-uploads of the same version number.
+Before uploading, bump the `version` field in both `package.json` and `manifest.json` to match (e.g. `"1.4.6"`). Both stores reject re-uploads of the same version number.
 
 ---
 
@@ -272,7 +300,7 @@ You need a key from **one** of these. All have free tiers or cheap starting cost
 | --- | --- | --- | --- |
 | **OpenAI** | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | gpt-4o-mini (~$0.00015/1K tokens) | No, but cheap |
 | **Anthropic (Claude)** | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) | claude-haiku-4-5 | No, but cheap |
-| **Google Gemini** | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) | gemini-2.0-flash | **Yes** |
+| **Google Gemini** | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) | gemini-2.5-flash-lite | **Yes** |
 
 A typical "Fix Spelling" on a paragraph costs less than $0.001. You'd spend $1 on thousands of fixes.
 
@@ -288,7 +316,7 @@ background.js         ← context menu wiring + API dispatch (MV3 service worker
 content.js            ← result modal injected into pages
 content.css           ← modal styling
 lib/
-  api.js              ← provider API calls (OpenAI, Anthropic, Gemini)
+  api.js              ← provider API calls (OpenAI, Anthropic, Gemini, Ollama)
   models.js           ← model lists per provider
   prompts.js          ← system prompts + profile injection
   text.js             ← text utilities (shared with content script)
@@ -297,10 +325,33 @@ options/              ← full settings page (keys, models, profile, custom prom
 scripts/
   build.js            ← produces dist/chrome/ and dist/firefox/
   setup.js            ← first-run setup helper
-tests/                ← Jest unit tests for lib/
+  loadEnv.js          ← Jest globalSetup — loads .env for live API tests
+tests/                ← Jest unit + integration tests for lib/ (~350 tests)
+desktop/
+  main.js             ← Electron main process
+  renderer/           ← settings UI (HTML/CSS/JS)
+  lib-node/           ← Node-only code (updater, store)
+  tests/              ← Jest tests for desktop-specific code (~90 tests)
 dist/
   chrome/             ← built Chrome extension (load unpacked here)
   firefox/            ← built Firefox extension (load temporary add-on here)
+```
+
+### Running tests
+
+```bash
+npm test                    # extension tests (unit + live API if keys present)
+npm test -- --coverage      # with coverage report
+cd desktop && npm test      # desktop tests
+```
+
+Live API tests in `tests/utilization.test.js` require env vars to run — they skip gracefully when absent:
+
+```bash
+# .env at project root (gitignored)
+OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=AIza...
+CLAUDE_API_KEY=sk-ant-...
 ```
 
 **Build output differences (Chrome vs Firefox):**
@@ -315,7 +366,7 @@ dist/
 
 - Keyboard shortcut to trigger last-used action
 - Writing history (last N fixes, restorable)
-- More providers (Mistral, Cohere, local Ollama)
+- More providers (Mistral, Cohere)
 - Right-click on images → describe / alt-text generation
 - A real MCP server integration for Claude Desktop users
 
@@ -347,10 +398,10 @@ You're loading the Chrome build in Firefox. Use `npm run build:firefox` and load
 Yes. Chrome: load `dist/chrome/` as an unpacked extension (stays loaded until you remove it). Firefox: load `dist/firefox/` as a temporary add-on (removed on browser restart — or self-sign with web-ext).
 
 **How do I add my own actions?**  
-Open the extension settings → scroll to **Custom Prompts** → add a name and a system prompt. Your custom actions appear in the right-click menu (up to 8). No code changes needed.
+Open the extension settings → scroll to **Custom Prompts** → add a name and a system prompt. Your custom action appears in the right-click menu. Free users get 1 custom prompt; Pro unlocks unlimited.
 
 **What is "Sound Like Me"?**  
-A profile system where you describe yourself — your name, role, writing style, and any context the AI should know. When enabled, every action uses your profile as context, so the output matches your voice instead of sounding like generic AI.
+A Pro profile system where you describe yourself — your name, role, writing style, and any context the AI should know. When enabled, every action uses your profile as context, so the output matches your voice instead of sounding like generic AI.
 
 **Does it work on every website?**  
 It injects into all pages (`<all_urls>` content script). It works anywhere you can select text and right-click. Some sites with aggressive CSP or sandboxed iframes may block the modal injection — the right-click menu still appears, but the result won't display inline.
@@ -370,4 +421,4 @@ Built because we needed it. Source available under the project LICENSE.
 
 ## License
 
-MIT — build whatever you want with it.
+Source available — see LICENSE. Not open source.

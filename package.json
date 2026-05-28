@@ -30,7 +30,7 @@
     "testMatch": ["**/tests/**/*.test.js"],
     "testPathIgnorePatterns": ["node_modules", "desktop/"],
     "collectCoverageFrom": ["lib/**/*.js", "!lib/updater.js"],
-    "coverageReporters": ["text", "lcov"],
+    "coverageReporters": ["text", "lcov", "html"],
     "coverageThreshold": {
       "global": {
         "lines": 70,
