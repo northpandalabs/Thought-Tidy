@@ -29,7 +29,15 @@ extraMetadata:
 
 win:
   target:
-    - target: portable
+    - target: nsis
       arch:
         - x64
   icon: ../icons/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "Thought Tidy TEST"
+  include: build/installer.nsh
