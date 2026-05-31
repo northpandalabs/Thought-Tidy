@@ -157,7 +157,7 @@ function createPopup() {
 
   popupWin.on("closed", () => { popupWin = null; });
 
-  if (isDev) popupWin.webContents.openDevTools({ mode: "detach" });
+  if (isDev || IS_TEST_BUILD) popupWin.webContents.openDevTools({ mode: "detach" });
 }
 
 function openPopup() {
@@ -224,7 +224,7 @@ function openSettings() {
   settingsWin.loadFile(path.join(__dirname, "renderer", "settings.html"));
   settingsWin.on("closed", () => { settingsWin = null; });
 
-  if (isDev) settingsWin.webContents.openDevTools({ mode: "right" });
+  if (isDev || IS_TEST_BUILD) settingsWin.webContents.openDevTools({ mode: "right" });
 }
 
 // ── Tray ───────────────────────────────────────────────────────────────────────

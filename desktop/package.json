@@ -61,6 +61,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Thought Tidy",
+      "license": "../legal/eula.txt",
       "include": "build/installer.nsh"
     },
     "publish": {

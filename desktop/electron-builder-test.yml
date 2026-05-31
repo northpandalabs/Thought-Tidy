@@ -1,5 +1,5 @@
 # electron-builder config for TEST ONLY CI builds.
-# Produces a portable .exe (no installer) with testBuild=true injected into package.json.
+# Produces a portable .exe AND an NSIS installer, both with testBuild=true injected.
 # Output goes to dist-build-test/ to avoid mixing with production dist-build/.
 
 appId: com.northpandalabs.thoughttidy
@@ -32,6 +32,9 @@ win:
     - target: nsis
       arch:
         - x64
+    - target: portable
+      arch:
+        - x64
   icon: ../icons/icon.png
 
 nsis:
@@ -40,4 +43,5 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: "Thought Tidy TEST"
+  license: "../legal/eula.txt"
   include: build/installer.nsh
