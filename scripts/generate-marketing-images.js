@@ -77,7 +77,7 @@ const thumbnail = `<svg width="600" height="600" xmlns="http://www.w3.org/2000/s
 <rect x="222" y="406" width="156" height="30" rx="15" fill="#7c3aed" opacity="0.9"/>
 <text x="300" y="425"
   font-family="'Segoe UI', system-ui, sans-serif"
-  font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">Pro — $5 one time</text>
+  font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">Pro — $10 one time</text>
 
 <!-- Pill: Platforms -->
 <rect x="398" y="406" width="130" height="30" rx="15" fill="#1e1e2e" stroke="#313244" stroke-width="1"/>
@@ -172,7 +172,7 @@ const cover = `<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg"
 <!-- PRO section label -->
 <text x="58" y="458"
   font-family="'Segoe UI', system-ui, sans-serif"
-  font-size="11" font-weight="700" fill="#7c3aed" letter-spacing="2">PRO — $5 ONE TIME</text>
+  font-size="11" font-weight="700" fill="#7c3aed" letter-spacing="2">PRO — $10 ONE TIME</text>
 
 <circle cx="65" cy="484" r="3" fill="#7c3aed"/>
 <text x="80" y="489"

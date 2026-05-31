@@ -284,7 +284,7 @@ The installed app checks for updates on launch and every 4 hours. When a new ver
 7. Submit for review — AMO reviews typically take a few days for new add-ons; faster after the first
 8. Once approved, the add-on is live on AMO and installable with one click
 
-> The add-on ID (`brainfixai@bheck` in `browser_specific_settings.gecko.id`) must match the ID registered on AMO. This is set automatically by `scripts/build.js`.
+> The add-on ID in `browser_specific_settings.gecko.id` (set in `manifest.json`) must match the ID you registered on AMO. This is copied automatically by `scripts/build.js`.
 
 ### Versioning
 
@@ -343,16 +343,43 @@ dist/
 npm test                    # extension tests (unit + live API if keys present)
 npm test -- --coverage      # with coverage report
 cd desktop && npm test      # desktop tests
+cd desktop && npm test -- --coverage  # desktop with coverage report
 ```
 
 Live API tests in `tests/utilization.test.js` require env vars to run — they skip gracefully when absent:
 
 ```bash
-# .env at project root (gitignored)
+# .env at project root (gitignored — never commit this file)
 OPENAI_API_KEY=sk-...
 GOOGLE_API_KEY=AIza...
 CLAUDE_API_KEY=sk-ant-...
 ```
+
+### Code coverage
+
+Coverage is measured per suite and reported in the GitHub Release notes for every tagged release.
+
+| Suite | Command | Output |
+| --- | --- | --- |
+| Extension (`tests/`) | `npm test -- --coverage` | `coverage/lcov-report/index.html` |
+| Desktop (`desktop/tests/`) | `cd desktop && npm test -- --coverage` | `desktop/coverage/lcov-report/index.html` |
+
+Both suites must pass in CI before any release is tagged. Coverage thresholds are enforced in Jest config — a drop below the threshold fails the build.
+
+### Security
+
+Thought Tidy has no backend server. All security concerns are client-side. The `tests/security.test.js` file covers the key invariants:
+
+| Area | What is tested |
+| --- | --- |
+| **XSS prevention** | All user-supplied text rendered via `textContent` or `escHtml()` — never `innerHTML`. Modal injection verified to escape special characters. |
+| **API key storage** | Extension stores keys via AES-256-GCM (`lib/crypto-storage.js`). Desktop uses OS keychain (`electron.safeStorage` / DPAPI on Windows). Keys are never logged or included in error messages. |
+| **Context isolation** | Electron `BrowserWindow` enforces `contextIsolation: true` and `nodeIntegration: false`. Preload script (`preload.js`) exposes only the minimum IPC surface. |
+| **Content Security Policy** | Extension manifest defines a strict CSP. No inline scripts, no `eval`. |
+| **No PII leakage** | No analytics, no telemetry. Text goes only from the browser to the AI provider the user configured — nowhere else. |
+| **Sync token auth** | Desktop sync server (127.0.0.1:47391) requires a session token generated at startup. Cross-process access is rejected. |
+
+If all tests fail in CI, the build is blocked and no release artifact is produced. Security test failures are treated as Critical — they must be remediated before any merge to `main`.
 
 **Build output differences (Chrome vs Firefox):**
 

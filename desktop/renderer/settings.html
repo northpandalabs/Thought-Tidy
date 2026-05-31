@@ -63,7 +63,7 @@
       display: none;
       position: absolute;
       inset: 0;
-      background: rgba(17, 17, 27, 0.84);
+      background: rgba(17, 17, 27, 0.45);
       border-radius: 8px;
       z-index: 20;
       flex-direction: column;
@@ -72,7 +72,7 @@
       gap: 8px;
       text-align: center;
       padding: 32px;
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(1px);
     }
     .pro-gate.locked .pro-overlay { display: flex; }
     .pro-lock-icon { font-size: 28px; }
@@ -228,6 +228,99 @@
       </div><!-- /provider-wizard -->
     </section>
 
+    <!-- Behavior -->
+    <section>
+      <h2>Behavior</h2>
+      <div class="field">
+        <label for="variants">Suggestions per request: <strong id="variants-display">1</strong></label>
+        <input type="range" id="variants" min="1" max="1" value="1">
+        <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+        <p class="hint">Fix Spelling is always 1. Other actions generate multiple versions so you can compare.</p>
+        <p id="variants-pro-hint" class="hint" style="display:none; margin-top:4px">
+          Multiple suggestions is a <a id="variants-gumroad-link" style="cursor:pointer; color:#b4befe;">Pro feature ↗</a>
+        </p>
+      </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="behavior-save-btn">Save</button>
+        <span class="section-save-status" id="behavior-save-status"></span>
+      </div>
+    </section>
+
+    <!-- Display / Zoom -->
+    <section id="zoom-section">
+      <h2>Display</h2>
+      <div class="field">
+        <label for="zoom-level">Popup zoom level</label>
+        <select id="zoom-level">
+          <option value="auto">Auto (match screen DPI)</option>
+          <option value="0.9">90%</option>
+          <option value="1.0">100%</option>
+          <option value="1.1">110%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+        </select>
+        <p class="hint">Adjusts the popup and settings window scale. Auto scales based on your display resolution.</p>
+      </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="zoom-save-btn">Save</button>
+        <span class="section-save-status" id="zoom-save-status"></span>
+      </div>
+    </section>
+
+    <!-- Edit Actions -->
+    <section id="actions-section">
+      <h2>
+        Action List
+        <button id="toggle-action-editor" class="link-btn" style="margin-left:auto">Edit Actions →</button>
+      </h2>
+      <p class="hint">Reorder actions using the arrows. Disabling and renaming require Pro.</p>
+      <div id="action-editor-panel" style="display:none; margin-top:12px">
+        <p class="hint" style="margin-bottom:10px">Built-in actions (grey lock) can't be renamed. At least one action must stay active.</p>
+        <div id="action-list" class="ae-list"></div>
+        <div class="section-save-row">
+          <button class="section-save-btn" id="actions-save-btn">Save Order</button>
+          <span class="section-save-status" id="actions-save-status"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Custom Prompts -->
+    <section id="custom-prompts-section" class="pro-gate">
+      <div class="pro-overlay">
+        <span class="pro-lock-icon">🔒</span>
+        <p>Pro feature</p>
+        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+      </div>
+      <h2>My Custom Prompts</h2>
+      <p class="hint" style="margin-bottom:14px">
+        Saved prompts appear in the popup action menu (up to 8).
+        Use these to build your own actions: Email Reply, Slack Message, Meeting Notes…
+      </p>
+      <div id="custom-prompts-list"></div>
+      <div class="add-prompt-form" id="add-prompt-form">
+        <h3>Add New Prompt</h3>
+        <div class="field">
+          <label for="new-prompt-name">Name (shown in popup menu)</label>
+          <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
+        </div>
+        <div class="field">
+          <label for="new-prompt-text">Instruction sent to the AI</label>
+          <textarea id="new-prompt-text" rows="4"
+            placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:"></textarea>
+        </div>
+        <div class="prompt-examples">
+          <span class="example-label">Examples:</span>
+          <button class="example-btn" data-name="Email Reply"
+            data-prompt="Rewrite as a professional, friendly email reply. Keep it concise. Return ONLY the email body:">Email Reply</button>
+          <button class="example-btn" data-name="Slack Message"
+            data-prompt="Rewrite as a clear, friendly Slack message. Keep it short. Return ONLY the message:">Slack Message</button>
+          <button class="example-btn" data-name="Bullet Points"
+            data-prompt="Extract key points as clear bullet points. Return ONLY the bullet points:">Bullet Points</button>
+        </div>
+        <button id="add-prompt-btn">Add to Menu</button>
+      </div>
+    </section>
+
     <!-- Unlock Pro -->
     <section id="pro-section">
       <h2>⚡ Thought Tidy Pro</h2>
@@ -312,78 +405,6 @@
       <div class="section-save-row">
         <button class="section-save-btn" id="profile-save-btn">Save</button>
         <span class="section-save-status" id="profile-save-status"></span>
-      </div>
-    </section>
-
-    <!-- Behavior -->
-    <section>
-      <h2>Behavior</h2>
-      <div class="field">
-        <label for="variants">Suggestions per request: <strong id="variants-display">1</strong></label>
-        <input type="range" id="variants" min="1" max="1" value="1">
-        <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
-        <p class="hint">Fix Spelling is always 1. Other actions generate multiple versions so you can compare.</p>
-        <p id="variants-pro-hint" class="hint" style="display:none; margin-top:4px">
-          Multiple suggestions is a <a id="variants-gumroad-link" style="cursor:pointer; color:#b4befe;">Pro feature ↗</a>
-        </p>
-      </div>
-      <div class="section-save-row">
-        <button class="section-save-btn" id="behavior-save-btn">Save</button>
-        <span class="section-save-status" id="behavior-save-status"></span>
-      </div>
-    </section>
-
-    <!-- Edit Actions -->
-    <section id="actions-section">
-      <h2>
-        Action List
-        <button id="toggle-action-editor" class="link-btn" style="margin-left:auto">Edit Actions →</button>
-      </h2>
-      <p class="hint">Reorder actions using the arrows. Disabling and renaming require Pro.</p>
-      <div id="action-editor-panel" style="display:none; margin-top:12px">
-        <p class="hint" style="margin-bottom:10px">Built-in actions (grey lock) can't be renamed. At least one action must stay active.</p>
-        <div id="action-list" class="ae-list"></div>
-        <div class="section-save-row">
-          <button class="section-save-btn" id="actions-save-btn">Save Order</button>
-          <span class="section-save-status" id="actions-save-status"></span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Custom Prompts -->
-    <section id="custom-prompts-section" class="pro-gate">
-      <div class="pro-overlay">
-        <span class="pro-lock-icon">🔒</span>
-        <p>Pro feature</p>
-        <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
-      </div>
-      <h2>My Custom Prompts</h2>
-      <p class="hint" style="margin-bottom:14px">
-        Saved prompts appear in the popup action menu (up to 8).
-        Use these to build your own actions: Email Reply, Slack Message, Meeting Notes…
-      </p>
-      <div id="custom-prompts-list"></div>
-      <div class="add-prompt-form" id="add-prompt-form">
-        <h3>Add New Prompt</h3>
-        <div class="field">
-          <label for="new-prompt-name">Name (shown in popup menu)</label>
-          <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
-        </div>
-        <div class="field">
-          <label for="new-prompt-text">Instruction sent to the AI</label>
-          <textarea id="new-prompt-text" rows="4"
-            placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:"></textarea>
-        </div>
-        <div class="prompt-examples">
-          <span class="example-label">Examples:</span>
-          <button class="example-btn" data-name="Email Reply"
-            data-prompt="Rewrite as a professional, friendly email reply. Keep it concise. Return ONLY the email body:">Email Reply</button>
-          <button class="example-btn" data-name="Slack Message"
-            data-prompt="Rewrite as a clear, friendly Slack message. Keep it short. Return ONLY the message:">Slack Message</button>
-          <button class="example-btn" data-name="Bullet Points"
-            data-prompt="Extract key points as clear bullet points. Return ONLY the bullet points:">Bullet Points</button>
-        </div>
-        <button id="add-prompt-btn">Add to Menu</button>
       </div>
     </section>
 
