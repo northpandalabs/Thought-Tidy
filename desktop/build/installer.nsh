@@ -15,6 +15,7 @@
 
 !include "LogicLib.nsh"
 !include "nsDialogs.nsh"
+!include "FileFunc.nsh"
 
 ; -- Hook: maintenance check (shown before EULA, skips itself on fresh install)
 !macro customWelcomePage
@@ -34,6 +35,7 @@ Var hOptUpdate
 Var hOptRemove
 Var hDesktopShortcut
 Var hAutoUpdater
+Var UninstallStr
 
 
 ; =============================================================================
@@ -41,16 +43,21 @@ Var hAutoUpdater
 ; Shown only when already installed. Aborts (skips) on fresh install.
 ; =============================================================================
 Function MaintenancePage
-  ; Check per-user install, fall back to per-machine
-  ReadRegStr $R0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" "InstallLocation"
-  ${If} $R0 == ""
-    ReadRegStr $R0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" "InstallLocation"
+  ; electron-builder does not write InstallLocation -- use UninstallString instead.
+  ; Check per-user (HKCU) first, then per-machine (HKLM).
+  ReadRegStr $UninstallStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" "UninstallString"
+  ${If} $UninstallStr == ""
+    ReadRegStr $UninstallStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" "UninstallString"
   ${EndIf}
-  ${If} $R0 == ""
+  ${If} $UninstallStr == ""
     Abort  ; fresh install -- skip this page
   ${EndIf}
 
-  StrCpy $INSTDIR $R0  ; pre-fill install dir from existing location
+  ; Derive $INSTDIR from the uninstaller path (strip quotes then get parent folder)
+  StrCpy $R0 $UninstallStr
+  StrCpy $R0 $R0 "" 1        ; strip leading quote
+  ${GetParent} $R0 $R1
+  StrCpy $INSTDIR $R1
 
   nsDialogs::Create 1018
   Pop $hDialog
@@ -83,16 +90,9 @@ FunctionEnd
 Function MaintenanceLeave
   ${NSD_GetState} $hOptRemove $R0
   ${If} $R0 == ${BST_CHECKED}
-    ; Try quiet uninstall string first, fall back to regular
-    ReadRegStr $R1 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" "QuietUninstallString"
-    ${If} $R1 == ""
-      ReadRegStr $R1 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" "UninstallString"
-    ${EndIf}
-    ${If} $R1 == ""
-      ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" "UninstallString"
-    ${EndIf}
-    ${If} $R1 != ""
-      ExecWait '$R1'
+    ; $UninstallStr was captured in MaintenancePage
+    ${If} $UninstallStr != ""
+      ExecWait '$UninstallStr'
     ${Else}
       MessageBox MB_ICONEXCLAMATION|MB_OK "Uninstaller not found. Please use Add/Remove Programs to remove Thought Tidy."
     ${EndIf}
