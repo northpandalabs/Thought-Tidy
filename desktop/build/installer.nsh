@@ -1,123 +1,51 @@
-; installer.nsh — Thought Tidy custom NSIS installer logic
+; Thought Tidy — Optional Features installer page
+; Injected by electron-builder via nsis.include in package.json.
+;
+; This page appears before the "Choose Install Location" screen.
+; Currently a UI placeholder — checkboxes are displayed but no feature
+; installation logic runs yet. Wired up in AIP R-021 (installer-preflight).
 
-; ── customHeader ─────────────────────────────────────────────────────────────
-
-!macro customHeader
-  !ifndef BUILD_UNINSTALLER
-
-  Var BTC_CB_QUICKCMDS  ; HWND of the AI Quick Commands checkbox
-  Var BTC_QC_ENABLED    ; "1" if the feature should be installed, "0" if not
-
-  ; ── Features page: Create ──────────────────────────────────────
-  Function btcFeaturesCreate
-    nsDialogs::Create 1018
-    Pop $0
-
-    ${NSD_CreateLabel} 0 0 100% 24u \
-      "Select optional features to install with Thought Tidy:"
-    Pop $0
-
-    ; Default the checkbox from the existing registry value (for upgrades/repairs)
-    ReadRegStr $R9 HKCU "Software\${APP_ID}\Features" "QuickCommands"
-    ${If} $R9 == "1"
-      StrCpy $R9 ${BST_CHECKED}
-    ${Else}
-      StrCpy $R9 ${BST_UNCHECKED}
-    ${EndIf}
-
-    ${NSD_CreateCheckbox} 10u 30u 100% 14u \
-      "AI Quick Commands — adds Email Reply, Slack, and LinkedIn Post prompt presets"
-    Pop $BTC_CB_QUICKCMDS
-    ${NSD_SetState} $BTC_CB_QUICKCMDS $R9
-
-    nsDialogs::Show
-  FunctionEnd
-
-  ; ── Features page: Leave ───────────────────────────────────────
-  Function btcFeaturesLeave
-    ${NSD_GetState} $BTC_CB_QUICKCMDS $R0
-    ${If} $R0 == ${BST_CHECKED}
-      StrCpy $BTC_QC_ENABLED "1"
-    ${Else}
-      StrCpy $BTC_QC_ENABLED "0"
-    ${EndIf}
-  FunctionEnd
-
-  Page Custom btcFeaturesCreate btcFeaturesLeave
-
-  !endif  ; BUILD_UNINSTALLER
+!macro customInstallPage
+  Page custom FeatureSelectPage FeatureSelectLeave
 !macroend
 
-; ── customInit: maintenance check via MessageBox (reliable on all Windows) ───
-; Runs in .onInit — before any pages are shown. MessageBox works here and
-; avoids the nsDialogs blank-page rendering bug on Windows 11 high-DPI.
+Var hDialog
+Var hLocalAI
+Var hAutoUpdater
 
-!macro customInit
-  !ifndef BUILD_UNINSTALLER
-
-  ReadRegStr $R0 HKCU \
-    "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
-    "UninstallString"
-  ${If} $R0 == ""
-    ReadRegStr $R0 HKLM \
-      "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
-      "UninstallString"
+Function FeatureSelectPage
+  nsDialogs::Create 1018
+  Pop $hDialog
+  ${If} $hDialog == error
+    Abort
   ${EndIf}
 
-  ${If} $R0 != ""
-    ; Already installed — offer upgrade/reinstall or exit
-    ReadRegStr $R1 HKCU \
-      "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
-      "DisplayVersion"
-    ${If} $R1 == ""
-      ReadRegStr $R1 HKLM \
-        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${UNINSTALL_APP_KEY}" \
-        "DisplayVersion"
-    ${EndIf}
-    ${If} $R1 == ""
-      StrCpy $R1 "an earlier version"
-    ${EndIf}
+  ${NSD_CreateLabel} 0 0 100% 14u "Optional Features"
+  Pop $0
 
-    MessageBox MB_YESNO|MB_ICONQUESTION \
-      "$(^Name) $R1 is already installed.$\r$\n$\r$\nInstall $(^Name) ${VERSION} now (upgrade / reinstall)?" \
-      IDYES done
-    Quit
+  ${NSD_CreateLabel} 0 18u 100% 12u "Select which optional components to install:"
+  Pop $0
 
-    done:
-  ${EndIf}
+  ${NSD_CreateCheckbox} 0 36u 100% 13u "Local AI  (~2-7 GB)"
+  Pop $hLocalAI
 
-  !endif  ; BUILD_UNINSTALLER
-!macroend
+  ${NSD_CreateLabel} 16u 51u 84% 18u "Run AI on your machine -- no internet, no API key required. Ollama setup guide launches after install."
+  Pop $0
 
-; ── Optional feature: AI Quick Commands ──────────────────────────────────────
+  ${NSD_CreateCheckbox} 0 74u 100% 13u "Auto-updater background service  (~5 MB)"
+  Pop $hAutoUpdater
 
-!macro customInstall
-  ; On silent install BTC_QC_ENABLED is empty — default to installing the feature
-  ${If} $BTC_QC_ENABLED == ""
-    StrCpy $BTC_QC_ENABLED "1"
-  ${EndIf}
+  ${NSD_CreateLabel} 16u 89u 84% 18u "Runs silently in the background, downloads new versions automatically, and applies them on next launch."
+  Pop $0
 
-  ${If} $BTC_QC_ENABLED == "1"
-    WriteRegStr HKCU "Software\${APP_ID}\Features" "QuickCommands" "1"
-    CreateDirectory "$APPDATA\Thought Tidy"
-    FileOpen $R7 "$APPDATA\Thought Tidy\quick-commands.json" w
-    FileWrite $R7 '[$\r$\n'
-    FileWrite $R7 '  { "name": "Email Reply",   "prompt": "Write a professional, concise reply to this email." },$\r$\n'
-    FileWrite $R7 '  { "name": "Slack Message", "prompt": "Rewrite this as a short, casual Slack message." },$\r$\n'
-    FileWrite $R7 '  { "name": "LinkedIn Post", "prompt": "Turn this into a polished LinkedIn post." }$\r$\n'
-    FileWrite $R7 ']'
-    FileClose $R7
-  ${Else}
-    DeleteRegValue HKCU "Software\${APP_ID}\Features" "QuickCommands"
-    Delete "$APPDATA\Thought Tidy\quick-commands.json"
-  ${EndIf}
-!macroend
+  nsDialogs::Show
+FunctionEnd
 
-; ── Clean up feature data on uninstall ───────────────────────────────────────
+Function FeatureSelectLeave
+  ; Local AI -- placeholder, value not acted upon yet (AIP R-021).
+  ${NSD_GetState} $hLocalAI $0
 
-!macro customUnInstall
-  DeleteRegKey HKCU "Software\${APP_ID}\Features"
-  Delete "$APPDATA\Thought Tidy\quick-commands.json"
-  Delete "$APPDATA\Thought Tidy\thought-tidy-settings.json"
-  RMDir  "$APPDATA\Thought Tidy"
-!macroend
+  ; Auto-updater -- write preference to registry; main.js reads it on first launch.
+  ${NSD_GetState} $hAutoUpdater $1
+  WriteRegDWORD HKCU "Software\NorthPandaLabs\ThoughtTidy" "autoUpdater" $1
+FunctionEnd

@@ -451,8 +451,23 @@ app.whenReady().then(() => {
     openSettings();
   }
 
+  // On first install, read auto-updater preference written by the installer checkbox.
+  // After that the store is the source of truth (user can toggle in settings later).
+  if (!store.has("autoUpdaterEnabled")) {
+    let enabled = true;
+    try {
+      const { execSync } = require("child_process");
+      const out = execSync(
+        'reg query "HKCU\\Software\\NorthPandaLabs\\ThoughtTidy" /v autoUpdater',
+        { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }
+      );
+      enabled = /0x1/.test(out);
+    } catch { /* registry key absent — default on */ }
+    store.set("autoUpdaterEnabled", enabled);
+  }
+
   // Schedule passive update check (packaged builds only — checks at noon daily)
-  if (app.isPackaged) {
+  if (app.isPackaged && store.get("autoUpdaterEnabled", true)) {
     const { scheduleUpdateCheck } = require("./lib-node/updater");
     scheduleUpdateCheck(store);
   }
