@@ -10,8 +10,8 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "openaiModel", "claudeKey", "claudeModel", "geminiKey", "geminiModel",
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey", "contextPresets", "devMode",
-  "zoomLevel"
+  "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "audienceLevel", "devMode",
+  "zoomLevel", "themeMode"
 ];
 
 const GUMROAD_URL    = "https://northpandalabs.gumroad.com/l/thought-tidy";
@@ -643,8 +643,8 @@ function renderCustomPrompts() {
     DEFAULT_ACTION_SETTINGS.forEach(a => {
       const opt = document.createElement("option");
       opt.value    = "builtin-" + a.id;
-      opt.disabled = true;
-      opt.textContent = (LOCKED_ACTIONS.has(a.id) ? "🔒 " : "") + a.label + (LOCKED_ACTIONS.has(a.id) ? "" : " (Pro)");
+      const isLocked = LOCKED_ACTIONS.has(a.id);
+      opt.textContent = (isLocked ? "🔒 " : "") + a.label + (!currentIsPro && !isLocked ? " (Pro)" : "");
       promptSel.appendChild(opt);
     });
     if (customPrompts.length) {
@@ -672,6 +672,7 @@ function renderCustomPrompts() {
   }
   customPrompts.forEach((p, i) => {
     const nameSpan  = document.createElement("span"); nameSpan.className = "cp-name"; nameSpan.textContent = p.name;
+    if (p.clarify) { const badge = document.createElement("span"); badge.className = "cp-clarify-badge"; badge.textContent = "clarify"; nameSpan.appendChild(badge); }
     const orderSpan = document.createElement("span"); orderSpan.className = "cp-order"; orderSpan.textContent = `#${i + 1} in menu`;
     const meta = document.createElement("div"); meta.className = "cp-meta"; meta.append(nameSpan, orderSpan);
     const textDiv = document.createElement("div"); textDiv.className = "cp-text";
@@ -712,8 +713,24 @@ function renderCustomPrompts() {
 
   const addForm = document.getElementById("add-prompt-form");
   if (addForm) {
-    const maxPrompts = currentIsPro ? 8 : 1;
-    addForm.style.display = customPrompts.length >= maxPrompts ? "none" : "";
+    const hasBasic   = customPrompts.some(p => !p.clarify);
+    const hasClarify = customPrompts.some(p =>  p.clarify);
+    const freeIsFull = hasBasic && hasClarify;
+    const isFull     = currentIsPro ? customPrompts.length >= 8 : freeIsFull;
+    addForm.style.display = isFull ? "none" : "";
+
+    const clarifyEl = document.getElementById("prompt-clarify");
+    if (!currentIsPro && clarifyEl && !isFull) {
+      if (!hasBasic && !hasClarify) {
+        clarifyEl.disabled = false;
+      } else if (!hasBasic) {
+        clarifyEl.checked = false; clarifyEl.disabled = true;
+      } else {
+        clarifyEl.checked = true; clarifyEl.disabled = true;
+      }
+    } else if (clarifyEl) {
+      clarifyEl.disabled = false;
+    }
 
     let warn = document.getElementById("free-prompt-warning");
     if (!currentIsPro && addForm.style.display !== "none") {
@@ -721,9 +738,9 @@ function renderCustomPrompts() {
         warn = document.createElement("p");
         warn.id = "free-prompt-warning";
         warn.style.cssText = "color:#f9e2af; background:rgba(249,226,175,0.07); border:1px solid rgba(249,226,175,0.18); border-radius:6px; padding:8px 10px; margin-bottom:12px; font-size:12px; line-height:1.5;";
-        warn.textContent = "⚠ Free tier: you get 1 custom prompt. Once added it is permanent — you cannot edit or delete it until you upgrade to Pro.";
         addForm.insertBefore(warn, addForm.firstChild);
       }
+      warn.textContent = "⚠ Free tier: you get 1 basic prompt and 1 clarify prompt. Once added they are permanent — upgrade to Pro to edit or add more.";
       warn.style.display = "block";
     } else if (warn) {
       warn.style.display = "none";
@@ -732,66 +749,84 @@ function renderCustomPrompts() {
 }
 
 async function addPrompt() {
-  const name   = document.getElementById("new-prompt-name").value.trim();
-  const prompt = document.getElementById("new-prompt-text").value.trim();
+  const name      = document.getElementById("new-prompt-name").value.trim();
+  const prompt    = document.getElementById("new-prompt-text").value.trim();
+  const isClarify = document.getElementById("prompt-clarify")?.checked || false;
   if (!name || !prompt) { alert("Enter both a name and an instruction."); return; }
   const addBtn = document.getElementById("add-prompt-btn");
   const editId = addBtn?.dataset.editId;
   if (editId) {
     if (!currentIsPro) return;
     const idx = customPrompts.findIndex(p => p.id === editId);
-    if (idx !== -1) customPrompts[idx] = { ...customPrompts[idx], name, prompt };
+    if (idx !== -1) customPrompts[idx] = { ...customPrompts[idx], name, prompt, clarify: isClarify };
     delete addBtn.dataset.editId;
     addBtn.textContent = "Add to Menu";
     document.getElementById("add-prompt-title").textContent = "Add New Prompt";
     document.getElementById("delete-prompt-btn").style.display = "none";
     document.getElementById("prompt-quick-select").value = "";
   } else {
-    const maxPrompts = currentIsPro ? 8 : 1;
-    if (customPrompts.length >= maxPrompts) {
-      alert(currentIsPro ? "Maximum 8 custom prompts." : "Free tier allows 1 custom prompt. Upgrade to Pro for more.");
+    if (!currentIsPro) {
+      const hasBasic   = customPrompts.some(p => !p.clarify);
+      const hasClarify = customPrompts.some(p =>  p.clarify);
+      if (isClarify && hasClarify)  { alert("Free tier: you already have a clarify prompt. Upgrade to Pro to add more."); return; }
+      if (!isClarify && hasBasic)   { alert("Free tier: you already have a basic prompt. Upgrade to Pro to add more."); return; }
+    } else if (customPrompts.length >= 8) {
+      alert("Maximum 8 custom prompts.");
       return;
     }
-    customPrompts.push({ id: uid(), name, prompt });
+    customPrompts.push({ id: uid(), name, prompt, clarify: isClarify });
   }
   await browser.storage.local.set({ customPrompts });
   renderCustomPrompts();
   document.getElementById("new-prompt-name").value = "";
   document.getElementById("new-prompt-text").value = "";
+  const clarifyEl = document.getElementById("prompt-clarify");
+  if (clarifyEl) clarifyEl.checked = true;
 }
 
 // ── History viewer ─────────────────────────────────────────────────────────────
 
 async function loadHistoryViewer() {
-  const { historyLog = [] } = await browser.storage.local.get("historyLog");
-  const entries = purgeOldLog(historyLog);
+  const stored = await browser.storage.local.get(["historyFull", "historyLog", "licenseEmail", "licenseKey"]);
+  const today  = todayDate();
+  // historyFull is the rich log written by the desktop app; fall back to historyLog
+  const full   = stored.historyFull || [];
+  const legacy = stored.historyLog  || [];
+  const allEntries = full.length ? full : legacy;
+  const entries = allEntries.filter(e => e.date === today);
+
   const section = document.getElementById("history-viewer-section");
   if (!section) return;
 
-  if (!entries.length) { section.style.display = "none"; return; }
-  section.style.display = "block";
   document.getElementById("history-viewer-count").textContent = entries.length;
+  if (!entries.length) { section.style.display = "none"; return; }
+  section.style.display = "";
 
   const list = document.getElementById("history-viewer-list");
   list.innerHTML = "";
   [...entries].reverse().forEach(e => {
     const t    = new Date(e.timestamp);
     const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+    const inT  = e.inputTokens  ?? e.inputLen  ?? 0;
+    const outT = e.outputTokens ?? e.outputLen ?? 0;
     const row  = document.createElement("div");
     row.className = "hv-entry";
     row.innerHTML = `
       <span class="hv-time">${time}</span>
-      <span class="hv-action">${e.action.replace(/-/g, " ")}</span>
+      <span class="hv-action">${(e.action || "").replace(/-/g, " ")}</span>
       <span class="hv-meta">${[e.provider, e.model].filter(Boolean).join(" · ")}</span>
-      <span class="hv-words">${e.inputLen || 0} → ${e.outputLen || 0} chars</span>`;
+      <span class="hv-words">${inT} → ${outT}</span>`;
     list.appendChild(row);
   });
 
   document.getElementById("history-clear-btn")?.addEventListener("click", async () => {
     if (!confirm("Clear all of today's history?")) return;
-    const { historyLog: hl = [] } = await browser.storage.local.get("historyLog");
-    const today = todayDate();
-    await browser.storage.local.set({ historyLog: hl.filter(e => e.date !== today) });
+    const { historyFull: hf = [], historyLog: hl = [] } = await browser.storage.local.get(["historyFull", "historyLog"]);
+    await browser.storage.local.set({
+      historyFull: hf.filter(e => e.date !== today),
+      historyLog:  hl.filter(e => e.date !== today),
+    });
+    document.getElementById("history-viewer-count").textContent = "0";
     section.style.display = "none";
   }, { once: true });
 }
@@ -817,12 +852,17 @@ async function saveProfile() {
 }
 
 async function saveBehavior() {
-  await browser.storage.local.set({ variants: getVal("variants") });
   if (typeof btcAPI !== "undefined" && btcAPI.setLoginItemEnabled) {
     const atLogin = document.getElementById("launchAtLogin")?.checked || false;
     await btcAPI.setLoginItemEnabled(atLogin);
   }
   showSaveStatus("behavior-save-status", "Saved!");
+}
+
+async function saveContext() {
+  const contextEnabled = document.getElementById("contextEnabled")?.checked !== false;
+  await browser.storage.local.set({ contextEnabled });
+  showSaveStatus("context-save-status", "Saved!");
 }
 
 async function saveActionOrder() {
@@ -852,7 +892,6 @@ async function save() {
   }
 
   await browser.storage.local.set({
-    variants:       getVal("variants"),
     customPrompts,
     actionSettings,
     profileName:    getVal("profileName"),
@@ -891,24 +930,34 @@ function applyProGates(isPro) {
   if (lockedView) lockedView.style.display = isPro ? "none" : "";
   if (activeView) activeView.style.display = isPro ? ""     : "none";
 
-  // Variants (Pro-only above 1)
-  const variantsInput   = document.getElementById("variants");
-  const variantsDisplay = document.getElementById("variants-display");
-  const variantsHint    = document.getElementById("variants-pro-hint");
-  if (variantsInput) {
-    variantsInput.max = isPro ? 4 : 1;
-    if (!isPro && parseInt(variantsInput.value) > 1) {
-      variantsInput.value = 1;
-      if (variantsDisplay) variantsDisplay.textContent = 1;
-    }
-  }
-  if (variantsHint) variantsHint.style.display = isPro ? "none" : "block";
+  // Hide PRO badges when activated
+  document.querySelectorAll(".pro-badge-sm").forEach(el => {
+    el.style.display = isPro ? "none" : "";
+  });
+
+  // Update pro button text
+  const proBtn = document.getElementById("activate-pro-link-btn");
+  if (proBtn) proBtn.textContent = isPro ? "✓ Activated" : "⚡ Activate Pro";
+
+  // History title and hint
+  const histTitle = document.getElementById("history-title-text");
+  if (histTitle) histTitle.textContent = isPro ? "All History" : "Today's History";
+  const histFreeHint = document.getElementById("history-free-hint");
+  if (histFreeHint) histFreeHint.style.display = isPro ? "none" : "block";
+  document.getElementById("history-upgrade-link")?.addEventListener("click", () => btcAPI.openURL(GUMROAD_URL));
 
   // Ollama is Pro-only — disable its wizard button for non-Pro users
   const ollamaBtn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
   if (ollamaBtn) {
     ollamaBtn.disabled = !isPro;
     ollamaBtn.title    = isPro ? "" : "Pro feature. Unlock Pro to use Ollama.";
+  }
+
+  // Seed 3 default audience presets the first time Pro is activated
+  if (isPro && !contextPresets.length) {
+    contextPresets = DEFAULT_AUDIENCE_PRESETS.map(p => ({ ...p, id: uid() }));
+    browser.storage.local.set({ contextPresets });
+    renderContextPresets();
   }
 }
 
@@ -927,7 +976,10 @@ function initProSection() {
   });
 
   document.querySelectorAll(".pro-unlock-link").forEach(a => {
-    a.addEventListener("click", () => btcAPI.openURL(GUMROAD_URL));
+    a.addEventListener("click", () => {
+      const panel = document.getElementById("pro-panel");
+      if (panel) panel.style.display = "block";
+    });
   });
 
   document.getElementById("activate-pro-btn")?.addEventListener("click", async () => {
@@ -947,6 +999,8 @@ function initProSection() {
     const emailEl = document.getElementById("pro-active-email");
     if (emailEl) emailEl.textContent = email;
     applyProGates(true);
+    const panel = document.getElementById("pro-panel");
+    if (panel) panel.style.display = "none";
   });
 
   document.getElementById("deactivate-pro-btn")?.addEventListener("click", async () => {
@@ -954,12 +1008,20 @@ function initProSection() {
     document.getElementById("pro-email-input").value = "";
     document.getElementById("pro-key-input").value   = "";
     applyProGates(false);
+    const panel = document.getElementById("pro-panel");
+    if (panel) panel.style.display = "none";
   });
 }
 
 // ── Context Presets ────────────────────────────────────────────────────────────
 
 let contextPresets = [];
+
+const DEFAULT_AUDIENCE_PRESETS = [
+  { name: "Casual Reader",    text: "Write for a casual reader. Use friendly, everyday language — simple, clear, and conversational. Avoid jargon." },
+  { name: "Professional",     text: "Write for a professional audience. Use polished, industry-standard language and an authoritative tone." },
+  { name: "Technical Expert", text: "Write for a technical expert. Be precise and concise — skip basic explanations and use specialized terminology freely." },
+];
 
 const ASSUMPTION_LABELS = [
   "", "1 — Beginner", "2 — Beginner", "3 — Basic", "4 — Basic",
@@ -975,63 +1037,55 @@ function renderContextPresets() {
   // Populate the quick-select dropdown
   const quickSel = document.getElementById("context-preset-quick-select");
   if (quickSel) {
-    quickSel.innerHTML = '<option value="">— select a profile to edit —</option>';
+    quickSel.innerHTML = '<option value="">— add new below —</option>';
     contextPresets.forEach((p, i) => {
       const opt = document.createElement("option");
       opt.value = String(i);
-      opt.textContent = `${p.name}  (level ${p.level})`;
+      opt.textContent = p.name;
       quickSel.appendChild(opt);
     });
   }
 
-  if (!contextPresets.length) {
-    const p = document.createElement("p");
-    p.className = "hint"; p.style.marginBottom = "12px";
-    p.textContent = "No presets yet — add one below.";
-    list.appendChild(p);
-    return;
-  }
-  contextPresets.forEach((p, i) => {
-    const row = document.createElement("div");
-    row.className = "cp-item";
-    row.style.cssText = "display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:1px solid #313244;";
-    row.innerHTML = `
-      <div style="flex:1; min-width:0">
-        <div style="font-weight:600; font-size:13px; color:#cdd6f4; margin-bottom:2px">${escHtml(p.name)}</div>
-        <div style="font-size:11px; color:#6c7086; white-space:pre-wrap; word-break:break-word">${escHtml(p.text.slice(0, 120))}${p.text.length > 120 ? "…" : ""}</div>
-      </div>
-      <button class="revert-btn cp-preset-delete" data-idx="${i}" style="flex-shrink:0">Delete</button>`;
-    list.appendChild(row);
+}
+
+function setCpLevel(level) {
+  document.querySelectorAll(".cp-level-btn").forEach(btn => {
+    const on = btn.dataset.level === (level || "intermediate");
+    btn.style.background = on ? "var(--accent)"  : "var(--bg-card)";
+    btn.style.color      = on ? "var(--bg-card)" : "var(--text-dim)";
+    btn.style.fontWeight = on ? "700" : "400";
   });
-  list.querySelectorAll(".cp-preset-delete").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      contextPresets.splice(parseInt(btn.dataset.idx), 1);
-      await browser.storage.local.set({ contextPresets });
-      renderContextPresets();
-    });
-  });
+}
+function getCpLevel() {
+  return document.querySelector(".cp-level-btn[style*='var(--accent)']")?.dataset.level
+      || document.querySelector(".cp-level-btn[style*='#89b4fa']")?.dataset.level
+      || "intermediate";
 }
 
 async function addContextPreset() {
   const name    = document.getElementById("new-cpreset-name")?.value?.trim();
   const text    = document.getElementById("new-cpreset-text")?.value?.trim();
+  const level   = getCpLevel();
   const saveBtn = document.getElementById("add-context-preset-btn");
   const editIdx = saveBtn?.dataset.editIdx;
   if (!name || !text) { alert("Enter both a name and a description."); return; }
 
   if (editIdx !== undefined && editIdx !== "") {
     const idx = parseInt(editIdx);
-    contextPresets[idx] = { ...contextPresets[idx], name, text };
+    contextPresets[idx] = { ...contextPresets[idx], name, text, level };
     delete saveBtn.dataset.editIdx;
-    saveBtn.textContent = "Save";
+    saveBtn.textContent = "Add";
   } else {
-    contextPresets.push({ id: uid(), name, text });
+    contextPresets.push({ id: uid(), name, text, level });
   }
   await browser.storage.local.set({ contextPresets });
   document.getElementById("new-cpreset-name").value = "";
   document.getElementById("new-cpreset-text").value = "";
   const quickSel = document.getElementById("context-preset-quick-select");
+  setCpLevel("intermediate");
   if (quickSel) quickSel.value = "";
+  const delBtn = document.getElementById("delete-context-preset-btn");
+  if (delBtn) delBtn.style.display = "none";
   renderContextPresets();
 }
 
@@ -1122,16 +1176,17 @@ async function init() {
     wzShow.textContent = wzKey.type === "password" ? "Show" : "Hide";
   });
 
-  // Variants
-  const variantsVal = s.variants || 1;
-  setVal("variants", variantsVal);
-  document.getElementById("variants-display").textContent = variantsVal;
-  document.getElementById("variants").addEventListener("input", e => {
-    document.getElementById("variants-display").textContent = e.target.value;
-  });
-
   document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
-    document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const panel = document.getElementById("pro-panel");
+    if (!panel) return;
+    // Close display panel if open
+    const displayPanel = document.getElementById("display-panel");
+    if (displayPanel) displayPanel.style.display = "none";
+    panel.style.display = panel.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("pro-panel-close")?.addEventListener("click", () => {
+    const panel = document.getElementById("pro-panel");
+    if (panel) panel.style.display = "none";
   });
 
   // Display panel toggle
@@ -1147,6 +1202,20 @@ async function init() {
   // Zoom level
   const zoomLevelEl = document.getElementById("zoom-level");
   if (zoomLevelEl) zoomLevelEl.value = s.zoomLevel || "auto";
+
+  // Theme
+  function applyTheme(mode) {
+    document.documentElement.setAttribute("data-theme", mode || "dark");
+  }
+  const themeEl = document.getElementById("app-theme");
+  if (themeEl) themeEl.value = s.themeMode || "dark";
+  applyTheme(s.themeMode || "dark");
+  themeEl?.addEventListener("change", async () => {
+    const theme = themeEl.value || "dark";
+    await browser.storage.local.set({ themeMode: theme });
+    applyTheme(theme);
+  });
+
   document.getElementById("zoom-save-btn")?.addEventListener("click", async () => {
     const zoom = document.getElementById("zoom-level")?.value || "auto";
     await browser.storage.local.set({ zoomLevel: zoom });
@@ -1231,6 +1300,39 @@ async function init() {
     }
   });
 
+  // Context enabled toggle
+  const contextEnabledEl = document.getElementById("contextEnabled");
+  if (contextEnabledEl) {
+    contextEnabledEl.checked = s.contextEnabled !== false;
+    contextEnabledEl.addEventListener("change", saveContext);
+  }
+
+  // Expertise level
+  (function () {
+    const active = s.audienceLevel || "intermediate";
+    function applyExpertise(level) {
+      document.querySelectorAll(".expertise-btn").forEach(btn => {
+        const on = btn.dataset.level === level;
+        btn.style.background = on ? "var(--accent)"    : "var(--bg-card)";
+        btn.style.color      = on ? "var(--bg-card)"   : "var(--text-dim)";
+        btn.style.fontWeight = on ? "700" : "400";
+      });
+    }
+    applyExpertise(active);
+    document.querySelectorAll(".expertise-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        applyExpertise(btn.dataset.level);
+        await browser.storage.local.set({ audienceLevel: btn.dataset.level });
+      });
+    });
+  })();
+
+  // Per-audience level picker
+  setCpLevel("intermediate");
+  document.querySelectorAll(".cp-level-btn").forEach(btn => {
+    btn.addEventListener("click", () => setCpLevel(btn.dataset.level));
+  });
+
   // Context presets
   contextPresets = s.contextPresets || [];
   renderContextPresets();
@@ -1239,19 +1341,40 @@ async function init() {
   document.getElementById("context-preset-quick-select")?.addEventListener("change", (e) => {
     const idx     = e.target.value;
     const saveBtn = document.getElementById("add-context-preset-btn");
+    const delBtn  = document.getElementById("delete-context-preset-btn");
     const nameEl  = document.getElementById("new-cpreset-name");
     const textEl  = document.getElementById("new-cpreset-text");
     if (idx === "") {
       if (nameEl) nameEl.value = "";
       if (textEl) textEl.value = "";
-      if (saveBtn) { delete saveBtn.dataset.editIdx; saveBtn.textContent = "Save"; }
+      setCpLevel("intermediate");
+      if (saveBtn) delete saveBtn.dataset.editIdx;
+      if (delBtn) delBtn.style.display = "none";
       return;
     }
     const preset = contextPresets[parseInt(idx)];
     if (!preset) return;
     if (nameEl) nameEl.value = preset.name;
     if (textEl) textEl.value = preset.text;
-    if (saveBtn) { saveBtn.textContent = "Update"; saveBtn.dataset.editIdx = idx; }
+    setCpLevel(preset.level || "intermediate");
+    if (saveBtn) saveBtn.dataset.editIdx = idx;
+    if (delBtn) delBtn.style.display = "";
+  });
+  document.getElementById("delete-context-preset-btn")?.addEventListener("click", async () => {
+    const saveBtn  = document.getElementById("add-context-preset-btn");
+    const delBtn   = document.getElementById("delete-context-preset-btn");
+    const quickSel = document.getElementById("context-preset-quick-select");
+    const idx = parseInt(saveBtn?.dataset.editIdx);
+    if (isNaN(idx)) return;
+    contextPresets.splice(idx, 1);
+    await browser.storage.local.set({ contextPresets });
+    if (saveBtn) delete saveBtn.dataset.editIdx;
+    if (delBtn) delBtn.style.display = "none";
+    document.getElementById("new-cpreset-name").value = "";
+    document.getElementById("new-cpreset-text").value = "";
+    setCpLevel("intermediate");
+    if (quickSel) quickSel.value = "";
+    renderContextPresets();
   });
 
   // Custom prompts
@@ -1266,20 +1389,44 @@ async function init() {
     const textEl  = document.getElementById("new-prompt-text");
     const delBtn  = document.getElementById("delete-prompt-btn");
     const titleEl = document.getElementById("add-prompt-title");
-    if (!val || !val.startsWith("custom-")) {
-      if (nameEl)  nameEl.value = "";
-      if (textEl)  textEl.value = "";
-      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; }
+
+    const resetForm = () => {
+      if (nameEl)  { nameEl.value = ""; nameEl.readOnly = false; }
+      if (textEl)  { textEl.value = ""; textEl.readOnly = false; }
+      const ce = document.getElementById("prompt-clarify");
+      if (ce) { ce.checked = true; ce.disabled = false; }
+      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; addBtn.disabled = false; }
       if (delBtn)  delBtn.style.display = "none";
       if (titleEl) titleEl.textContent = "Add New Prompt";
+    };
+
+    if (!val) { resetForm(); return; }
+
+    if (val.startsWith("builtin-")) {
+      const actionId = val.replace("builtin-", "");
+      const action   = DEFAULT_ACTION_SETTINGS.find(a => a.id === actionId);
+      if (!action) { resetForm(); return; }
+      const isLocked = LOCKED_ACTIONS.has(actionId);
+      if (nameEl)  { nameEl.value = action.label; nameEl.readOnly = isLocked; }
+      if (textEl)  { textEl.value = MENU_PROMPTS[actionId] || ""; textEl.readOnly = isLocked; }
+      const ce = document.getElementById("prompt-clarify");
+      if (ce) { ce.checked = !!action.clarify; ce.disabled = isLocked; }
+      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; addBtn.disabled = isLocked; }
+      if (delBtn)  delBtn.style.display = "none";
+      if (titleEl) titleEl.textContent = isLocked ? "Built-in Prompt (read-only)" : "Edit Prompt";
       return;
     }
+
+    if (!val.startsWith("custom-")) { resetForm(); return; }
+
     const idx = parseInt(val.replace("custom-", ""));
     const p   = customPrompts[idx];
     if (!p) return;
-    if (nameEl)  nameEl.value = p.name;
-    if (textEl)  textEl.value = p.prompt;
-    if (addBtn)  { addBtn.dataset.editId = p.id; addBtn.textContent = "Update Prompt"; }
+    if (nameEl)  { nameEl.value = p.name; nameEl.readOnly = false; }
+    if (textEl)  { textEl.value = p.prompt; textEl.readOnly = false; }
+    const ce = document.getElementById("prompt-clarify");
+    if (ce) { ce.checked = !!p.clarify; ce.disabled = false; }
+    if (addBtn)  { addBtn.dataset.editId = p.id; addBtn.textContent = "Update Prompt"; addBtn.disabled = false; }
     if (delBtn)  delBtn.style.display = currentIsPro ? "inline-block" : "none";
     if (titleEl) titleEl.textContent = "Edit Prompt";
   });
@@ -1323,7 +1470,6 @@ async function init() {
   document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
   document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);
   document.getElementById("actions-save-btn")?.addEventListener("click", saveActionOrder);
-  document.getElementById("variants-gumroad-link")?.addEventListener("click", () => btcAPI.openURL(GUMROAD_URL));
 
   initProSection();
 

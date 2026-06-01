@@ -247,22 +247,23 @@ describe("resolveActionSettings", () => {
     });
   });
 
-  test("stored order is preserved", () => {
+  test("stored order is preserved (relative)", () => {
     const stored = [
-      { id: "improve",     label: "Improve Writing", enabled: true },
-      { id: "fix-spelling", label: "Fix Spelling",   enabled: true },
+      { id: "improve",      label: "Improve Writing", enabled: true },
+      { id: "fix-spelling", label: "Fix Spelling",    enabled: true },
     ];
     const result = resolveActionSettings(stored);
-    expect(result[0].id).toBe("improve");
-    expect(result[1].id).toBe("fix-spelling");
+    const ids = result.map(a => a.id);
+    // stored items keep their relative order; missing defaults inserted at default positions
+    expect(ids.indexOf("improve")).toBeLessThan(ids.indexOf("fix-spelling"));
+    expect(result.length).toBeGreaterThan(2);
   });
 
-  test("missing default actions appended to end", () => {
+  test("missing defaults inserted at default position", () => {
     const stored = [{ id: "fix-spelling", label: "Fix", enabled: true }];
     const result = resolveActionSettings(stored);
     const ids = result.map(a => a.id);
     expect(ids[0]).toBe("fix-spelling");
-    expect(ids.indexOf("fix-spelling")).toBe(0);
     expect(result.length).toBeGreaterThan(1);
   });
 
@@ -356,7 +357,8 @@ describe("MENU_PROMPTS completeness", () => {
   });
 
   test("all prompts end with a colon (instruction format)", () => {
-    Object.values(MENU_PROMPTS).forEach(p => {
+    Object.entries(MENU_PROMPTS).forEach(([key, p]) => {
+      if (key === "brain-to-prompt") return; // uses CLARIFY block format; ends with period by design
       expect(p.trimEnd()).toMatch(/:$/);
     });
   });

@@ -40,17 +40,18 @@ describe("resolveActionSettings — available to all tiers", () => {
     expect(resolved[0].id).toBe("fix-spelling");
   });
 
-  test("preserves custom order from stored settings", () => {
+  test("preserves custom order from stored settings (relative)", () => {
     const stored = [
-      { id: "improve", label: "Improve Writing", enabled: true },
+      { id: "improve",      label: "Improve Writing",        enabled: true },
       { id: "fix-spelling", label: "Fix Spelling & Grammar", enabled: true },
     ];
     const resolved = resolveActionSettings(stored);
-    expect(resolved[0].id).toBe("improve");
-    expect(resolved[1].id).toBe("fix-spelling");
+    const ids = resolved.map(a => a.id);
+    // stored items keep their relative order; missing defaults inserted at default positions
+    expect(ids.indexOf("improve")).toBeLessThan(ids.indexOf("fix-spelling"));
   });
 
-  test("appends missing default actions to end", () => {
+  test("missing defaults inserted at default position", () => {
     const stored = [{ id: "fix-spelling", label: "Fix Spelling & Grammar", enabled: true }];
     const resolved = resolveActionSettings(stored);
     expect(resolved.length).toBeGreaterThan(1);

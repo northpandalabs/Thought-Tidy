@@ -35,6 +35,7 @@ Var hOptUpdate
 Var hOptRemove
 Var hDesktopShortcut
 Var hAutoUpdater
+Var hStartWithWindows
 Var UninstallStr
 
 
@@ -103,7 +104,7 @@ FunctionEnd
 
 
 ; =============================================================================
-; SETUP OPTIONS -- desktop shortcut + auto-updater
+; SETUP OPTIONS -- desktop shortcut + auto-updater + start with Windows
 ; =============================================================================
 Function IconUpdaterPage
   nsDialogs::Create 1018
@@ -126,7 +127,14 @@ Function IconUpdaterPage
   Pop $hAutoUpdater
   ${NSD_SetState} $hAutoUpdater ${BST_CHECKED}
 
-  ${NSD_CreateLabel} 16u 71u 84% 24u "Runs silently in the background, downloads new versions automatically, and applies them on next launch."
+  ${NSD_CreateLabel} 16u 71u 84% 20u "Runs silently in the background, downloads new versions automatically, and applies them on next launch."
+  Pop $0
+
+  ${NSD_CreateCheckbox} 0 96u 100% 13u "Start with Windows"
+  Pop $hStartWithWindows
+  ${NSD_SetState} $hStartWithWindows ${BST_CHECKED}
+
+  ${NSD_CreateLabel} 16u 111u 84% 18u "Automatically launch Thought Tidy when you log in."
   Pop $0
 
   nsDialogs::Show
@@ -139,6 +147,19 @@ Function IconUpdaterLeave
   ; Auto-updater -- write preference to registry; main.js reads it on first launch.
   ${NSD_GetState} $hAutoUpdater $1
   WriteRegDWORD HKCU "Software\NorthPandaLabs\ThoughtTidy" "autoUpdater" $1
+
+  ; Start with Windows -- create or skip startup folder shortcut directly.
+  ${NSD_GetState} $hStartWithWindows $2
+  ${If} $2 == ${BST_CHECKED}
+    CreateShortcut "$APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Thought Tidy.lnk" "$INSTDIR\Thought Tidy.exe"
+  ${Else}
+    Delete "$APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Thought Tidy.lnk"
+  ${EndIf}
 FunctionEnd
 
 !endif ; BUILD_UNINSTALLER
+
+; Remove startup shortcut on uninstall.
+!macro customUnInstall
+  Delete "$APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Thought Tidy.lnk"
+!macroend

@@ -7,7 +7,8 @@ const STORAGE_KEYS = [
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey", "contextPresets", "lastContextAudience"
+  "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "lastContextAudience",
+  "themeMode"
 ];
 
 const BUILT_IN_AUDIENCE = [
@@ -65,37 +66,45 @@ const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", 
 
 let currentSettings = {};
 
+function rebuildVariantsSelect(settings, isPro) {
+  const sel = document.getElementById("variants-select");
+  if (!sel) return;
+  const savedVal = parseInt(settings.variants) || 1;
+  sel.innerHTML = "";
+  for (let i = 1; i <= 4; i++) {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    if (i > 1 && !isPro) {
+      opt.textContent = `×${i} (Pro)`;
+      opt.disabled    = true;
+    } else {
+      opt.textContent = `×${i}`;
+    }
+    sel.appendChild(opt);
+  }
+  sel.value = isPro ? String(Math.max(1, Math.min(4, savedVal))) : "1";
+}
+
 async function init() {
   currentSettings = await cryptoGet(STORAGE_KEYS);
 
-  const variantsEl  = document.getElementById("variants");
-  const variantsVal = document.getElementById("variants-val");
+  document.documentElement.setAttribute("data-theme", currentSettings.themeMode || "dark");
 
   const isPro = isProUnlocked(currentSettings);
-  if (!isPro) {
-    variantsEl.max   = 1;
-    variantsEl.value = 1;
-    const badge = document.createElement("a");
-    badge.className   = "pro-badge-sm";
-    badge.textContent = "Pro ↗";
-    badge.style.cursor = "pointer";
-    badge.title = "Upgrade to Pro for multiple suggestions";
-    badge.addEventListener("click", () => {
-      browser.tabs.create({ url: "https://northpandalabs.gumroad.com/l/thought-tidy" });
-    });
-    variantsEl.insertAdjacentElement("afterend", badge);
-  } else {
-    variantsEl.max   = 4;
-    variantsEl.value = currentSettings.variants || 1;
-  }
-  variantsVal.textContent = variantsEl.value;
+  rebuildVariantsSelect(currentSettings, isPro);
 
   updateProviderStatus(currentSettings);
 
   populateAudienceSelect(currentSettings);
 
-  // Restore last-used context audience
-  if (currentSettings.lastContextAudience) {
+  // Hide the "+ Add context" row if the user has disabled it in settings
+  if (currentSettings.contextEnabled === false) {
+    const row = document.querySelector(".ctx-toggle-row");
+    if (row) row.style.display = "none";
+  }
+
+  // Restore last-used context audience (skip if user disabled context in settings)
+  if (currentSettings.contextEnabled !== false && currentSettings.lastContextAudience) {
     const sheet = document.getElementById("context-sheet");
     const sel   = document.getElementById("context-audience-select");
     const btn   = document.getElementById("toggle-context-btn");
@@ -181,10 +190,8 @@ async function init() {
   const ctaEl = document.getElementById("setup-cta");
   if (ctaEl) ctaEl.style.display = (hasProvider || hasLegacyKey) ? "none" : "block";
 
-  variantsEl.addEventListener("input", () => {
-    if (!isProUnlocked(currentSettings)) { variantsEl.value = 1; return; }
-    variantsVal.textContent = variantsEl.value;
-    browser.storage.local.set({ variants: variantsEl.value });
+  document.getElementById("variants-select")?.addEventListener("change", (e) => {
+    browser.storage.local.set({ variants: e.target.value });
   });
 
   document.getElementById("open-settings").addEventListener("click", () => {
@@ -242,12 +249,19 @@ async function runProcess() {
   const actionVal = document.getElementById("action-select").value;
   const cps       = currentSettings.customPrompts || [];
   let systemPrompt;
+  let isClarifyEnabled = false;
   if (actionVal.startsWith("custom-")) {
-    const idx    = parseInt(actionVal.replace("custom-", ""), 10);
-    systemPrompt = cps[idx]?.prompt || "Process the following text:";
+    const idx = parseInt(actionVal.replace("custom-", ""), 10);
+    const cp  = cps[idx];
+    systemPrompt = cp?.prompt || "Process the following text:";
+    if (cp?.clarify) {
+      isClarifyEnabled = true;
+      systemPrompt = buildClarifyPrompt(systemPrompt);
+    }
   } else {
     systemPrompt = MENU_PROMPTS[actionVal];
     if (!systemPrompt) return;
+    if (actionVal === "brain-to-prompt") isClarifyEnabled = true;
   }
   systemPrompt = buildPromptWithProfile(systemPrompt, currentSettings);
 
@@ -263,7 +277,7 @@ async function runProcess() {
   const isPro  = isProUnlocked(currentSettings);
   const count  = actionVal === "fix-spelling" || !isPro
     ? 1
-    : Math.max(1, Math.min(4, parseInt(currentSettings.variants) || 1));
+    : Math.max(1, Math.min(4, parseInt(document.getElementById("variants-select")?.value) || 1));
 
   document.getElementById("process-btn").disabled = true;
   showLoading(true, count);
@@ -287,6 +301,12 @@ async function runProcess() {
       usedProvider = r.usedProvider;
       usedModel    = r.usedModel;
     }
+    // CLARIFY detection — for brain-to-prompt and clarify-enabled custom actions
+    if (isClarifyEnabled && results.length === 1 && results[0].trimStart().startsWith("CLARIFY:")) {
+      showClarify(results[0], text, systemPrompt);
+      return;
+    }
+
     showResult(results, null);
     await browser.storage.local.set({ lastAction: actionVal });
 
@@ -315,6 +335,50 @@ function showLoading(on, count = 1) {
   const loadingText = document.getElementById("result-loading-text");
   if (loadingText) loadingText.textContent = count > 1 ? `Getting suggestion 1 of ${count}…` : "Processing…";
   document.getElementById("result-slots").innerHTML = "";
+  const clarifyArea = document.getElementById("clarify-area");
+  if (clarifyArea) clarifyArea.style.display = "none";
+}
+
+function showClarify(clarifyText, originalText, systemPrompt) {
+  document.getElementById("result-loading").style.display = "none";
+  document.getElementById("result-slots").innerHTML = "";
+  const area = document.getElementById("clarify-area");
+  const qEl  = document.getElementById("clarify-questions");
+  if (!area || !qEl) { showResult([clarifyText], null); return; }
+
+  const lines = clarifyText.replace(/^CLARIFY:\n?/i, "").split("\n")
+    .map(l => l.replace(/^[•\-*\d.]+\s*/, "").trim()).filter(Boolean);
+  qEl.innerHTML = "";
+  lines.forEach(q => {
+    const p = document.createElement("p");
+    p.className = "clarify-question"; p.textContent = q;
+    qEl.appendChild(p);
+  });
+  document.getElementById("clarify-answers").value = "";
+  area.style.display = "block";
+
+  const btn = document.getElementById("clarify-submit-btn");
+  const handler = async () => {
+    const answers = document.getElementById("clarify-answers").value.trim();
+    if (!answers) return;
+    area.style.display = "none";
+    showLoading(true, 1);
+    try {
+      const r = await callAIWithFallback(
+        currentSettings.configuredProviders,
+        currentSettings.geminiModels,
+        currentSettings,
+        systemPrompt,
+        `${originalText}\n\n---\nAdditional context:\n${answers}`
+      );
+      showResult([r.result], null);
+    } catch (err) {
+      showResult(null, `Error: ${err.message}`);
+    } finally {
+      document.getElementById("process-btn").disabled = false;
+    }
+  };
+  btn.addEventListener("click", handler, { once: true });
 }
 
 function showResult(results, error) {

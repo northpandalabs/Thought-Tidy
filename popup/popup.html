@@ -25,6 +25,12 @@
 
     <div class="action-row">
       <select id="action-select"></select>
+      <select id="variants-select" class="variants-select">
+        <option value="1">×1</option>
+        <option value="2">×2</option>
+        <option value="3">×3</option>
+        <option value="4">×4</option>
+      </select>
       <button id="process-btn">Run</button>
     </div>
     <div class="ctx-toggle-row">
@@ -35,6 +41,12 @@
     <div id="result-area" style="display:none">
       <div id="result-loading" class="result-loading" style="display:none">
         <div class="mini-spinner"></div><span id="result-loading-text">Processing…</span>
+      </div>
+      <div id="clarify-area" style="display:none" class="clarify-wrap">
+        <p class="clarify-header">A couple of quick questions to nail this:</p>
+        <div id="clarify-questions"></div>
+        <textarea id="clarify-answers" class="clarify-input" placeholder="Type your answers here…" rows="3"></textarea>
+        <button id="clarify-submit-btn">Continue →</button>
       </div>
       <div id="result-slots"></div>
     </div>
@@ -60,12 +72,6 @@
   </div>
 
   <div class="divider"></div>
-
-  <div class="section">
-    <label>Suggestions <span id="variants-val">1</span></label>
-    <input type="range" id="variants" min="1" max="4" value="1">
-    <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
-  </div>
 
   <div class="section key-status" id="key-status">
     <span id="key-indicator" class="dot dot-bad"></span>

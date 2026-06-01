@@ -23,6 +23,7 @@ describe("MENU_PROMPTS", () => {
 
   test("every prompt ends with a colon (instruction separator convention)", () => {
     Object.entries(MENU_PROMPTS).forEach(([key, prompt]) => {
+      if (key === "brain-to-prompt") return; // uses CLARIFY block format; ends with period by design
       expect(prompt.trimEnd()).toMatch(/:$/);
     });
   });

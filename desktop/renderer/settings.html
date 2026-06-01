@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="settings.css">
   <style>
     html, body {
-      background: #181825;
+      background: var(--bg-page);
     }
     .page-header .links-row a[href] { cursor: pointer; }
     .page-header .links-row a[href]::before { content: ""; }
@@ -16,8 +16,8 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       height: 44px;
-      background: #11111b;
-      border-bottom: 1px solid #313244;
+      background: var(--bg-bar);
+      border-bottom: 1px solid var(--surface);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -33,7 +33,7 @@
     .app-titlebar-title {
       font-size: 13px;
       font-weight: 600;
-      color: #a6adc8;
+      color: var(--text-dim);
       -webkit-app-region: no-drag;
     }
 
@@ -41,17 +41,17 @@
     body { padding-top: 44px; }
 
     .desktop-note {
-      background: #1e1e2e;
-      border: 1px solid #313244;
+      background: var(--bg-card);
+      border: 1px solid var(--surface);
       border-radius: 8px;
       padding: 10px 14px;
       font-size: 12px;
-      color: #6c7086;
+      color: var(--text-muted);
       margin-bottom: 16px;
     }
-    .desktop-note strong { color: #9399b2; }
+    .desktop-note strong { color: var(--text-sub); }
     .desktop-note code {
-      background: #181825;
+      background: var(--bg-page);
       padding: 1px 5px;
       border-radius: 3px;
       font-size: 11px;
@@ -63,7 +63,7 @@
       display: none;
       position: absolute;
       inset: 0;
-      background: rgba(17, 17, 27, 0.45);
+      background: var(--overlay-bg);
       border-radius: 8px;
       z-index: 20;
       flex-direction: column;
@@ -76,19 +76,19 @@
     }
     .pro-gate.locked .pro-overlay { display: flex; }
     .pro-lock-icon { font-size: 28px; }
-    .pro-overlay p { color: #cdd6f4; font-size: 14px; margin: 0; }
-    .pro-overlay a { color: #b4befe; font-weight: 600; cursor: pointer; }
+    .pro-overlay p { color: var(--text); font-size: 14px; margin: 0; }
+    .pro-overlay a { color: var(--accent); font-weight: 600; cursor: pointer; }
     .pro-active-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; background: #1e1e2e;
-      border-radius: 8px; border: 1px solid #313244;
+      padding: 12px 16px; background: var(--bg-card);
+      border-radius: 8px; border: 1px solid var(--surface);
     }
     .pro-active-badge {
       background: linear-gradient(135deg, #7c3aed, #4f46e5);
       color: white; font-size: 12px; font-weight: 700;
       padding: 4px 10px; border-radius: 100px;
     }
-    .pro-active-email { color: #cdd6f4; font-size: 13px; }
+    .pro-active-email { color: var(--text); font-size: 13px; }
     .pro-status-msg { font-size: 13px; min-height: 18px; margin-top: 10px; }
     .pro-status-msg.error   { color: #f38ba8; }
     .pro-status-msg.success { color: #a6e3a1; }
@@ -103,17 +103,25 @@
 <body>
   <div class="app-titlebar">
     <img id="titlebar-icon" src="../../icons/icon.png" onerror="this.style.display='none'" alt="">
-    <span class="app-titlebar-title">Thought Tidy — Settings</span>
-    <button id="activate-pro-link-btn" style="-webkit-app-region:no-drag; background:none; border:none; color:#cba6f7; font-size:11.5px; font-weight:600; padding:4px 8px; border-radius:6px; cursor:pointer; margin-left:auto;">⚡ Activate Pro</button>
-    <button id="display-panel-btn" style="-webkit-app-region:no-drag; background:none; border:1px solid #313244; color:#a6adc8; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; margin-left:8px;">Display ⚙</button>
+    <span class="app-titlebar-title" style="position:absolute; left:0; right:0; text-align:center; pointer-events:none; -webkit-app-region:no-drag;">Thought Tidy — Settings</span>
+    <button id="activate-pro-link-btn" style="-webkit-app-region:no-drag; background:none; border:none; color:var(--accent); font-size:11.5px; font-weight:600; padding:4px 8px; border-radius:6px; cursor:pointer; margin-left:auto;">⚡ Activate Pro</button>
+    <button id="display-panel-btn" style="-webkit-app-region:no-drag; background:none; border:1px solid var(--surface); color:var(--text-sub); font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; margin-left:8px;">Display ⚙</button>
   </div>
 
   <!-- Display Settings Panel (fixed below titlebar, toggled by Display button) -->
-  <div id="display-panel" style="display:none; position:fixed; top:44px; left:0; right:0; background:#11111b; border-bottom:1px solid #313244; padding:16px 18px; z-index:90; box-shadow:0 4px 20px rgba(0,0,0,0.6);">
-    <div style="max-width:480px">
+  <div id="display-panel" style="display:none; position:fixed; top:44px; left:0; right:0; background:var(--bg-bar); border-bottom:1px solid var(--surface); padding:16px 18px; z-index:90; box-shadow:0 4px 20px rgba(0,0,0,0.6);">
+    <div style="max-width:480px; margin:0 auto">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <span style="font-size:13px; font-weight:600; color:#cdd6f4;">Display Settings</span>
-        <button id="display-panel-close" style="background:none; border:none; color:#6c7086; cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px;">✕</button>
+        <span style="font-size:13px; font-weight:600; color:var(--text);">Display Settings</span>
+        <button id="display-panel-close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px;">✕</button>
+      </div>
+      <div class="field">
+        <label for="app-theme">Theme</label>
+        <select id="app-theme">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="device">Device (follow system)</option>
+        </select>
       </div>
       <div class="field">
         <label for="zoom-level">Popup zoom level</label>
@@ -134,6 +142,36 @@
     </div>
   </div>
 
+  <!-- Pro Activation Panel (fixed below titlebar) -->
+  <div id="pro-panel" style="display:none; position:fixed; top:44px; left:0; right:0; background:var(--bg-bar); border-bottom:1px solid var(--surface); padding:20px 18px; z-index:90; box-shadow:0 6px 30px rgba(0,0,0,0.7);">
+    <div style="max-width:480px; margin:0 auto">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <span style="font-size:13px; font-weight:700; color:var(--text);">⚡ Thought Tidy Pro</span>
+        <button id="pro-panel-close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px; -webkit-app-region:no-drag;">✕</button>
+      </div>
+      <div id="pro-locked-view">
+        <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
+        <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro ($10 one-time) ↗</a>
+        <div class="field" style="margin-top:12px">
+          <label for="pro-email-input">Email used at purchase</label>
+          <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off" style="width:100%">
+        </div>
+        <div class="field">
+          <label for="pro-key-input">License Key</label>
+          <input type="text" id="pro-key-input" placeholder="80D8A918-7E81416E-8D2C26C0-2CE892A8" autocomplete="off" style="width:100%;font-family:monospace;letter-spacing:0.04em">
+        </div>
+        <button id="activate-pro-btn" class="btn-primary">Activate</button>
+        <div id="pro-status-msg" class="pro-status-msg"></div>
+      </div>
+      <div id="pro-active-view" style="display:none">
+        <div class="pro-active-row">
+          <span class="pro-active-email" style="color:var(--text-muted); font-size:12px">✓ License active — <span id="pro-active-email"></span></span>
+          <button id="deactivate-pro-btn" class="revert-btn" style="margin-left:auto">Deactivate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="page">
 
     <div id="test-only-banner" style="display:none; background:#f59e0b; color:#1c1917; padding:10px 14px; font-weight:700; font-size:13px; border-radius:8px; margin-bottom:16px; margin-top:4px;">
@@ -141,7 +179,7 @@
     </div>
 
     <div class="page-header">
-      <h1>⧉ Thought Tidy <span style="font-size:13px;font-weight:400;color:#6c7086">Desktop</span></h1>
+      <h1>⧉ Thought Tidy <span style="font-size:13px;font-weight:400;color:var(--text-muted)">Desktop</span></h1>
       <p class="tagline">
         Built for fast thinkers, running as a tray app.<br>
         Press <strong>Ctrl+Shift+Space</strong> (or Cmd+Shift+Space on Mac) anywhere to open the popup.
@@ -261,15 +299,6 @@
     <section>
       <h2>Behavior</h2>
       <div class="field">
-        <label for="variants">Suggestions per request: <strong id="variants-display">1</strong></label>
-        <input type="range" id="variants" min="1" max="1" value="1">
-        <div class="range-labels"><span>1</span><span>2</span><span>3</span><span>4</span></div>
-        <p class="hint">Fix Spelling is always 1. Other actions generate multiple versions so you can compare.</p>
-        <p id="variants-pro-hint" class="hint" style="display:none; margin-top:4px">
-          Multiple suggestions is a <a id="variants-gumroad-link" style="cursor:pointer; color:#b4befe;">Pro feature ↗</a>
-        </p>
-      </div>
-      <div class="field">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
           <input type="checkbox" id="launchAtLogin" checked>
           Start with Windows
@@ -279,59 +308,6 @@
       <div class="section-save-row">
         <button class="section-save-btn" id="behavior-save-btn">Save</button>
         <span class="section-save-status" id="behavior-save-status"></span>
-      </div>
-    </section>
-
-    <!-- Context & Audience -->
-    <section id="context-section">
-      <h2>Context &amp; Audience</h2>
-      <p class="hint" style="margin-bottom:14px">When you run an action, tap <strong>+ Add context</strong> in the popup to tell the AI who you're writing for. Built-in levels cover Beginner to Expert. Pro users can add custom audience types for specific domains or professions — like <em>Firefighter</em> or <em>iOS Developer</em> — so the AI uses the right vocabulary.</p>
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <span style="font-size:13px; font-weight:600; color:#a6adc8;">Custom Audience Types <span class="pro-badge-sm">PRO</span></span>
-        <button id="toggle-context-presets" class="link-btn">Manage Audience Types →</button>
-      </div>
-      <div id="context-presets-section" class="pro-gate" style="display:none; margin-top:10px;">
-        <div class="pro-overlay">
-          <span class="pro-lock-icon">🔒</span>
-          <p>Pro feature</p>
-          <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
-        </div>
-        <p class="hint" style="margin-bottom:14px">Define specific audience types by profession or domain. These appear in the popup dropdown so you can pick them per run — the AI will use that group's vocabulary and frame explanations accordingly.</p>
-        <div class="field" style="margin-bottom:10px">
-          <label for="context-preset-quick-select">Edit an existing type:</label>
-          <select id="context-preset-quick-select">
-            <option value="">— select a type to edit —</option>
-          </select>
-        </div>
-        <div id="context-presets-list"></div>
-        <div id="add-context-preset-form">
-          <div class="field">
-            <label for="new-cpreset-name">Audience name</label>
-            <input type="text" id="new-cpreset-name" placeholder="e.g. Firefighter, iOS Developer, Legal Client">
-          </div>
-          <div class="field">
-            <label for="new-cpreset-text">Their vocabulary &amp; domain</label>
-            <textarea id="new-cpreset-text" rows="2" placeholder="e.g. A firefighter — use terms like incident command, suppression, turnout gear. Avoid medical jargon."></textarea>
-          </div>
-          <button id="add-context-preset-btn">Save</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Edit Actions -->
-    <section id="actions-section">
-      <h2>
-        Action List
-        <button id="toggle-action-editor" class="link-btn" style="margin-left:auto">Edit Actions →</button>
-      </h2>
-      <p class="hint">Reorder actions using the arrows. Disabling and renaming require Pro.</p>
-      <div id="action-editor-panel" style="display:none; margin-top:12px">
-        <p class="hint" style="margin-bottom:10px">Built-in actions (grey lock) can't be renamed. At least one action must stay active.</p>
-        <div id="action-list" class="ae-list"></div>
-        <div class="section-save-row">
-          <button class="section-save-btn" id="actions-save-btn">Save Order</button>
-          <span class="section-save-status" id="actions-save-status"></span>
-        </div>
       </div>
     </section>
 
@@ -372,6 +348,15 @@
           <textarea id="new-prompt-text" rows="4"
             placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:"></textarea>
         </div>
+        <div class="field" style="margin-top:10px">
+          <label class="checkbox-label" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
+            <input type="checkbox" id="prompt-clarify" style="margin-top:2px;flex-shrink:0">
+            <span>
+              <strong>Ask clarifying questions</strong>
+              <span class="hint" style="display:block;margin-top:2px">If enabled, the AI will ask for more info when the input is unclear, then run your instruction.</span>
+            </span>
+          </label>
+        </div>
         <div class="prompt-examples">
           <span class="example-label">Examples:</span>
           <button class="example-btn" data-name="Email Reply"
@@ -387,30 +372,85 @@
         </div>
       </div>
       </div><!-- /prompts-panel -->
+
+      <!-- Action List (sub-section inside Custom Prompts) -->
+      <div id="actions-section" style="border-top:1px solid var(--surface); margin-top:18px; padding-top:16px;">
+        <h2>
+          Action List
+          <button id="toggle-action-editor" class="link-btn" style="margin-left:auto">Edit Actions →</button>
+        </h2>
+        <p class="hint">Reorder actions using the arrows. Disabling and renaming require Pro.</p>
+        <div id="action-editor-panel" style="display:none; margin-top:12px">
+          <p class="hint" style="margin-bottom:10px">Built-in actions (grey lock) can't be renamed. At least one action must stay active.</p>
+          <div id="action-list" class="ae-list"></div>
+          <div class="section-save-row">
+            <button class="section-save-btn" id="actions-save-btn">Save Order</button>
+            <span class="section-save-status" id="actions-save-status"></span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Unlock Pro -->
-    <section id="pro-section">
-      <h2>⚡ Thought Tidy Pro</h2>
-      <div id="pro-locked-view">
-        <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
-        <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro ($10 one-time) ↗</a>
-        <div class="field" style="margin-top:12px">
-          <label for="pro-email-input">Email used at purchase</label>
-          <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off">
+    <!-- Context & Audience -->
+    <section id="context-section">
+      <h2>
+        Context &amp; Audience
+        <label class="toggle-label" style="margin-left:auto; font-weight:normal">
+          <input type="checkbox" id="contextEnabled" checked>
+          <span class="toggle-text">Show in popup</span>
+        </label>
+      </h2>
+      <p class="hint" style="margin-bottom:14px">When you run an action, tap <strong>+ Add context</strong> in the popup to tell the AI who you're writing for. Built-in levels cover Beginner to Expert. Pro users can add custom audience types for specific domains or professions — like <em>Firefighter</em> or <em>iOS Developer</em> — so the AI uses the right vocabulary.</p>
+      <div class="field" style="margin-bottom:16px">
+        <label style="display:block; margin-bottom:8px; font-weight:600">Default knowledge level</label>
+        <div style="display:flex; gap:0; border:1px solid var(--surface); border-radius:6px; overflow:hidden">
+          <button class="expertise-btn" data-level="beginner"     style="flex:1; padding:7px 4px; font-size:12px; background:var(--bg-card); border:none; border-right:1px solid var(--surface); color:var(--text-dim); cursor:pointer">Beginner</button>
+          <button class="expertise-btn" data-level="intermediate" style="flex:1; padding:7px 4px; font-size:12px; background:var(--bg-card); border:none; border-right:1px solid var(--surface); color:var(--text-dim); cursor:pointer">Intermediate</button>
+          <button class="expertise-btn" data-level="advanced"     style="flex:1; padding:7px 4px; font-size:12px; background:var(--bg-card); border:none; border-right:1px solid var(--surface); color:var(--text-dim); cursor:pointer">Advanced</button>
+          <button class="expertise-btn" data-level="expert"       style="flex:1; padding:7px 4px; font-size:12px; background:var(--bg-card); border:none; color:var(--text-dim); cursor:pointer">Expert</button>
         </div>
-        <div class="field">
-          <label for="pro-key-input">License Key</label>
-          <input type="text" id="pro-key-input" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off">
-        </div>
-        <button id="activate-pro-btn" class="btn-primary">Activate</button>
-        <div id="pro-status-msg" class="pro-status-msg"></div>
+        <p class="hint" style="margin-top:6px">Sets the assumed expertise of your audience. Affects how the AI phrases explanations — simpler language for Beginner, no hand-holding for Expert.</p>
       </div>
-      <div id="pro-active-view" style="display:none">
-        <div class="pro-active-row">
-          <span class="pro-active-badge">✓ Pro Active</span>
-          <span id="pro-active-email" class="pro-active-email"></span>
-          <button id="deactivate-pro-btn" class="revert-btn" style="margin-left:auto">Deactivate</button>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:13px; font-weight:600; color:var(--text-sub);">Custom Audience Types <span class="pro-badge-sm">PRO</span></span>
+        <button id="toggle-context-presets" class="link-btn">Manage Audience Types →</button>
+      </div>
+      <div id="context-presets-section" class="pro-gate" style="display:none; margin-top:10px;">
+        <div class="pro-overlay">
+          <span class="pro-lock-icon">🔒</span>
+          <p>Pro feature</p>
+          <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+        </div>
+        <p class="hint" style="margin-bottom:14px">Define specific audience types by profession or domain. These appear in the popup dropdown so you can pick them per run — the AI will use that group's vocabulary and frame explanations accordingly.</p>
+        <div class="field" style="margin-bottom:10px">
+          <label for="context-preset-quick-select">Edit an existing type:</label>
+          <select id="context-preset-quick-select">
+            <option value="">— select a type to edit —</option>
+          </select>
+        </div>
+        <div id="context-presets-list"></div>
+        <div id="add-context-preset-form">
+          <div class="field">
+            <label for="new-cpreset-name">Audience name</label>
+            <input type="text" id="new-cpreset-name" placeholder="e.g. Firefighter, iOS Developer, Legal Client">
+          </div>
+          <div class="field">
+            <label for="new-cpreset-text">Their vocabulary &amp; domain</label>
+            <textarea id="new-cpreset-text" rows="2" placeholder="e.g. A firefighter — use terms like incident command, suppression, turnout gear. Avoid medical jargon."></textarea>
+          </div>
+          <div class="field" style="margin-bottom:12px">
+            <label style="display:block; margin-bottom:6px">Knowledge level for this audience</label>
+            <div style="display:flex; gap:0; border:1px solid var(--surface); border-radius:6px; overflow:hidden">
+              <button class="cp-level-btn" data-level="beginner"     style="flex:1; padding:6px 4px; font-size:11px; background:var(--bg-card); border:none; border-right:1px solid var(--surface); color:var(--text-dim); cursor:pointer">Beginner</button>
+              <button class="cp-level-btn" data-level="intermediate" style="flex:1; padding:6px 4px; font-size:11px; background:var(--bg-card); border:none; border-right:1px solid var(--surface); color:var(--text-dim); cursor:pointer">Intermediate</button>
+              <button class="cp-level-btn" data-level="advanced"     style="flex:1; padding:6px 4px; font-size:11px; background:var(--bg-card); border:none; border-right:1px solid var(--surface); color:var(--text-dim); cursor:pointer">Advanced</button>
+              <button class="cp-level-btn" data-level="expert"       style="flex:1; padding:6px 4px; font-size:11px; background:var(--bg-card); border:none; color:var(--text-dim); cursor:pointer">Expert</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center">
+            <button id="add-context-preset-btn" class="btn-primary">Add</button>
+            <button id="delete-context-preset-btn" class="revert-btn" style="display:none">Delete</button>
+          </div>
         </div>
       </div>
     </section>
@@ -484,12 +524,13 @@
         <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
       </div>
       <h2>
-        Today's History
+        <span id="history-title-text">Today's History</span>
         <span class="section-count" id="history-viewer-count">0</span>
         <button id="view-full-history-btn" class="link-btn">View Full History →</button>
         <button id="history-clear-btn" class="link-btn" style="margin-left:8px">Clear today</button>
       </h2>
       <p class="hint" style="margin-bottom:10px">Every AI action you run today. Clears automatically at midnight.</p>
+      <p id="history-free-hint" class="hint" style="display:none; margin-top:4px; color:#f9e2af;">Free tier shows today's history only. <a id="history-upgrade-link" style="cursor:pointer; color:#b4befe;">Upgrade to Pro</a> for full history.</p>
       <div id="history-viewer-list" class="hv-list"></div>
     </section>
 

@@ -4,7 +4,7 @@
 const {
   app, BrowserWindow, Tray, Menu, globalShortcut,
   ipcMain, clipboard, nativeImage, shell, Notification, screen,
-  safeStorage
+  safeStorage, dialog
 } = require("electron");
 const path  = require("path");
 const Store = require("electron-store");
@@ -115,6 +115,13 @@ let tray        = null;
 let popupWin    = null;
 let settingsWin = null;
 
+function applyZoomToWindow(win) {
+  if (!win || win.isDestroyed()) return;
+  const zoom = encStore ? encStore.get("zoomLevel") : null;
+  const factor = (!zoom || zoom === "auto") ? 1.0 : parseFloat(zoom);
+  if (!isNaN(factor)) win.webContents.setZoomFactor(factor);
+}
+
 // ── Path helpers ───────────────────────────────────────────────────────────────
 
 // In production (packaged), extra resources land in process.resourcesPath.
@@ -149,6 +156,8 @@ function createPopup() {
   });
 
   popupWin.loadFile(path.join(__dirname, "renderer", "popup.html"));
+
+  popupWin.webContents.on("did-finish-load", () => applyZoomToWindow(popupWin));
 
   // Hide (don't close) when focus is lost
   popupWin.on("blur", () => {
@@ -222,6 +231,7 @@ function openSettings() {
   });
   settingsWin.setMenu(null);
   settingsWin.loadFile(path.join(__dirname, "renderer", "settings.html"));
+  settingsWin.webContents.on("did-finish-load", () => applyZoomToWindow(settingsWin));
   settingsWin.on("closed", () => { settingsWin = null; });
 
   if (isDev || IS_TEST_BUILD) settingsWin.webContents.openDevTools({ mode: "right" });
@@ -400,9 +410,25 @@ function smartOpenPopup() {
   openPopup();
 }
 
+// ── Single-instance lock ───────────────────────────────────────────────────────
+
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.whenReady().then(() => {
+    dialog.showMessageBoxSync({
+      type:    "warning",
+      title:   "Thought Tidy",
+      message: "Another instance of Thought Tidy is already running.",
+      buttons: ["OK"]
+    });
+    app.quit();
+  });
+}
+
 // ── App lifecycle ──────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
+  if (!gotLock) return; // second instance — quit after dialog
   app.setName("Thought Tidy");
 
   // Migrate plaintext keys to OS keychain encryption, then wrap the store
@@ -427,6 +453,41 @@ app.whenReady().then(() => {
     appVersion:      app.getVersion(),
     updateAvailable: encStore.get("updateAvailable") || null
   }));
+
+  ipcMain.handle("set-zoom", (_, zoom) => {
+    encStore.set("zoomLevel", zoom);
+    const factor = (!zoom || zoom === "auto") ? 1.0 : parseFloat(zoom);
+    if (isNaN(factor)) return;
+    for (const win of [popupWin, settingsWin]) {
+      if (win && !win.isDestroyed()) win.webContents.setZoomFactor(factor);
+    }
+  });
+
+  function startupShortcut() {
+    return path.join(
+      app.getPath("appData"),
+      "Microsoft", "Windows", "Start Menu", "Programs", "Startup",
+      "Thought Tidy.lnk"
+    );
+  }
+
+  ipcMain.handle("get-login-item", () => {
+    if (process.platform !== "win32") return app.getLoginItemSettings().openAtLogin;
+    return require("fs").existsSync(startupShortcut());
+  });
+
+  ipcMain.handle("set-login-item", (_, val) => {
+    if (process.platform !== "win32") {
+      app.setLoginItemSettings({ openAtLogin: !!val, openAsHidden: true });
+      return;
+    }
+    const lnk = startupShortcut();
+    if (val) {
+      shell.writeShortcutLink(lnk, "create", { target: process.execPath, description: "Thought Tidy" });
+    } else {
+      try { require("fs").unlinkSync(lnk); } catch {}
+    }
+  });
 
   // macOS: no dock icon — pure tray app
   if (process.platform === "darwin") app.dock.hide();

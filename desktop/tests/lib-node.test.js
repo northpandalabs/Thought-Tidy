@@ -76,6 +76,7 @@ describe("lib-node/prompts.js", () => {
 
   test("each prompt ends with a colon (instructs AI to return only the result)", () => {
     for (const [key, prompt] of Object.entries(MENU_PROMPTS)) {
+      if (key === "brain-to-prompt") continue; // uses CLARIFY block format; ends with period by design
       expect(prompt.trim().endsWith(":")).toBe(true);
     }
   });

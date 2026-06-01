@@ -24,6 +24,13 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // App meta: { isTestBuild, updateAvailable }
   getAppConfig:   ()         => ipcRenderer.invoke("get-app-config"),
 
+  // Startup / login item
+  getLoginItemEnabled: ()      => ipcRenderer.invoke("get-login-item"),
+  setLoginItemEnabled: (val)   => ipcRenderer.invoke("set-login-item", val),
+
+  // Display zoom
+  setZoom: (zoom) => ipcRenderer.invoke("set-zoom", zoom),
+
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {
     ipcRenderer.on("popup-opened", () => callback());

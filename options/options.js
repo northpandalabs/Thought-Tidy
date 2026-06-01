@@ -6,7 +6,8 @@ const STORAGE_KEYS = [
   "geminiKey", "geminiModel", "geminiModels", "geminiModelsLastFetched",
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey", "syncEnabled", "contextPresets", "devMode"
+  "licenseEmail", "licenseKey", "syncEnabled", "contextPresets", "contextEnabled", "audienceLevel", "devMode",
+  "themeMode"
 ];
 
 const GUMROAD_URL    = "https://northpandalabs.gumroad.com/l/thought-tidy";
@@ -763,6 +764,12 @@ function renderActionEditor() {
 let customPrompts   = [];
 let contextPresets  = [];
 
+const DEFAULT_AUDIENCE_PRESETS = [
+  { name: "Casual Reader",    text: "Write for a casual reader. Use friendly, everyday language — simple, clear, and conversational. Avoid jargon." },
+  { name: "Professional",     text: "Write for a professional audience. Use polished, industry-standard language and an authoritative tone." },
+  { name: "Technical Expert", text: "Write for a technical expert. Be precise and concise — skip basic explanations and use specialized terminology freely." },
+];
+
 function renderContextPresets() {
   const list = document.getElementById("context-presets-list");
   if (!list) return;
@@ -770,7 +777,7 @@ function renderContextPresets() {
 
   const quickSel = document.getElementById("context-preset-quick-select");
   if (quickSel) {
-    quickSel.innerHTML = '<option value="">— select a type to edit —</option>';
+    quickSel.innerHTML = '<option value="">— add new below —</option>';
     contextPresets.forEach((p, i) => {
       const opt = document.createElement("option");
       opt.value = String(i);
@@ -779,53 +786,44 @@ function renderContextPresets() {
     });
   }
 
-  if (!contextPresets.length) {
-    const p = document.createElement("p");
-    p.className = "hint"; p.style.marginBottom = "12px";
-    p.textContent = "No audience types yet — add one below.";
-    list.appendChild(p);
-    return;
-  }
-  contextPresets.forEach((p, i) => {
-    const row = document.createElement("div");
-    row.style.cssText = "display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:1px solid #313244;";
-    row.innerHTML = `
-      <div style="flex:1; min-width:0">
-        <div style="font-weight:600; font-size:13px; color:#cdd6f4; margin-bottom:2px">${escHtml(p.name)}</div>
-        <div style="font-size:11px; color:#6c7086; white-space:pre-wrap; word-break:break-word">${escHtml(p.text.slice(0, 120))}${p.text.length > 120 ? "…" : ""}</div>
-      </div>
-      <button class="revert-btn cp-preset-delete" data-idx="${i}" style="flex-shrink:0">Delete</button>`;
-    list.appendChild(row);
+}
+
+function setCpLevel(level) {
+  document.querySelectorAll(".cp-level-btn").forEach(btn => {
+    const on = btn.dataset.level === (level || "intermediate");
+    btn.style.background = on ? "#89b4fa" : "#1e1e2e";
+    btn.style.color      = on ? "#1e1e2e" : "#9399b2";
+    btn.style.fontWeight = on ? "700" : "400";
   });
-  list.querySelectorAll(".cp-preset-delete").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      contextPresets.splice(parseInt(btn.dataset.idx), 1);
-      await cryptoSet({ contextPresets });
-      renderContextPresets();
-    });
-  });
+}
+function getCpLevel() {
+  return document.querySelector(".cp-level-btn[style*='#89b4fa']")?.dataset.level || "intermediate";
 }
 
 async function addContextPreset() {
   const name    = document.getElementById("new-cpreset-name")?.value?.trim();
   const text    = document.getElementById("new-cpreset-text")?.value?.trim();
+  const level   = getCpLevel();
   const saveBtn = document.getElementById("add-context-preset-btn");
   const editIdx = saveBtn?.dataset.editIdx;
   if (!name || !text) { alert("Enter both a name and a description."); return; }
 
   if (editIdx !== undefined && editIdx !== "") {
     const idx = parseInt(editIdx);
-    contextPresets[idx] = { ...contextPresets[idx], name, text };
+    contextPresets[idx] = { ...contextPresets[idx], name, text, level };
     delete saveBtn.dataset.editIdx;
-    saveBtn.textContent = "Save";
+    saveBtn.textContent = "Add";
   } else {
-    contextPresets.push({ id: uid(), name, text });
+    contextPresets.push({ id: uid(), name, text, level });
   }
   await cryptoSet({ contextPresets });
   document.getElementById("new-cpreset-name").value = "";
   document.getElementById("new-cpreset-text").value = "";
+  setCpLevel("intermediate");
   const quickSel = document.getElementById("context-preset-quick-select");
   if (quickSel) quickSel.value = "";
+  const delBtn = document.getElementById("delete-context-preset-btn");
+  if (delBtn) delBtn.style.display = "none";
   renderContextPresets();
 }
 
@@ -840,8 +838,8 @@ function renderCustomPrompts() {
     DEFAULT_ACTION_SETTINGS.forEach(a => {
       const opt = document.createElement("option");
       opt.value    = "builtin-" + a.id;
-      opt.disabled = true;
-      opt.textContent = (LOCKED_ACTIONS.has(a.id) ? "🔒 " : "") + a.label + (LOCKED_ACTIONS.has(a.id) ? "" : " (Pro)");
+      const isLocked = LOCKED_ACTIONS.has(a.id);
+      opt.textContent = (isLocked ? "🔒 " : "") + a.label + (!currentIsPro && !isLocked ? " (Pro)" : "");
       promptSel.appendChild(opt);
     });
     if (customPrompts.length) {
@@ -875,6 +873,11 @@ function renderCustomPrompts() {
     const nameSpan = document.createElement("span");
     nameSpan.className = "cp-name";
     nameSpan.textContent = p.name;
+    if (p.clarify) {
+      const badge = document.createElement("span");
+      badge.className = "cp-clarify-badge"; badge.textContent = "clarify";
+      nameSpan.appendChild(badge);
+    }
     const orderSpan = document.createElement("span");
     orderSpan.className = "cp-order";
     orderSpan.textContent = `#${i + 1} in menu`;
@@ -939,19 +942,35 @@ function renderCustomPrompts() {
 
   const addForm = document.getElementById("add-prompt-form");
   if (addForm) {
-    const maxPrompts = currentIsPro ? 8 : 1;
-    addForm.style.display = customPrompts.length >= maxPrompts ? "none" : "";
+    const hasBasic   = customPrompts.some(p => !p.clarify);
+    const hasClarify = customPrompts.some(p =>  p.clarify);
+    const freeIsFull = hasBasic && hasClarify;
+    const isFull     = currentIsPro ? customPrompts.length >= 8 : freeIsFull;
+    addForm.style.display = isFull ? "none" : "";
 
-    // Show permanent-action warning for free users while the form is visible
+    // For free users, guide the clarify checkbox toward whichever slot is still open
+    const clarifyEl = document.getElementById("prompt-clarify");
+    if (!currentIsPro && clarifyEl && !isFull) {
+      if (!hasBasic && !hasClarify) {
+        clarifyEl.disabled = false; // Let them choose for their first slot
+      } else if (!hasBasic) {
+        clarifyEl.checked = false; clarifyEl.disabled = true; // Must add a basic prompt
+      } else {
+        clarifyEl.checked = true; clarifyEl.disabled = true; // Must add a clarify prompt
+      }
+    } else if (clarifyEl) {
+      clarifyEl.disabled = false;
+    }
+
     let warn = document.getElementById("free-prompt-warning");
     if (!currentIsPro && addForm.style.display !== "none") {
       if (!warn) {
         warn = document.createElement("p");
         warn.id = "free-prompt-warning";
         warn.style.cssText = "color:#f9e2af; background:rgba(249,226,175,0.07); border:1px solid rgba(249,226,175,0.18); border-radius:6px; padding:8px 10px; margin-bottom:12px; font-size:12px; line-height:1.5;";
-        warn.textContent = "⚠ Free tier: you get 1 custom prompt. Once added it is permanent — you cannot edit or delete it until you upgrade to Pro.";
         addForm.insertBefore(warn, addForm.firstChild);
       }
+      warn.textContent = "⚠ Free tier: you get 1 basic prompt and 1 clarify prompt. Once added they are permanent — upgrade to Pro to edit or add more.";
       warn.style.display = "block";
     } else if (warn) {
       warn.style.display = "none";
@@ -960,17 +979,18 @@ function renderCustomPrompts() {
 }
 
 function addPrompt() {
-  const name   = document.getElementById("new-prompt-name").value.trim();
-  const prompt = document.getElementById("new-prompt-text").value.trim();
+  const name      = document.getElementById("new-prompt-name").value.trim();
+  const prompt    = document.getElementById("new-prompt-text").value.trim();
+  const isClarify = document.getElementById("prompt-clarify")?.checked || false;
   if (!name || !prompt) { alert("Enter both a name and an instruction."); return; }
 
-  const addBtn  = document.getElementById("add-prompt-btn");
-  const editId  = addBtn?.dataset.editId;
+  const addBtn = document.getElementById("add-prompt-btn");
+  const editId = addBtn?.dataset.editId;
 
   if (editId) {
     if (!currentIsPro) return;
     const idx = customPrompts.findIndex(p => p.id === editId);
-    if (idx !== -1) customPrompts[idx] = { ...customPrompts[idx], name, prompt };
+    if (idx !== -1) customPrompts[idx] = { ...customPrompts[idx], name, prompt, clarify: isClarify };
     delete addBtn.dataset.editId;
     addBtn.textContent = "Add to Menu";
     const titleEl = document.getElementById("add-prompt-title");
@@ -980,28 +1000,35 @@ function addPrompt() {
     const promptSel = document.getElementById("prompt-quick-select");
     if (promptSel) promptSel.value = "";
   } else {
-    const maxPrompts = currentIsPro ? 8 : 1;
-    if (customPrompts.length >= maxPrompts) {
-      alert(currentIsPro ? "Maximum 8 custom prompts." : "Free tier allows 1 custom prompt. Upgrade to Pro for more.");
+    if (!currentIsPro) {
+      const hasBasic   = customPrompts.some(p => !p.clarify);
+      const hasClarify = customPrompts.some(p => p.clarify);
+      if (isClarify && hasClarify)  { alert("Free tier: you already have a clarify prompt. Upgrade to Pro to add more."); return; }
+      if (!isClarify && hasBasic)   { alert("Free tier: you already have a basic prompt. Upgrade to Pro to add more."); return; }
+    } else if (customPrompts.length >= 8) {
+      alert("Maximum 8 custom prompts.");
       return;
     }
-    customPrompts.push({ id: uid(), name, prompt });
+    customPrompts.push({ id: uid(), name, prompt, clarify: isClarify });
   }
   renderCustomPrompts();
   document.getElementById("new-prompt-name").value = "";
   document.getElementById("new-prompt-text").value = "";
+  const clarifyEl = document.getElementById("prompt-clarify");
+  if (clarifyEl) clarifyEl.checked = true;
 }
 
 // ── History viewer ─────────────────────────────────────────────────────────────
 
 async function loadHistoryViewer() {
-  const { historyLog = [] } = await browser.storage.local.get("historyLog");
-  const entries = purgeOldLog(historyLog);
+  const stored = await browser.storage.local.get(["historyLog", "licenseEmail", "licenseKey"]);
+  const historyLog = stored.historyLog || [];
+  const isPro = isProUnlocked(stored);
+  const entries = isPro ? [...historyLog] : purgeOldLog(historyLog);
   const section = document.getElementById("history-viewer-section");
   if (!section) return;
 
   if (!entries.length) { section.style.display = "none"; return; }
-  section.style.display = "block";
   document.getElementById("history-viewer-count").textContent = entries.length;
 
   const list = document.getElementById("history-viewer-list");
@@ -1049,7 +1076,6 @@ async function save() {
 
   const syncEnabled = document.getElementById("syncEnabled")?.checked !== false;
   await cryptoSet({
-    variants:       getVal("variants"),
     customPrompts,
     actionSettings,
     profileName:    getVal("profileName"),
@@ -1072,6 +1098,8 @@ async function init() {
   await migrateStorage();
 
   const s = await cryptoGet(STORAGE_KEYS);
+
+  document.documentElement.setAttribute("data-theme", s.themeMode || "dark");
 
   configuredProviders = s.configuredProviders || [];
   geminiModels        = s.geminiModels || [null, null, null];
@@ -1124,14 +1152,6 @@ async function init() {
   wzShow.addEventListener("click", () => {
     wzKey.type        = wzKey.type === "password" ? "text" : "password";
     wzShow.textContent = wzKey.type === "password" ? "Show" : "Hide";
-  });
-
-  // Variants
-  const variantsVal = s.variants || 1;
-  setVal("variants", variantsVal);
-  document.getElementById("variants-display").textContent = variantsVal;
-  document.getElementById("variants").addEventListener("input", e => {
-    document.getElementById("variants-display").textContent = e.target.value;
   });
 
   // Profile fields
@@ -1187,20 +1207,42 @@ async function init() {
     const addBtn  = document.getElementById("add-prompt-btn");
     const titleEl = document.getElementById("add-prompt-title");
     const delBtn  = document.getElementById("delete-prompt-btn");
-    if (!val || val.startsWith("builtin-")) {
-      if (nameEl)  nameEl.value  = "";
-      if (textEl)  textEl.value  = "";
-      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; }
+
+    const resetForm = () => {
+      if (nameEl)  { nameEl.value = ""; nameEl.readOnly = false; }
+      if (textEl)  { textEl.value = ""; textEl.readOnly = false; }
+      const ce = document.getElementById("prompt-clarify");
+      if (ce) { ce.checked = true; ce.disabled = false; }
+      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; addBtn.disabled = false; }
       if (titleEl) titleEl.textContent = "Add New Prompt";
       if (delBtn)  delBtn.style.display = "none";
+    };
+
+    if (!val) { resetForm(); return; }
+
+    if (val.startsWith("builtin-")) {
+      const actionId = val.replace("builtin-", "");
+      const action   = DEFAULT_ACTION_SETTINGS.find(a => a.id === actionId);
+      if (!action) { resetForm(); return; }
+      const isLocked = LOCKED_ACTIONS.has(actionId);
+      if (nameEl)  { nameEl.value = action.label; nameEl.readOnly = isLocked; }
+      if (textEl)  { textEl.value = MENU_PROMPTS[actionId] || ""; textEl.readOnly = isLocked; }
+      const ce = document.getElementById("prompt-clarify");
+      if (ce) { ce.checked = !!action.clarify; ce.disabled = isLocked; }
+      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; addBtn.disabled = isLocked; }
+      if (delBtn)  delBtn.style.display = "none";
+      if (titleEl) titleEl.textContent = isLocked ? "Built-in Prompt (read-only)" : "Edit Prompt";
       return;
     }
+
     const idx = parseInt(val.replace("custom-", ""), 10);
     const p   = customPrompts[idx];
     if (!p || !currentIsPro) return;
-    if (nameEl)  nameEl.value  = p.name;
-    if (textEl)  textEl.value  = p.prompt;
-    if (addBtn)  { addBtn.dataset.editId = p.id; addBtn.textContent = "Save Changes"; }
+    if (nameEl)  { nameEl.value = p.name; nameEl.readOnly = false; }
+    if (textEl)  { textEl.value = p.prompt; textEl.readOnly = false; }
+    const clarifyEl = document.getElementById("prompt-clarify");
+    if (clarifyEl) { clarifyEl.checked = !!p.clarify; clarifyEl.disabled = false; }
+    if (addBtn)  { addBtn.dataset.editId = p.id; addBtn.textContent = "Save Changes"; addBtn.disabled = false; }
     if (titleEl) titleEl.textContent = "Edit Prompt";
     if (delBtn)  delBtn.style.display = "";
   });
@@ -1224,6 +1266,43 @@ async function init() {
     renderCustomPrompts();
   });
 
+  // Context enabled toggle
+  const contextEnabledEl = document.getElementById("contextEnabled");
+  if (contextEnabledEl) contextEnabledEl.checked = s.contextEnabled !== false;
+  document.getElementById("context-save-btn")?.addEventListener("click", async () => {
+    const contextEnabled = document.getElementById("contextEnabled")?.checked !== false;
+    await browser.storage.local.set({ contextEnabled });
+    const st = document.getElementById("context-save-status");
+    if (st) { st.textContent = "Saved!"; setTimeout(() => { st.textContent = ""; }, 2000); }
+  });
+
+  // Expertise level
+  (function () {
+    const LEVELS = ["beginner", "intermediate", "advanced", "expert"];
+    const active = s.audienceLevel || "intermediate";
+    function applyExpertise(level) {
+      document.querySelectorAll(".expertise-btn").forEach(btn => {
+        const on = btn.dataset.level === level;
+        btn.style.background   = on ? "#89b4fa" : "#1e1e2e";
+        btn.style.color        = on ? "#1e1e2e" : "#9399b2";
+        btn.style.fontWeight   = on ? "700" : "400";
+      });
+    }
+    applyExpertise(active);
+    document.querySelectorAll(".expertise-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        applyExpertise(btn.dataset.level);
+        await browser.storage.local.set({ audienceLevel: btn.dataset.level });
+      });
+    });
+  })();
+
+  // Per-audience level picker buttons
+  setCpLevel("intermediate");
+  document.querySelectorAll(".cp-level-btn").forEach(btn => {
+    btn.addEventListener("click", () => setCpLevel(btn.dataset.level));
+  });
+
   // Context presets
   contextPresets = s.contextPresets || [];
   renderContextPresets();
@@ -1232,19 +1311,39 @@ async function init() {
   document.getElementById("context-preset-quick-select")?.addEventListener("change", (e) => {
     const idx     = e.target.value;
     const saveBtn = document.getElementById("add-context-preset-btn");
+    const delBtn  = document.getElementById("delete-context-preset-btn");
     const nameEl  = document.getElementById("new-cpreset-name");
     const textEl  = document.getElementById("new-cpreset-text");
     if (idx === "") {
       if (nameEl) nameEl.value = "";
       if (textEl) textEl.value = "";
-      if (saveBtn) { delete saveBtn.dataset.editIdx; saveBtn.textContent = "Save"; }
+      if (saveBtn) delete saveBtn.dataset.editIdx;
+      if (delBtn) delBtn.style.display = "none";
       return;
     }
     const preset = contextPresets[parseInt(idx)];
     if (!preset) return;
     if (nameEl) nameEl.value = preset.name;
     if (textEl) textEl.value = preset.text;
-    if (saveBtn) { saveBtn.textContent = "Update"; saveBtn.dataset.editIdx = idx; }
+    setCpLevel(preset.level || "intermediate");
+    if (saveBtn) saveBtn.dataset.editIdx = idx;
+    if (delBtn) delBtn.style.display = "";
+  });
+  document.getElementById("delete-context-preset-btn")?.addEventListener("click", async () => {
+    const saveBtn  = document.getElementById("add-context-preset-btn");
+    const delBtn   = document.getElementById("delete-context-preset-btn");
+    const quickSel = document.getElementById("context-preset-quick-select");
+    const idx = parseInt(saveBtn?.dataset.editIdx);
+    if (isNaN(idx)) return;
+    contextPresets.splice(idx, 1);
+    await cryptoSet({ contextPresets });
+    if (saveBtn) delete saveBtn.dataset.editIdx;
+    if (delBtn) delBtn.style.display = "none";
+    document.getElementById("new-cpreset-name").value = "";
+    document.getElementById("new-cpreset-text").value = "";
+    setCpLevel("intermediate");
+    if (quickSel) quickSel.value = "";
+    renderContextPresets();
   });
 
   // Custom prompts
@@ -1270,13 +1369,17 @@ async function init() {
   });
 
   // Per-section save buttons
-  document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);
   document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
   document.getElementById("actions-save-btn")?.addEventListener("click", saveActions);
   document.getElementById("sync-save-btn")?.addEventListener("click", saveSyncSetting);
 
   document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
-    document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const panel = document.getElementById("pro-panel");
+    if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("pro-panel-close")?.addEventListener("click", () => {
+    const panel = document.getElementById("pro-panel");
+    if (panel) panel.style.display = "none";
   });
 
   // Audience Types toggle
@@ -1298,9 +1401,6 @@ async function init() {
     panel.style.display = open ? "block" : "none";
     btn.textContent     = open ? "← Close" : "Manage Prompts →";
   });
-
-  // Variants Gumroad link for free users
-  document.getElementById("variants-gumroad-link")?.addEventListener("click", openGumroad);
 
   // Desktop sync toggle
   const syncEnabled = await browser.storage.local.get("syncEnabled");
@@ -1342,7 +1442,6 @@ function showSectionStatus(elId, msg, isErr) {
 }
 
 async function saveBehavior() {
-  await cryptoSet({ variants: getVal("variants") });
   showSectionStatus("behavior-save-status", "Saved!");
 }
 
@@ -1395,18 +1494,28 @@ function applyProGates(isPro) {
   if (lockedView) lockedView.style.display = isPro ? "none" : "";
   if (activeView) activeView.style.display = isPro ? ""     : "none";
 
-  // Variants (Pro-only) — cap at 1 and reset if needed
-  const variantsInput   = document.getElementById("variants");
-  const variantsDisplay = document.getElementById("variants-display");
-  const variantsHint    = document.getElementById("variants-pro-hint");
-  if (variantsInput) {
-    variantsInput.max = isPro ? 4 : 1;
-    if (!isPro && parseInt(variantsInput.value) > 1) {
-      variantsInput.value = 1;
-      if (variantsDisplay) variantsDisplay.textContent = 1;
-    }
+  // Hide PRO badges when activated
+  document.querySelectorAll(".pro-badge-sm").forEach(el => {
+    el.style.display = isPro ? "none" : "";
+  });
+
+  // Update pro button text
+  const proBtn = document.getElementById("activate-pro-link-btn");
+  if (proBtn) proBtn.textContent = isPro ? "✓ Activated" : "⚡ Activate Pro";
+
+  // History title and hint
+  const histTitle = document.getElementById("history-title-text");
+  if (histTitle) histTitle.textContent = isPro ? "All History" : "Today's History";
+  const histFreeHint = document.getElementById("history-free-hint");
+  if (histFreeHint) histFreeHint.style.display = isPro ? "none" : "block";
+  document.getElementById("history-upgrade-link")?.addEventListener("click", openGumroad);
+
+  // Seed 3 default audience presets the first time Pro is activated
+  if (isPro && !contextPresets.length) {
+    contextPresets = DEFAULT_AUDIENCE_PRESETS.map(p => ({ ...p, id: uid() }));
+    browser.storage.local.set({ contextPresets });
+    renderContextPresets();
   }
-  if (variantsHint) variantsHint.style.display = isPro ? "none" : "block";
 }
 
 function initProSection() {
@@ -1422,7 +1531,10 @@ function initProSection() {
   document.getElementById("pro-buy-link")?.addEventListener("click", openGumroad);
 
   document.querySelectorAll(".pro-unlock-link").forEach(a => {
-    a.addEventListener("click", openGumroad);
+    a.addEventListener("click", () => {
+      const panel = document.getElementById("pro-panel");
+      if (panel) panel.style.display = "block";
+    });
   });
 
   document.getElementById("activate-pro-btn")?.addEventListener("click", async () => {
@@ -1443,6 +1555,8 @@ function initProSection() {
     const emailEl = document.getElementById("pro-active-email");
     if (emailEl) emailEl.textContent = email;
     applyProGates(true);
+    const panel = document.getElementById("pro-panel");
+    if (panel) panel.style.display = "none";
   });
 
   document.getElementById("deactivate-pro-btn")?.addEventListener("click", async () => {
@@ -1450,6 +1564,8 @@ function initProSection() {
     document.getElementById("pro-email-input").value = "";
     document.getElementById("pro-key-input").value   = "";
     applyProGates(false);
+    const panel = document.getElementById("pro-panel");
+    if (panel) panel.style.display = "none";
   });
 }
 

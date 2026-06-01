@@ -13,12 +13,32 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
-  "lastContextAudience"
+  "lastContextAudience", "contextEnabled", "themeMode"
 ];
 
 const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
 
 let settings = {};
+
+function rebuildVariantsSelect() {
+  const sel    = document.getElementById("variants-select");
+  if (!sel) return;
+  const isPro    = isProUnlocked(settings);
+  const savedVal = parseInt(settings.variants) || 1;
+  sel.innerHTML  = "";
+  for (let i = 1; i <= 4; i++) {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    if (i > 1 && !isPro) {
+      opt.textContent = `×${i} (Pro)`;
+      opt.disabled    = true;
+    } else {
+      opt.textContent = `×${i}`;
+    }
+    sel.appendChild(opt);
+  }
+  sel.value = isPro ? String(Math.max(1, Math.min(4, savedVal))) : "1";
+}
 
 // ── Boot ───────────────────────────────────────────────────────────────────────
 
@@ -35,6 +55,14 @@ function restoreContextAudience() {
   const sheet    = document.getElementById("context-sheet");
   const sel      = document.getElementById("context-audience-select");
   const btn      = document.getElementById("toggle-context-btn");
+  const row      = document.querySelector(".ctx-toggle-row");
+  if (settings.contextEnabled === false) {
+    if (row)   row.style.display = "none";
+    if (sheet) sheet.style.display = "none";
+    if (sel)   sel.value = "";
+    if (btn)   { btn.textContent = "+ Add context"; btn.classList.remove("active"); }
+    return;
+  }
   if (audience) {
     if (sheet) sheet.style.display = "block";
     if (sel)   sel.value = audience;
@@ -95,8 +123,10 @@ function buildAudiencePrompt() {
 
 async function init() {
   settings = await browser.storage.local.get(STORAGE_KEYS);
+  document.documentElement.setAttribute("data-theme", settings.themeMode || "dark");
   updateFooter();
   populateCustomActions();
+  rebuildVariantsSelect();
   populateContextSheet();
   restoreContextAudience();
   document.getElementById("input-text").focus();
@@ -104,11 +134,18 @@ async function init() {
   // Refresh settings + UI each time the popup is shown
   btcAPI.onPopupOpened(async () => {
     settings = await browser.storage.local.get(STORAGE_KEYS);
+    document.documentElement.setAttribute("data-theme", settings.themeMode || "dark");
     updateFooter();
     rebuildActionDropdown();
+    rebuildVariantsSelect();
     populateContextSheet();
     restoreContextAudience();
+    loadHistory();
     document.getElementById("input-text").focus();
+  });
+
+  document.getElementById("variants-select")?.addEventListener("change", (e) => {
+    browser.storage.local.set({ variants: e.target.value });
   });
 
   // Wire controls
@@ -242,12 +279,19 @@ async function runProcess() {
   const cps       = settings.customPrompts || [];
   let   systemPrompt;
 
+  let isClarifyEnabled = false;
   if (actionVal.startsWith("custom-")) {
-    const idx    = parseInt(actionVal.replace("custom-", ""), 10);
-    systemPrompt = cps[idx]?.prompt || "Process the following text:";
+    const idx = parseInt(actionVal.replace("custom-", ""), 10);
+    const cp  = cps[idx];
+    systemPrompt = cp?.prompt || "Process the following text:";
+    if (cp?.clarify) {
+      isClarifyEnabled = true;
+      systemPrompt = buildClarifyPrompt(systemPrompt);
+    }
   } else {
     systemPrompt = MENU_PROMPTS[actionVal];
     if (!systemPrompt) return;
+    if (actionVal === "brain-to-prompt") isClarifyEnabled = true;
   }
   systemPrompt = buildPromptWithProfile(systemPrompt, settings);
 
@@ -263,7 +307,7 @@ async function runProcess() {
   const isPro  = isProUnlocked(settings);
   const count  = actionVal === "fix-spelling" || !isPro
     ? 1
-    : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
+    : Math.max(1, Math.min(4, parseInt(document.getElementById("variants-select")?.value) || 1));
 
   document.getElementById("run-btn").disabled = true;
   showLoading(true, count);
@@ -288,6 +332,12 @@ async function runProcess() {
       usedProvider = r.usedProvider;
       usedModel    = r.usedModel;
     }
+    // CLARIFY detection — for brain-to-prompt and clarify-enabled custom actions
+    if (isClarifyEnabled && results.length === 1 && results[0].trimStart().startsWith("CLARIFY:")) {
+      showClarify(results[0], text, systemPrompt);
+      return;
+    }
+
     showResult(results, null);
     await browser.storage.local.set({ lastAction: actionVal });
 
@@ -303,6 +353,7 @@ async function runProcess() {
       ...cost
     });
     await browser.storage.local.set({ historyFull: historyFull.slice(-500) });
+    loadHistory();
   } catch (err) {
     showResult(null, err.message);
   } finally {
@@ -312,11 +363,55 @@ async function runProcess() {
 
 // ── UI helpers ─────────────────────────────────────────────────────────────────
 
+function showClarify(clarifyText, originalText, systemPrompt) {
+  document.getElementById("result-loading").style.display = "none";
+  document.getElementById("result-slots").innerHTML = "";
+  const area = document.getElementById("clarify-area");
+  const qEl  = document.getElementById("clarify-questions");
+  if (!area || !qEl) { showResult([clarifyText], null); return; }
+
+  const lines = clarifyText.replace(/^CLARIFY:\n?/i, "").split("\n")
+    .map(l => l.replace(/^[•\-*\d.]+\s*/, "").trim()).filter(Boolean);
+  qEl.innerHTML = "";
+  lines.forEach(q => {
+    const p = document.createElement("p");
+    p.className = "clarify-question"; p.textContent = q;
+    qEl.appendChild(p);
+  });
+  document.getElementById("clarify-answers").value = "";
+  area.style.display = "block";
+
+  const btn = document.getElementById("clarify-submit-btn");
+  const handler = async () => {
+    const answers = document.getElementById("clarify-answers").value.trim();
+    if (!answers) return;
+    area.style.display = "none";
+    showLoading(true, 1);
+    try {
+      const r = await callAIWithFallback(
+        settings.configuredProviders,
+        settings.geminiModels,
+        settings,
+        systemPrompt,
+        `${originalText}\n\n---\nAdditional context:\n${answers}`
+      );
+      showResult([r.result], null);
+    } catch (err) {
+      showResult(null, err.message);
+    } finally {
+      document.getElementById("run-btn").disabled = false;
+    }
+  };
+  btn.addEventListener("click", handler, { once: true });
+}
+
 function showLoading(on, count = 1) {
   document.getElementById("result-area").style.display = "block";
   document.getElementById("result-loading").style.display = on ? "flex" : "none";
   const loadingText = document.getElementById("result-loading-text");
   if (loadingText) loadingText.textContent = count > 1 ? `Getting suggestion 1 of ${count}…` : "Processing…";
+  const clarifyArea = document.getElementById("clarify-area");
+  if (clarifyArea) clarifyArea.style.display = "none";
   document.getElementById("result-slots").innerHTML = "";
 }
 
@@ -391,23 +486,30 @@ function updateFooter() {
   }
 }
 
+let _historyToggleWired = false;
+
 async function loadHistory() {
-  const raw     = await browser.storage.local.get("historyLog");
-  const entries = purgeOldLog(raw.historyLog || []); // uses todayDate() internally
+  const { historyFull = [] } = await browser.storage.local.get("historyFull");
+  const today   = todayDate();
+  const entries = historyFull.filter(e => e.date === today);
 
   const section = document.getElementById("history-section");
-  if (!entries.length) { if (section) section.style.display = "none"; return; }
+  if (!section) return;
+  if (!entries.length) { section.style.display = "none"; return; }
 
   section.style.display = "block";
   document.getElementById("history-count").textContent = entries.length;
 
-  // Persistent toggle — no { once: true } so collapse also works
-  document.getElementById("history-toggle").addEventListener("click", () => {
-    const list = document.getElementById("history-list");
-    list.style.display = list.style.display === "none" ? "block" : "none";
-  });
+  if (!_historyToggleWired) {
+    _historyToggleWired = true;
+    document.getElementById("history-toggle").addEventListener("click", () => {
+      const list = document.getElementById("history-list");
+      list.style.display = list.style.display === "none" ? "block" : "none";
+    });
+  }
 
   const list = document.getElementById("history-list");
+  list.innerHTML = "";
   entries.slice(-10).reverse().forEach(e => {
     const item = document.createElement("div");
     item.className = "history-item";

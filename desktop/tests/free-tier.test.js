@@ -27,8 +27,8 @@ describe("resolveActionSettings — reorder is free on desktop", () => {
       { id: "fix-spelling", label: "Fix Spelling & Grammar", enabled: true },
     ];
     const resolved = resolveActionSettings(stored);
-    expect(resolved[0].id).toBe("casual");
-    expect(resolved[1].id).toBe("fix-spelling");
+    const ids = resolved.map(a => a.id);
+    expect(ids.indexOf("casual")).toBeLessThan(ids.indexOf("fix-spelling"));
   });
 
   test("all default actions present after resolve", () => {
