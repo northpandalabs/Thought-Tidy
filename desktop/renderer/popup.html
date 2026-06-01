@@ -32,6 +32,9 @@
       <select id="action-select"></select>
       <button id="run-btn">Run</button>
     </div>
+    <div class="ctx-toggle-row">
+      <button id="toggle-context-btn" class="ctx-toggle-btn">+ Add context</button>
+    </div>
 
     <!-- Result -->
     <div id="result-area" style="display:none">
@@ -39,6 +42,25 @@
         <div class="spinner"></div><span id="result-loading-text">Processing…</span>
       </div>
       <div id="result-slots"></div>
+    </div>
+  </div>
+
+  <!-- Context Sheet (audience selector, toggled by "+ Add context" button) -->
+  <div id="context-sheet" style="display:none">
+    <div class="ctx-sheet-header">
+      <span class="ctx-sheet-title">Adjust for your reader</span>
+      <div class="ctx-header-actions">
+        <button id="ctx-help-btn" class="ctx-help-btn" title="What is this?">?</button>
+        <button id="context-skip-btn" class="ctx-close-btn">✕ Skip</button>
+      </div>
+    </div>
+    <div id="ctx-help-text" class="ctx-help-text" style="display:none">
+      Set how much your reader already knows. The AI adjusts its language to match — simpler for beginners, more direct for experts. Only applies to this run.
+    </div>
+    <div class="ctx-sheet-body">
+      <select id="context-audience-select">
+        <option value="">— their knowledge level —</option>
+      </select>
     </div>
   </div>
 

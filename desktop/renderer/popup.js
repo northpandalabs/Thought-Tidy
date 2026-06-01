@@ -12,7 +12,8 @@ const STORAGE_KEYS = [
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey"
+  "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
+  "lastContextAudience"
 ];
 
 const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
@@ -21,10 +22,83 @@ let settings = {};
 
 // ── Boot ───────────────────────────────────────────────────────────────────────
 
+const BUILT_IN_AUDIENCE = [
+  { value: "beginner",      label: "Beginner",      pro: false, prompt: "The recipient is a beginner. Use very simple language, avoid all jargon, and explain every concept." },
+  { value: "basic",         label: "Basic",          pro: true,  prompt: "The recipient has basic familiarity. Keep language accessible and briefly explain any terms used." },
+  { value: "moderate",      label: "Moderate",       pro: true,  prompt: "The recipient has moderate knowledge. Standard professional language is appropriate." },
+  { value: "knowledgeable", label: "Knowledgeable",  pro: true,  prompt: "The recipient is experienced. Industry terms are fine; no need to over-explain." },
+  { value: "expert",        label: "Expert",         pro: false, prompt: "The recipient is an expert. Be concise and direct — skip basic explanations." },
+];
+
+function restoreContextAudience() {
+  const audience = settings.lastContextAudience;
+  const sheet    = document.getElementById("context-sheet");
+  const sel      = document.getElementById("context-audience-select");
+  const btn      = document.getElementById("toggle-context-btn");
+  if (audience) {
+    if (sheet) sheet.style.display = "block";
+    if (sel)   sel.value = audience;
+    if (btn)   { btn.textContent = "− Context"; btn.classList.add("active"); }
+  } else {
+    if (sheet) sheet.style.display = "none";
+    if (sel)   sel.value = "";
+    if (btn)   { btn.textContent = "+ Add context"; btn.classList.remove("active"); }
+    const helpEl  = document.getElementById("ctx-help-text");
+    const helpBtn = document.getElementById("ctx-help-btn");
+    if (helpEl)  helpEl.style.display = "none";
+    if (helpBtn) helpBtn.classList.remove("active");
+  }
+}
+
+function populateContextSheet() {
+  const sel    = document.getElementById("context-audience-select");
+  if (!sel) return;
+  const isPro  = isProUnlocked(settings);
+  const presets = settings.contextPresets || [];
+
+  sel.innerHTML = '<option value="">— their knowledge level —</option>';
+  BUILT_IN_AUDIENCE.forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a.value;
+    if (a.pro && !isPro) {
+      opt.textContent = a.label + " (Pro)";
+      opt.disabled    = true;
+    } else {
+      opt.textContent = a.label;
+    }
+    sel.appendChild(opt);
+  });
+
+  if (isPro && presets.length) {
+    const sep = document.createElement("option");
+    sep.disabled = true; sep.textContent = "── Custom ──";
+    sel.appendChild(sep);
+    presets.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value       = "preset:" + p.id;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+function buildAudiencePrompt() {
+  const sel = document.getElementById("context-audience-select");
+  if (!sel || !sel.value) return "";
+  if (sel.value.startsWith("preset:")) {
+    const id     = sel.value.slice(7);
+    const preset = (settings.contextPresets || []).find(p => p.id === id);
+    return preset ? preset.text : "";
+  }
+  return BUILT_IN_AUDIENCE.find(a => a.value === sel.value)?.prompt || "";
+}
+
 async function init() {
   settings = await browser.storage.local.get(STORAGE_KEYS);
   updateFooter();
   populateCustomActions();
+  populateContextSheet();
+  restoreContextAudience();
   document.getElementById("input-text").focus();
 
   // Refresh settings + UI each time the popup is shown
@@ -32,6 +106,8 @@ async function init() {
     settings = await browser.storage.local.get(STORAGE_KEYS);
     updateFooter();
     rebuildActionDropdown();
+    populateContextSheet();
+    restoreContextAudience();
     document.getElementById("input-text").focus();
   });
 
@@ -51,6 +127,44 @@ async function init() {
     textarea.value = text;
     textarea.focus();
     textarea.select();
+  });
+
+  document.getElementById("toggle-context-btn")?.addEventListener("click", () => {
+    const sheet     = document.getElementById("context-sheet");
+    const btn       = document.getElementById("toggle-context-btn");
+    const isOpen    = sheet.style.display !== "none";
+    if (isOpen) {
+      sheet.style.display = "none";
+      btn.textContent = "+ Add context";
+      btn.classList.remove("active");
+    } else {
+      sheet.style.display = "block";
+      btn.textContent = "− Context";
+      btn.classList.add("active");
+    }
+  });
+
+  document.getElementById("ctx-help-btn")?.addEventListener("click", () => {
+    const helpEl = document.getElementById("ctx-help-text");
+    const btn    = document.getElementById("ctx-help-btn");
+    if (!helpEl) return;
+    const open = helpEl.style.display === "none";
+    helpEl.style.display = open ? "block" : "none";
+    btn.classList.toggle("active", open);
+  });
+
+  document.getElementById("context-skip-btn")?.addEventListener("click", () => {
+    const sheet   = document.getElementById("context-sheet");
+    const sel     = document.getElementById("context-audience-select");
+    const btn     = document.getElementById("toggle-context-btn");
+    const helpEl  = document.getElementById("ctx-help-text");
+    const helpBtn = document.getElementById("ctx-help-btn");
+    if (sheet)   sheet.style.display = "none";
+    if (sel)     sel.value = "";
+    if (btn)     { btn.textContent = "+ Add context"; btn.classList.remove("active"); }
+    if (helpEl)  helpEl.style.display = "none";
+    if (helpBtn) helpBtn.classList.remove("active");
+    browser.storage.local.set({ lastContextAudience: "" });
   });
 
   document.getElementById("input-text").addEventListener("keydown", (e) => {
@@ -137,6 +251,15 @@ async function runProcess() {
   }
   systemPrompt = buildPromptWithProfile(systemPrompt, settings);
 
+  const contextSheet   = document.getElementById("context-sheet");
+  const contextOpen    = contextSheet?.style.display !== "none";
+  const audienceValue  = contextOpen ? (document.getElementById("context-audience-select")?.value || "") : "";
+  const audiencePrompt = contextOpen ? buildAudiencePrompt() : "";
+  if (audiencePrompt) {
+    systemPrompt += `\n\nAudience: ${audiencePrompt}`;
+  }
+  await browser.storage.local.set({ lastContextAudience: audienceValue });
+
   const isPro  = isProUnlocked(settings);
   const count  = actionVal === "fix-spelling" || !isPro
     ? 1
@@ -174,6 +297,7 @@ async function runProcess() {
     historyFull.push({
       id: uid(), timestamp: Date.now(), date: today, source: "desktop",
       action: actionVal, provider: usedProvider, model: usedModel,
+      systemPrompt: systemPrompt.slice(0, 2000),
       inputText: text.slice(0, 5000),
       outputs: results.map(r => r.slice(0, 5000)),
       ...cost

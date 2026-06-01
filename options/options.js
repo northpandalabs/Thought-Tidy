@@ -6,7 +6,7 @@ const STORAGE_KEYS = [
   "geminiKey", "geminiModel", "geminiModels", "geminiModelsLastFetched",
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey", "syncEnabled"
+  "licenseEmail", "licenseKey", "syncEnabled", "contextPresets", "devMode"
 ];
 
 const GUMROAD_URL    = "https://northpandalabs.gumroad.com/l/thought-tidy";
@@ -672,6 +672,7 @@ function renderActionEditor() {
 
     const row = document.createElement("div");
     row.className = `ae-row${!action.enabled ? " ae-disabled" : ""}`;
+    row.dataset.actionId = action.id;
 
     const ordDiv = document.createElement("div"); ordDiv.className = "ae-order";
     const upOrd = document.createElement("button");
@@ -759,9 +760,106 @@ function renderActionEditor() {
 
 // ── Custom Prompts ─────────────────────────────────────────────────────────────
 
-let customPrompts = [];
+let customPrompts   = [];
+let contextPresets  = [];
+
+function renderContextPresets() {
+  const list = document.getElementById("context-presets-list");
+  if (!list) return;
+  list.innerHTML = "";
+
+  const quickSel = document.getElementById("context-preset-quick-select");
+  if (quickSel) {
+    quickSel.innerHTML = '<option value="">— select a type to edit —</option>';
+    contextPresets.forEach((p, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = p.name;
+      quickSel.appendChild(opt);
+    });
+  }
+
+  if (!contextPresets.length) {
+    const p = document.createElement("p");
+    p.className = "hint"; p.style.marginBottom = "12px";
+    p.textContent = "No audience types yet — add one below.";
+    list.appendChild(p);
+    return;
+  }
+  contextPresets.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:1px solid #313244;";
+    row.innerHTML = `
+      <div style="flex:1; min-width:0">
+        <div style="font-weight:600; font-size:13px; color:#cdd6f4; margin-bottom:2px">${escHtml(p.name)}</div>
+        <div style="font-size:11px; color:#6c7086; white-space:pre-wrap; word-break:break-word">${escHtml(p.text.slice(0, 120))}${p.text.length > 120 ? "…" : ""}</div>
+      </div>
+      <button class="revert-btn cp-preset-delete" data-idx="${i}" style="flex-shrink:0">Delete</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll(".cp-preset-delete").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      contextPresets.splice(parseInt(btn.dataset.idx), 1);
+      await cryptoSet({ contextPresets });
+      renderContextPresets();
+    });
+  });
+}
+
+async function addContextPreset() {
+  const name    = document.getElementById("new-cpreset-name")?.value?.trim();
+  const text    = document.getElementById("new-cpreset-text")?.value?.trim();
+  const saveBtn = document.getElementById("add-context-preset-btn");
+  const editIdx = saveBtn?.dataset.editIdx;
+  if (!name || !text) { alert("Enter both a name and a description."); return; }
+
+  if (editIdx !== undefined && editIdx !== "") {
+    const idx = parseInt(editIdx);
+    contextPresets[idx] = { ...contextPresets[idx], name, text };
+    delete saveBtn.dataset.editIdx;
+    saveBtn.textContent = "Save";
+  } else {
+    contextPresets.push({ id: uid(), name, text });
+  }
+  await cryptoSet({ contextPresets });
+  document.getElementById("new-cpreset-name").value = "";
+  document.getElementById("new-cpreset-text").value = "";
+  const quickSel = document.getElementById("context-preset-quick-select");
+  if (quickSel) quickSel.value = "";
+  renderContextPresets();
+}
 
 function renderCustomPrompts() {
+  const promptSel = document.getElementById("prompt-quick-select");
+  if (promptSel) {
+    const curVal = promptSel.value;
+    promptSel.innerHTML = '<option value="">— Add new prompt —</option>';
+    const sep1 = document.createElement("option");
+    sep1.disabled = true; sep1.textContent = "── Built-in ──";
+    promptSel.appendChild(sep1);
+    DEFAULT_ACTION_SETTINGS.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value    = "builtin-" + a.id;
+      opt.disabled = true;
+      opt.textContent = (LOCKED_ACTIONS.has(a.id) ? "🔒 " : "") + a.label + (LOCKED_ACTIONS.has(a.id) ? "" : " (Pro)");
+      promptSel.appendChild(opt);
+    });
+    if (customPrompts.length) {
+      const sep2 = document.createElement("option");
+      sep2.disabled = true; sep2.textContent = "── Custom ──";
+      promptSel.appendChild(sep2);
+      customPrompts.forEach((p, i) => {
+        const opt = document.createElement("option");
+        opt.value = "custom-" + i;
+        if (!currentIsPro) { opt.textContent = p.name + " (Pro)"; opt.disabled = true; }
+        else                { opt.textContent = p.name; }
+        promptSel.appendChild(opt);
+      });
+    }
+    const restorable = promptSel.querySelector(`option[value="${curVal}"]:not([disabled])`);
+    promptSel.value = restorable ? curVal : "";
+  }
+
   const list = document.getElementById("custom-prompts-list");
   list.textContent = "";
 
@@ -865,12 +963,30 @@ function addPrompt() {
   const name   = document.getElementById("new-prompt-name").value.trim();
   const prompt = document.getElementById("new-prompt-text").value.trim();
   if (!name || !prompt) { alert("Enter both a name and an instruction."); return; }
-  const maxPrompts = currentIsPro ? 8 : 1;
-  if (customPrompts.length >= maxPrompts) {
-    alert(currentIsPro ? "Maximum 8 custom prompts." : "Free tier allows 1 custom prompt. Upgrade to Pro for more.");
-    return;
+
+  const addBtn  = document.getElementById("add-prompt-btn");
+  const editId  = addBtn?.dataset.editId;
+
+  if (editId) {
+    if (!currentIsPro) return;
+    const idx = customPrompts.findIndex(p => p.id === editId);
+    if (idx !== -1) customPrompts[idx] = { ...customPrompts[idx], name, prompt };
+    delete addBtn.dataset.editId;
+    addBtn.textContent = "Add to Menu";
+    const titleEl = document.getElementById("add-prompt-title");
+    if (titleEl) titleEl.textContent = "Add New Prompt";
+    const delBtn = document.getElementById("delete-prompt-btn");
+    if (delBtn)  delBtn.style.display = "none";
+    const promptSel = document.getElementById("prompt-quick-select");
+    if (promptSel) promptSel.value = "";
+  } else {
+    const maxPrompts = currentIsPro ? 8 : 1;
+    if (customPrompts.length >= maxPrompts) {
+      alert(currentIsPro ? "Maximum 8 custom prompts." : "Free tier allows 1 custom prompt. Upgrade to Pro for more.");
+      return;
+    }
+    customPrompts.push({ id: uid(), name, prompt });
   }
-  customPrompts.push({ id: uid(), name, prompt });
   renderCustomPrompts();
   document.getElementById("new-prompt-name").value = "";
   document.getElementById("new-prompt-text").value = "";
@@ -969,6 +1085,26 @@ async function init() {
 
   // Wizard wiring
   document.getElementById("add-provider-btn").addEventListener("click", showWizard);
+
+  // Secret dev mode: open + Add Provider 5 times within 10 seconds to toggle
+  let _devClicks = [];
+  document.getElementById("add-provider-btn").addEventListener("click", async () => {
+    const now = Date.now();
+    _devClicks = _devClicks.filter(t => now - t < 10000);
+    _devClicks.push(now);
+    if (_devClicks.length >= 5) {
+      _devClicks = [];
+      const { devMode: cur } = await browser.storage.local.get("devMode");
+      const next = !cur;
+      await browser.storage.local.set({ devMode: next });
+      const toast = document.createElement("div");
+      toast.textContent = next ? "🛠 Developer mode enabled" : "Developer mode disabled";
+      toast.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#313244;color:#cdd6f4;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);pointer-events:none;";
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+  });
+
   document.getElementById("wizard-cancel-1").addEventListener("click", hideWizard);
   document.getElementById("wizard-back").addEventListener("click", () => {
     document.getElementById("wizard-step-2").style.display = "none";
@@ -1044,6 +1180,73 @@ async function init() {
     btn.textContent     = open ? "← Close Editor" : "Edit Actions →";
   });
 
+  document.getElementById("prompt-quick-select")?.addEventListener("change", (e) => {
+    const val     = e.target.value;
+    const nameEl  = document.getElementById("new-prompt-name");
+    const textEl  = document.getElementById("new-prompt-text");
+    const addBtn  = document.getElementById("add-prompt-btn");
+    const titleEl = document.getElementById("add-prompt-title");
+    const delBtn  = document.getElementById("delete-prompt-btn");
+    if (!val || val.startsWith("builtin-")) {
+      if (nameEl)  nameEl.value  = "";
+      if (textEl)  textEl.value  = "";
+      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; }
+      if (titleEl) titleEl.textContent = "Add New Prompt";
+      if (delBtn)  delBtn.style.display = "none";
+      return;
+    }
+    const idx = parseInt(val.replace("custom-", ""), 10);
+    const p   = customPrompts[idx];
+    if (!p || !currentIsPro) return;
+    if (nameEl)  nameEl.value  = p.name;
+    if (textEl)  textEl.value  = p.prompt;
+    if (addBtn)  { addBtn.dataset.editId = p.id; addBtn.textContent = "Save Changes"; }
+    if (titleEl) titleEl.textContent = "Edit Prompt";
+    if (delBtn)  delBtn.style.display = "";
+  });
+
+  document.getElementById("delete-prompt-btn")?.addEventListener("click", () => {
+    const addBtn = document.getElementById("add-prompt-btn");
+    const editId = addBtn?.dataset.editId;
+    if (!editId || !currentIsPro) return;
+    if (!confirm("Delete this prompt?")) return;
+    customPrompts = customPrompts.filter(p => p.id !== editId);
+    delete addBtn.dataset.editId;
+    addBtn.textContent = "Add to Menu";
+    const titleEl = document.getElementById("add-prompt-title");
+    if (titleEl) titleEl.textContent = "Add New Prompt";
+    const delBtn = document.getElementById("delete-prompt-btn");
+    if (delBtn)  delBtn.style.display = "none";
+    const promptSel = document.getElementById("prompt-quick-select");
+    if (promptSel) promptSel.value = "";
+    document.getElementById("new-prompt-name").value = "";
+    document.getElementById("new-prompt-text").value = "";
+    renderCustomPrompts();
+  });
+
+  // Context presets
+  contextPresets = s.contextPresets || [];
+  renderContextPresets();
+  document.getElementById("add-context-preset-btn")?.addEventListener("click", addContextPreset);
+
+  document.getElementById("context-preset-quick-select")?.addEventListener("change", (e) => {
+    const idx     = e.target.value;
+    const saveBtn = document.getElementById("add-context-preset-btn");
+    const nameEl  = document.getElementById("new-cpreset-name");
+    const textEl  = document.getElementById("new-cpreset-text");
+    if (idx === "") {
+      if (nameEl) nameEl.value = "";
+      if (textEl) textEl.value = "";
+      if (saveBtn) { delete saveBtn.dataset.editIdx; saveBtn.textContent = "Save"; }
+      return;
+    }
+    const preset = contextPresets[parseInt(idx)];
+    if (!preset) return;
+    if (nameEl) nameEl.value = preset.name;
+    if (textEl) textEl.value = preset.text;
+    if (saveBtn) { saveBtn.textContent = "Update"; saveBtn.dataset.editIdx = idx; }
+  });
+
   // Custom prompts
   customPrompts = s.customPrompts || [];
   renderCustomPrompts();
@@ -1071,6 +1274,30 @@ async function init() {
   document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
   document.getElementById("actions-save-btn")?.addEventListener("click", saveActions);
   document.getElementById("sync-save-btn")?.addEventListener("click", saveSyncSetting);
+
+  document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
+    document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // Audience Types toggle
+  document.getElementById("toggle-context-presets")?.addEventListener("click", () => {
+    const panel = document.getElementById("context-presets-section");
+    const btn   = document.getElementById("toggle-context-presets");
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    btn.textContent     = open ? "← Close" : "Manage Audience Types →";
+  });
+
+  // Manage Prompts toggle
+  document.getElementById("toggle-prompts")?.addEventListener("click", () => {
+    const panel = document.getElementById("prompts-panel");
+    const btn   = document.getElementById("toggle-prompts");
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    btn.textContent     = open ? "← Close" : "Manage Prompts →";
+  });
 
   // Variants Gumroad link for free users
   document.getElementById("variants-gumroad-link")?.addEventListener("click", openGumroad);
@@ -1153,7 +1380,7 @@ async function saveSyncSetting() {
 
 function applyProGates(isPro) {
   currentIsPro = isPro;
-  ["profile-section", "history-viewer-section"].forEach(id => {
+  ["profile-section", "history-viewer-section", "context-presets-section"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.toggle("locked", !isPro);

@@ -10,7 +10,8 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "openaiModel", "claudeKey", "claudeModel", "geminiKey", "geminiModel",
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey"
+  "licenseEmail", "licenseKey", "contextPresets", "devMode",
+  "zoomLevel"
 ];
 
 const GUMROAD_URL    = "https://northpandalabs.gumroad.com/l/thought-tidy";
@@ -516,6 +517,20 @@ function renderActionEditor() {
   list.innerHTML = "";
   const enabledCount = actionSettings.filter(a => a.enabled).length;
 
+  // Populate the quick-select dropdown
+  const quickSel = document.getElementById("action-quick-select");
+  if (quickSel) {
+    const prev = quickSel.value;
+    quickSel.innerHTML = '<option value="">— choose an action —</option>';
+    actionSettings.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = a.label + (a.enabled ? "" : " (disabled)");
+      quickSel.appendChild(opt);
+    });
+    if (prev) quickSel.value = prev;
+  }
+
   const freeActs = actionSettings.filter(a => !PRO_ACTION_IDS.has(a.id));
   const proActs  = actionSettings.filter(a =>  PRO_ACTION_IDS.has(a.id));
   const toRender = currentIsPro ? actionSettings : [...freeActs, ...proActs];
@@ -540,6 +555,7 @@ function renderActionEditor() {
 
     const row = document.createElement("div");
     row.className = `ae-row${!action.enabled ? " ae-disabled" : ""}`;
+    row.dataset.actionId = action.id;
 
     let upDisabled, dnDisabled, upTitle, dnTitle;
     if (!currentIsPro && isProAction) {
@@ -617,6 +633,36 @@ function renderActionEditor() {
 let customPrompts = [];
 
 function renderCustomPrompts() {
+  const promptSel = document.getElementById("prompt-quick-select");
+  if (promptSel) {
+    const curVal = promptSel.value;
+    promptSel.innerHTML = '<option value="">— Add new prompt —</option>';
+    const sep1 = document.createElement("option");
+    sep1.disabled = true; sep1.textContent = "── Built-in ──";
+    promptSel.appendChild(sep1);
+    DEFAULT_ACTION_SETTINGS.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value    = "builtin-" + a.id;
+      opt.disabled = true;
+      opt.textContent = (LOCKED_ACTIONS.has(a.id) ? "🔒 " : "") + a.label + (LOCKED_ACTIONS.has(a.id) ? "" : " (Pro)");
+      promptSel.appendChild(opt);
+    });
+    if (customPrompts.length) {
+      const sep2 = document.createElement("option");
+      sep2.disabled = true; sep2.textContent = "── Custom ──";
+      promptSel.appendChild(sep2);
+      customPrompts.forEach((p, i) => {
+        const opt = document.createElement("option");
+        opt.value = "custom-" + i;
+        if (!currentIsPro) { opt.textContent = p.name + " (Pro)"; opt.disabled = true; }
+        else                { opt.textContent = p.name; }
+        promptSel.appendChild(opt);
+      });
+    }
+    const restorable = promptSel.querySelector(`option[value="${curVal}"]:not([disabled])`);
+    promptSel.value = restorable ? curVal : "";
+  }
+
   const list = document.getElementById("custom-prompts-list");
   list.textContent = "";
   if (!customPrompts.length) {
@@ -689,12 +735,25 @@ async function addPrompt() {
   const name   = document.getElementById("new-prompt-name").value.trim();
   const prompt = document.getElementById("new-prompt-text").value.trim();
   if (!name || !prompt) { alert("Enter both a name and an instruction."); return; }
-  const maxPrompts = currentIsPro ? 8 : 1;
-  if (customPrompts.length >= maxPrompts) {
-    alert(currentIsPro ? "Maximum 8 custom prompts." : "Free tier allows 1 custom prompt. Upgrade to Pro for more.");
-    return;
+  const addBtn = document.getElementById("add-prompt-btn");
+  const editId = addBtn?.dataset.editId;
+  if (editId) {
+    if (!currentIsPro) return;
+    const idx = customPrompts.findIndex(p => p.id === editId);
+    if (idx !== -1) customPrompts[idx] = { ...customPrompts[idx], name, prompt };
+    delete addBtn.dataset.editId;
+    addBtn.textContent = "Add to Menu";
+    document.getElementById("add-prompt-title").textContent = "Add New Prompt";
+    document.getElementById("delete-prompt-btn").style.display = "none";
+    document.getElementById("prompt-quick-select").value = "";
+  } else {
+    const maxPrompts = currentIsPro ? 8 : 1;
+    if (customPrompts.length >= maxPrompts) {
+      alert(currentIsPro ? "Maximum 8 custom prompts." : "Free tier allows 1 custom prompt. Upgrade to Pro for more.");
+      return;
+    }
+    customPrompts.push({ id: uid(), name, prompt });
   }
-  customPrompts.push({ id: uid(), name, prompt });
   await browser.storage.local.set({ customPrompts });
   renderCustomPrompts();
   document.getElementById("new-prompt-name").value = "";
@@ -759,6 +818,10 @@ async function saveProfile() {
 
 async function saveBehavior() {
   await browser.storage.local.set({ variants: getVal("variants") });
+  if (typeof btcAPI !== "undefined" && btcAPI.setLoginItemEnabled) {
+    const atLogin = document.getElementById("launchAtLogin")?.checked || false;
+    await btcAPI.setLoginItemEnabled(atLogin);
+  }
   showSaveStatus("behavior-save-status", "Saved!");
 }
 
@@ -812,7 +875,7 @@ function setVal(id, v) { const el = document.getElementById(id); if (el) el.valu
 
 function applyProGates(isPro) {
   currentIsPro = isPro;
-  ["profile-section", "history-viewer-section"].forEach(id => {
+  ["profile-section", "history-viewer-section", "context-presets-section"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.toggle("locked", !isPro);
@@ -894,6 +957,84 @@ function initProSection() {
   });
 }
 
+// ── Context Presets ────────────────────────────────────────────────────────────
+
+let contextPresets = [];
+
+const ASSUMPTION_LABELS = [
+  "", "1 — Beginner", "2 — Beginner", "3 — Basic", "4 — Basic",
+  "5 — Moderate", "6 — Moderate", "7 — Knowledgeable", "8 — Knowledgeable",
+  "9 — Expert", "10 — Expert"
+];
+
+function renderContextPresets() {
+  const list = document.getElementById("context-presets-list");
+  if (!list) return;
+  list.innerHTML = "";
+
+  // Populate the quick-select dropdown
+  const quickSel = document.getElementById("context-preset-quick-select");
+  if (quickSel) {
+    quickSel.innerHTML = '<option value="">— select a profile to edit —</option>';
+    contextPresets.forEach((p, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `${p.name}  (level ${p.level})`;
+      quickSel.appendChild(opt);
+    });
+  }
+
+  if (!contextPresets.length) {
+    const p = document.createElement("p");
+    p.className = "hint"; p.style.marginBottom = "12px";
+    p.textContent = "No presets yet — add one below.";
+    list.appendChild(p);
+    return;
+  }
+  contextPresets.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "cp-item";
+    row.style.cssText = "display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:1px solid #313244;";
+    row.innerHTML = `
+      <div style="flex:1; min-width:0">
+        <div style="font-weight:600; font-size:13px; color:#cdd6f4; margin-bottom:2px">${escHtml(p.name)}</div>
+        <div style="font-size:11px; color:#6c7086; white-space:pre-wrap; word-break:break-word">${escHtml(p.text.slice(0, 120))}${p.text.length > 120 ? "…" : ""}</div>
+      </div>
+      <button class="revert-btn cp-preset-delete" data-idx="${i}" style="flex-shrink:0">Delete</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll(".cp-preset-delete").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      contextPresets.splice(parseInt(btn.dataset.idx), 1);
+      await browser.storage.local.set({ contextPresets });
+      renderContextPresets();
+    });
+  });
+}
+
+async function addContextPreset() {
+  const name    = document.getElementById("new-cpreset-name")?.value?.trim();
+  const text    = document.getElementById("new-cpreset-text")?.value?.trim();
+  const saveBtn = document.getElementById("add-context-preset-btn");
+  const editIdx = saveBtn?.dataset.editIdx;
+  if (!name || !text) { alert("Enter both a name and a description."); return; }
+
+  if (editIdx !== undefined && editIdx !== "") {
+    const idx = parseInt(editIdx);
+    contextPresets[idx] = { ...contextPresets[idx], name, text };
+    delete saveBtn.dataset.editIdx;
+    saveBtn.textContent = "Save";
+  } else {
+    contextPresets.push({ id: uid(), name, text });
+  }
+  await browser.storage.local.set({ contextPresets });
+  document.getElementById("new-cpreset-name").value = "";
+  document.getElementById("new-cpreset-text").value = "";
+  const quickSel = document.getElementById("context-preset-quick-select");
+  if (quickSel) quickSel.value = "";
+  renderContextPresets();
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────────
 
 async function init() {
@@ -925,6 +1066,13 @@ async function init() {
         notice.style.display = "block";
       }
     }
+
+    // Launch-at-login — load actual OS state
+    try {
+      const atLogin = await btcAPI.getLoginItemEnabled();
+      const el = document.getElementById("launchAtLogin");
+      if (el) el.checked = !!atLogin;
+    } catch {}
   }
 
   await migrateStorage();
@@ -936,6 +1084,26 @@ async function init() {
 
   // Wizard wiring
   document.getElementById("add-provider-btn").addEventListener("click", showWizard);
+
+  // Secret dev mode: open + Add Provider 5 times within 10 seconds to toggle
+  let _devClicks = [];
+  document.getElementById("add-provider-btn").addEventListener("click", async () => {
+    const now = Date.now();
+    _devClicks = _devClicks.filter(t => now - t < 10000);
+    _devClicks.push(now);
+    if (_devClicks.length >= 5) {
+      _devClicks = [];
+      const { devMode: cur } = await browser.storage.local.get("devMode");
+      const next = !cur;
+      await browser.storage.local.set({ devMode: next });
+      const toast = document.createElement("div");
+      toast.textContent = next ? "🛠 Developer mode enabled" : "Developer mode disabled";
+      toast.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#313244;color:#cdd6f4;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);pointer-events:none;";
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+  });
+
   document.getElementById("wizard-cancel-1").addEventListener("click", hideWizard);
   document.getElementById("wizard-back").addEventListener("click", () => {
     document.getElementById("wizard-step-2").style.display = "none";
@@ -962,6 +1130,50 @@ async function init() {
     document.getElementById("variants-display").textContent = e.target.value;
   });
 
+  document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
+    document.getElementById("pro-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // Display panel toggle
+  document.getElementById("display-panel-btn")?.addEventListener("click", () => {
+    const panel = document.getElementById("display-panel");
+    if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("display-panel-close")?.addEventListener("click", () => {
+    const panel = document.getElementById("display-panel");
+    if (panel) panel.style.display = "none";
+  });
+
+  // Zoom level
+  const zoomLevelEl = document.getElementById("zoom-level");
+  if (zoomLevelEl) zoomLevelEl.value = s.zoomLevel || "auto";
+  document.getElementById("zoom-save-btn")?.addEventListener("click", async () => {
+    const zoom = document.getElementById("zoom-level")?.value || "auto";
+    await browser.storage.local.set({ zoomLevel: zoom });
+    if (typeof btcAPI !== "undefined" && btcAPI.setZoom) btcAPI.setZoom(zoom);
+    showSaveStatus("zoom-save-status", "Saved!");
+  });
+
+  // Audience Types toggle
+  document.getElementById("toggle-context-presets")?.addEventListener("click", () => {
+    const panel = document.getElementById("context-presets-section");
+    const btn   = document.getElementById("toggle-context-presets");
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    btn.textContent     = open ? "← Close" : "Manage Audience Types →";
+  });
+
+  // Manage Prompts toggle
+  document.getElementById("toggle-prompts")?.addEventListener("click", () => {
+    const panel = document.getElementById("prompts-panel");
+    const btn   = document.getElementById("toggle-prompts");
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    btn.textContent     = open ? "← Close" : "Manage Prompts →";
+  });
+
   // Profile
   setVal("profileName",    s.profileName    || "");
   setVal("profileRole",    s.profileRole    || "");
@@ -979,6 +1191,17 @@ async function init() {
     const open  = panel.style.display === "none";
     panel.style.display = open ? "block" : "none";
     btn.textContent     = open ? "← Close Editor" : "Edit Actions →";
+  });
+
+  document.getElementById("action-quick-select")?.addEventListener("change", (e) => {
+    const id = e.target.value;
+    document.querySelectorAll(".ae-row").forEach(r => r.style.outline = "");
+    if (!id) return;
+    const row = document.querySelector(`[data-action-id="${id}"]`);
+    if (row) {
+      row.style.outline = "1px solid #89b4fa";
+      row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   });
 
   // Context URL toggle
@@ -1008,10 +1231,76 @@ async function init() {
     }
   });
 
+  // Context presets
+  contextPresets = s.contextPresets || [];
+  renderContextPresets();
+  document.getElementById("add-context-preset-btn")?.addEventListener("click", addContextPreset);
+
+  document.getElementById("context-preset-quick-select")?.addEventListener("change", (e) => {
+    const idx     = e.target.value;
+    const saveBtn = document.getElementById("add-context-preset-btn");
+    const nameEl  = document.getElementById("new-cpreset-name");
+    const textEl  = document.getElementById("new-cpreset-text");
+    if (idx === "") {
+      if (nameEl) nameEl.value = "";
+      if (textEl) textEl.value = "";
+      if (saveBtn) { delete saveBtn.dataset.editIdx; saveBtn.textContent = "Save"; }
+      return;
+    }
+    const preset = contextPresets[parseInt(idx)];
+    if (!preset) return;
+    if (nameEl) nameEl.value = preset.name;
+    if (textEl) textEl.value = preset.text;
+    if (saveBtn) { saveBtn.textContent = "Update"; saveBtn.dataset.editIdx = idx; }
+  });
+
   // Custom prompts
   customPrompts = s.customPrompts || [];
   renderCustomPrompts();
   document.getElementById("add-prompt-btn").addEventListener("click", addPrompt);
+
+  document.getElementById("prompt-quick-select")?.addEventListener("change", (e) => {
+    const val     = e.target.value;
+    const addBtn  = document.getElementById("add-prompt-btn");
+    const nameEl  = document.getElementById("new-prompt-name");
+    const textEl  = document.getElementById("new-prompt-text");
+    const delBtn  = document.getElementById("delete-prompt-btn");
+    const titleEl = document.getElementById("add-prompt-title");
+    if (!val || !val.startsWith("custom-")) {
+      if (nameEl)  nameEl.value = "";
+      if (textEl)  textEl.value = "";
+      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; }
+      if (delBtn)  delBtn.style.display = "none";
+      if (titleEl) titleEl.textContent = "Add New Prompt";
+      return;
+    }
+    const idx = parseInt(val.replace("custom-", ""));
+    const p   = customPrompts[idx];
+    if (!p) return;
+    if (nameEl)  nameEl.value = p.name;
+    if (textEl)  textEl.value = p.prompt;
+    if (addBtn)  { addBtn.dataset.editId = p.id; addBtn.textContent = "Update Prompt"; }
+    if (delBtn)  delBtn.style.display = currentIsPro ? "inline-block" : "none";
+    if (titleEl) titleEl.textContent = "Edit Prompt";
+  });
+
+  document.getElementById("delete-prompt-btn")?.addEventListener("click", async () => {
+    const addBtn = document.getElementById("add-prompt-btn");
+    const editId = addBtn?.dataset.editId;
+    if (!editId) return;
+    if (!confirm("Delete this custom prompt? This cannot be undone.")) return;
+    customPrompts = customPrompts.filter(p => p.id !== editId);
+    await browser.storage.local.set({ customPrompts });
+    delete addBtn.dataset.editId;
+    addBtn.textContent = "Add to Menu";
+    document.getElementById("add-prompt-title").textContent = "Add New Prompt";
+    document.getElementById("delete-prompt-btn").style.display = "none";
+    document.getElementById("new-prompt-name").value = "";
+    document.getElementById("new-prompt-text").value = "";
+    document.getElementById("prompt-quick-select").value = "";
+    renderCustomPrompts();
+  });
+
   document.querySelectorAll(".example-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.getElementById("new-prompt-name").value = btn.dataset.name;

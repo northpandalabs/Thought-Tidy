@@ -104,7 +104,36 @@
   <div class="app-titlebar">
     <img id="titlebar-icon" src="../../icons/icon.png" onerror="this.style.display='none'" alt="">
     <span class="app-titlebar-title">Thought Tidy — Settings</span>
+    <button id="activate-pro-link-btn" style="-webkit-app-region:no-drag; background:none; border:none; color:#cba6f7; font-size:11.5px; font-weight:600; padding:4px 8px; border-radius:6px; cursor:pointer; margin-left:auto;">⚡ Activate Pro</button>
+    <button id="display-panel-btn" style="-webkit-app-region:no-drag; background:none; border:1px solid #313244; color:#a6adc8; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; margin-left:8px;">Display ⚙</button>
   </div>
+
+  <!-- Display Settings Panel (fixed below titlebar, toggled by Display button) -->
+  <div id="display-panel" style="display:none; position:fixed; top:44px; left:0; right:0; background:#11111b; border-bottom:1px solid #313244; padding:16px 18px; z-index:90; box-shadow:0 4px 20px rgba(0,0,0,0.6);">
+    <div style="max-width:480px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-size:13px; font-weight:600; color:#cdd6f4;">Display Settings</span>
+        <button id="display-panel-close" style="background:none; border:none; color:#6c7086; cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px;">✕</button>
+      </div>
+      <div class="field">
+        <label for="zoom-level">Popup zoom level</label>
+        <select id="zoom-level">
+          <option value="auto">Auto (match screen DPI)</option>
+          <option value="0.9">90%</option>
+          <option value="1.0">100%</option>
+          <option value="1.1">110%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+        </select>
+        <p class="hint">Adjusts the popup and settings window scale. Auto scales based on your display resolution.</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+        <button class="section-save-btn" id="zoom-save-btn">Save</button>
+        <span class="section-save-status" id="zoom-save-status"></span>
+      </div>
+    </div>
+  </div>
+
   <div class="page">
 
     <div id="test-only-banner" style="display:none; background:#f59e0b; color:#1c1917; padding:10px 14px; font-weight:700; font-size:13px; border-radius:8px; margin-bottom:16px; margin-top:4px;">
@@ -240,30 +269,52 @@
           Multiple suggestions is a <a id="variants-gumroad-link" style="cursor:pointer; color:#b4befe;">Pro feature ↗</a>
         </p>
       </div>
+      <div class="field">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
+          <input type="checkbox" id="launchAtLogin" checked>
+          Start with Windows
+        </label>
+        <p class="hint">Automatically start Thought Tidy when you log in.</p>
+      </div>
       <div class="section-save-row">
         <button class="section-save-btn" id="behavior-save-btn">Save</button>
         <span class="section-save-status" id="behavior-save-status"></span>
       </div>
     </section>
 
-    <!-- Display / Zoom -->
-    <section id="zoom-section">
-      <h2>Display</h2>
-      <div class="field">
-        <label for="zoom-level">Popup zoom level</label>
-        <select id="zoom-level">
-          <option value="auto">Auto (match screen DPI)</option>
-          <option value="0.9">90%</option>
-          <option value="1.0">100%</option>
-          <option value="1.1">110%</option>
-          <option value="1.25">125%</option>
-          <option value="1.5">150%</option>
-        </select>
-        <p class="hint">Adjusts the popup and settings window scale. Auto scales based on your display resolution.</p>
+    <!-- Context & Audience -->
+    <section id="context-section">
+      <h2>Context &amp; Audience</h2>
+      <p class="hint" style="margin-bottom:14px">When you run an action, tap <strong>+ Add context</strong> in the popup to tell the AI who you're writing for. Built-in levels cover Beginner to Expert. Pro users can add custom audience types for specific domains or professions — like <em>Firefighter</em> or <em>iOS Developer</em> — so the AI uses the right vocabulary.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:13px; font-weight:600; color:#a6adc8;">Custom Audience Types <span class="pro-badge-sm">PRO</span></span>
+        <button id="toggle-context-presets" class="link-btn">Manage Audience Types →</button>
       </div>
-      <div class="section-save-row">
-        <button class="section-save-btn" id="zoom-save-btn">Save</button>
-        <span class="section-save-status" id="zoom-save-status"></span>
+      <div id="context-presets-section" class="pro-gate" style="display:none; margin-top:10px;">
+        <div class="pro-overlay">
+          <span class="pro-lock-icon">🔒</span>
+          <p>Pro feature</p>
+          <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
+        </div>
+        <p class="hint" style="margin-bottom:14px">Define specific audience types by profession or domain. These appear in the popup dropdown so you can pick them per run — the AI will use that group's vocabulary and frame explanations accordingly.</p>
+        <div class="field" style="margin-bottom:10px">
+          <label for="context-preset-quick-select">Edit an existing type:</label>
+          <select id="context-preset-quick-select">
+            <option value="">— select a type to edit —</option>
+          </select>
+        </div>
+        <div id="context-presets-list"></div>
+        <div id="add-context-preset-form">
+          <div class="field">
+            <label for="new-cpreset-name">Audience name</label>
+            <input type="text" id="new-cpreset-name" placeholder="e.g. Firefighter, iOS Developer, Legal Client">
+          </div>
+          <div class="field">
+            <label for="new-cpreset-text">Their vocabulary &amp; domain</label>
+            <textarea id="new-cpreset-text" rows="2" placeholder="e.g. A firefighter — use terms like incident command, suppression, turnout gear. Avoid medical jargon."></textarea>
+          </div>
+          <button id="add-context-preset-btn">Save</button>
+        </div>
       </div>
     </section>
 
@@ -291,14 +342,27 @@
         <p>Pro feature</p>
         <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
       </div>
-      <h2>My Custom Prompts</h2>
+      <h2>
+        My Custom Prompts
+        <button id="toggle-prompts" class="link-btn" style="margin-left:auto">Manage Prompts →</button>
+      </h2>
       <p class="hint" style="margin-bottom:14px">
         Saved prompts appear in the popup action menu (up to 8).
         Use these to build your own actions: Email Reply, Slack Message, Meeting Notes…
       </p>
+      <div id="prompts-panel" style="display:none">
+      <div id="free-prompt-warning" style="display:none; color:#f9e2af; background:rgba(249,226,175,0.07); border:1px solid rgba(249,226,175,0.22); border-radius:6px; padding:9px 12px; margin-bottom:12px; font-size:12px; line-height:1.5;">
+        ⚠ Free tier — 1 permanent prompt only. Once added it cannot be edited or deleted until you upgrade to Pro.
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label for="prompt-quick-select">Select a prompt:</label>
+        <select id="prompt-quick-select">
+          <option value="">— Add new prompt —</option>
+        </select>
+      </div>
       <div id="custom-prompts-list"></div>
       <div class="add-prompt-form" id="add-prompt-form">
-        <h3>Add New Prompt</h3>
+        <h3 id="add-prompt-title">Add New Prompt</h3>
         <div class="field">
           <label for="new-prompt-name">Name (shown in popup menu)</label>
           <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
@@ -317,8 +381,12 @@
           <button class="example-btn" data-name="Bullet Points"
             data-prompt="Extract key points as clear bullet points. Return ONLY the bullet points:">Bullet Points</button>
         </div>
-        <button id="add-prompt-btn">Add to Menu</button>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:10px">
+          <button id="add-prompt-btn">Add to Menu</button>
+          <button id="delete-prompt-btn" class="revert-btn" style="display:none">Delete</button>
+        </div>
       </div>
+      </div><!-- /prompts-panel -->
     </section>
 
     <!-- Unlock Pro -->
@@ -366,7 +434,7 @@
       <div class="profile-grid">
         <div class="field">
           <label for="profileName">Your Name</label>
-          <input type="text" id="profileName" placeholder="Bailey">
+          <input type="text" id="profileName" placeholder="Your name">
         </div>
         <div class="field">
           <label for="profileRole">Your Role / Job</label>

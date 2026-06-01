@@ -7,8 +7,59 @@ const STORAGE_KEYS = [
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
-  "licenseEmail", "licenseKey"
+  "licenseEmail", "licenseKey", "contextPresets", "lastContextAudience"
 ];
+
+const BUILT_IN_AUDIENCE = [
+  { value: "beginner",      label: "Beginner",      pro: false, prompt: "The recipient is a beginner. Use very simple language, avoid all jargon, and explain every concept." },
+  { value: "basic",         label: "Basic",          pro: true,  prompt: "The recipient has basic familiarity. Keep language accessible and briefly explain any terms used." },
+  { value: "moderate",      label: "Moderate",       pro: true,  prompt: "The recipient has moderate knowledge. Standard professional language is appropriate." },
+  { value: "knowledgeable", label: "Knowledgeable",  pro: true,  prompt: "The recipient is experienced. Industry terms are fine; no need to over-explain." },
+  { value: "expert",        label: "Expert",         pro: false, prompt: "The recipient is an expert. Be concise and direct — skip basic explanations." },
+];
+
+function populateAudienceSelect(settings) {
+  const sel    = document.getElementById("context-audience-select");
+  if (!sel) return;
+  const isPro  = isProUnlocked(settings);
+  const presets = settings.contextPresets || [];
+
+  sel.innerHTML = '<option value="">— their knowledge level —</option>';
+  BUILT_IN_AUDIENCE.forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a.value;
+    if (a.pro && !isPro) {
+      opt.textContent = a.label + " (Pro)";
+      opt.disabled    = true;
+    } else {
+      opt.textContent = a.label;
+    }
+    sel.appendChild(opt);
+  });
+
+  if (isPro && presets.length) {
+    const sep = document.createElement("option");
+    sep.disabled = true; sep.textContent = "── Custom ──";
+    sel.appendChild(sep);
+    presets.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value       = "preset:" + p.id;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+function buildAudiencePrompt(settings) {
+  const sel = document.getElementById("context-audience-select");
+  if (!sel || !sel.value) return "";
+  if (sel.value.startsWith("preset:")) {
+    const id     = sel.value.slice(7);
+    const preset = (settings.contextPresets || []).find(p => p.id === id);
+    return preset ? preset.text : "";
+  }
+  return BUILT_IN_AUDIENCE.find(a => a.value === sel.value)?.prompt || "";
+}
 
 const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
 
@@ -40,6 +91,56 @@ async function init() {
   variantsVal.textContent = variantsEl.value;
 
   updateProviderStatus(currentSettings);
+
+  populateAudienceSelect(currentSettings);
+
+  // Restore last-used context audience
+  if (currentSettings.lastContextAudience) {
+    const sheet = document.getElementById("context-sheet");
+    const sel   = document.getElementById("context-audience-select");
+    const btn   = document.getElementById("toggle-context-btn");
+    if (sheet) sheet.style.display = "block";
+    if (sel)   sel.value = currentSettings.lastContextAudience;
+    if (btn)   { btn.textContent = "− Context"; btn.classList.add("active"); }
+  }
+
+  document.getElementById("toggle-context-btn")?.addEventListener("click", () => {
+    const sheet  = document.getElementById("context-sheet");
+    const btn    = document.getElementById("toggle-context-btn");
+    const isOpen = sheet.style.display !== "none";
+    if (isOpen) {
+      sheet.style.display = "none";
+      btn.textContent = "+ Add context";
+      btn.classList.remove("active");
+    } else {
+      sheet.style.display = "block";
+      btn.textContent = "− Context";
+      btn.classList.add("active");
+    }
+  });
+
+  document.getElementById("ctx-help-btn")?.addEventListener("click", () => {
+    const helpEl = document.getElementById("ctx-help-text");
+    const btn    = document.getElementById("ctx-help-btn");
+    if (!helpEl) return;
+    const open = helpEl.style.display === "none";
+    helpEl.style.display = open ? "block" : "none";
+    btn.classList.toggle("active", open);
+  });
+
+  document.getElementById("context-skip-btn")?.addEventListener("click", () => {
+    const sheet   = document.getElementById("context-sheet");
+    const sel     = document.getElementById("context-audience-select");
+    const btn     = document.getElementById("toggle-context-btn");
+    const helpEl  = document.getElementById("ctx-help-text");
+    const helpBtn = document.getElementById("ctx-help-btn");
+    if (sheet)   sheet.style.display = "none";
+    if (sel)     sel.value = "";
+    if (btn)     { btn.textContent = "+ Add context"; btn.classList.remove("active"); }
+    if (helpEl)  helpEl.style.display = "none";
+    if (helpBtn) helpBtn.classList.remove("active");
+    browser.storage.local.set({ lastContextAudience: "" });
+  });
 
   // Populate action dropdown from actionSettings (user-ordered/enabled list) + custom prompts
   const actionSel   = document.getElementById("action-select");
@@ -96,21 +197,6 @@ async function init() {
   document.getElementById("process-btn").addEventListener("click", runProcess);
   document.getElementById("run-selection-btn").addEventListener("click", runFromSelection);
 
-  document.getElementById("copy-result").addEventListener("click", () => {
-    const text = document.getElementById("result-text").textContent;
-    navigator.clipboard.writeText(text).catch(() => {});
-    const btn = document.getElementById("copy-result");
-    btn.textContent = "Copied!";
-    setTimeout(() => (btn.textContent = "Copy"), 1600);
-  });
-
-  document.getElementById("replace-input").addEventListener("click", () => {
-    const result = document.getElementById("result-text").innerText || "";
-    document.getElementById("input-text").value = result;
-    document.getElementById("result-area").style.display = "none";
-    document.getElementById("result-text").contentEditable = "false";
-  });
-
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
   const purged = purgeOldLog(rawLog);
   if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
@@ -165,55 +251,127 @@ async function runProcess() {
   }
   systemPrompt = buildPromptWithProfile(systemPrompt, currentSettings);
 
-  showLoading(true);
+  const contextSheet   = document.getElementById("context-sheet");
+  const contextOpen    = contextSheet?.style.display !== "none";
+  const audienceValue  = contextOpen ? (document.getElementById("context-audience-select")?.value || "") : "";
+  const audiencePrompt = contextOpen ? buildAudiencePrompt(currentSettings) : "";
+  if (audiencePrompt) {
+    systemPrompt += `\n\nAudience: ${audiencePrompt}`;
+  }
+  await browser.storage.local.set({ lastContextAudience: audienceValue });
+
+  const isPro  = isProUnlocked(currentSettings);
+  const count  = actionVal === "fix-spelling" || !isPro
+    ? 1
+    : Math.max(1, Math.min(4, parseInt(currentSettings.variants) || 1));
+
+  document.getElementById("process-btn").disabled = true;
+  showLoading(true, count);
   try {
-    const { result, usedProvider, usedModel } = await callAIWithFallback(
-      currentSettings.configuredProviders,
-      currentSettings.geminiModels,
-      currentSettings,
-      systemPrompt,
-      text
-    );
-    showResult(result, null);
+    const results     = [];
+    let usedProvider  = "";
+    let usedModel     = "";
+    const loadingText = document.getElementById("result-loading-text");
+    for (let i = 0; i < count; i++) {
+      if (count > 1 && loadingText) {
+        loadingText.textContent = `Getting suggestion ${i + 1} of ${count}…`;
+      }
+      const r = await callAIWithFallback(
+        currentSettings.configuredProviders,
+        currentSettings.geminiModels,
+        currentSettings,
+        systemPrompt,
+        text
+      );
+      results.push(r.result);
+      usedProvider = r.usedProvider;
+      usedModel    = r.usedModel;
+    }
+    showResult(results, null);
     await browser.storage.local.set({ lastAction: actionVal });
 
     const today = todayDate();
     const { historyFull = [] } = await browser.storage.local.get("historyFull");
-    const cost = estimateCost(usedModel, text, [result]);
+    const cost = estimateCost(usedModel, text, results);
     historyFull.push({
       id: uid(), timestamp: Date.now(), date: today, source: "extension",
       action: actionVal, provider: usedProvider, model: usedModel,
+      systemPrompt: systemPrompt.slice(0, 2000),
       inputText: text.slice(0, 5000),
-      outputs: [result.slice(0, 5000)],
+      outputs: results.map(r => r.slice(0, 5000)),
       ...cost
     });
     await browser.storage.local.set({ historyFull: historyFull.slice(-500) });
   } catch (err) {
     showResult(null, `Error: ${err.message}`);
+  } finally {
+    document.getElementById("process-btn").disabled = false;
   }
 }
 
-function showLoading(on) {
-  document.getElementById("result-area").style.display  = "block";
+function showLoading(on, count = 1) {
+  document.getElementById("result-area").style.display = "block";
   document.getElementById("result-loading").style.display = on ? "flex" : "none";
-  document.getElementById("result-text").textContent    = "";
-  document.getElementById("result-actions").style.display = "none";
+  const loadingText = document.getElementById("result-loading-text");
+  if (loadingText) loadingText.textContent = count > 1 ? `Getting suggestion 1 of ${count}…` : "Processing…";
+  document.getElementById("result-slots").innerHTML = "";
 }
 
-function showResult(text, error) {
+function showResult(results, error) {
   document.getElementById("result-loading").style.display = "none";
-  const textEl = document.getElementById("result-text");
+  const slots = document.getElementById("result-slots");
+  slots.innerHTML = "";
+
   if (error) {
-    textEl.textContent = error;
-    textEl.className   = "result-text result-error";
-    document.getElementById("result-actions").style.display = "none";
-  } else {
-    textEl.textContent     = text;
-    textEl.className       = "result-text";
-    textEl.contentEditable = "true";
-    textEl.spellcheck      = false;
-    document.getElementById("result-actions").style.display = "flex";
+    const el = document.createElement("div");
+    el.className   = "result-text result-error";
+    el.textContent = error;
+    slots.appendChild(el);
+    return;
   }
+
+  results.forEach((text, i) => {
+    const slot = document.createElement("div");
+    slot.className = "result-slot";
+
+    if (results.length > 1) {
+      const label = document.createElement("div");
+      label.className   = "result-slot-label";
+      label.textContent = `Suggestion ${i + 1} of ${results.length}`;
+      slot.appendChild(label);
+    }
+
+    const box = document.createElement("div");
+    box.className       = "result-text";
+    box.contentEditable = "true";
+    box.spellcheck      = false;
+    box.textContent     = text;
+    slot.appendChild(box);
+
+    const actions = document.createElement("div");
+    actions.className = "result-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "Copy";
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(box.innerText).catch(() => {});
+      copyBtn.textContent = "Copied!";
+      setTimeout(() => (copyBtn.textContent = "Copy"), 1600);
+    });
+
+    const useBtn = document.createElement("button");
+    useBtn.className   = "replace-btn";
+    useBtn.textContent = "Use this ↑";
+    useBtn.addEventListener("click", () => {
+      document.getElementById("input-text").value = box.innerText || "";
+      document.getElementById("result-area").style.display = "none";
+      slots.innerHTML = "";
+    });
+
+    actions.append(copyBtn, useBtn);
+    slot.appendChild(actions);
+    slots.appendChild(slot);
+  });
 }
 
 function updateProviderStatus(settings) {

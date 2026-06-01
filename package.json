@@ -1,36 +1,49 @@
 {
   "name": "thought-tidy",
-  "version": "1.4.9",
+  "version": "1.5.0",
   "description": "AI writing assistant for fast thinkers — Chrome and Firefox extension",
   "private": true,
   "scripts": {
-    "test":           "jest",
-    "test:watch":     "jest --watch",
-    "test:coverage":  "jest --coverage",
-    "set-version":    "node scripts/set-version.js",
-    "setup":          "node scripts/setup.js",
-
-    "build":          "node scripts/build.js",
-    "build:firefox":  "node scripts/build.js firefox",
-    "build:chrome":   "node scripts/build.js chrome",
-    "build:desktop":  "cd desktop && npm run dist",
-    "build:all":      "node scripts/build.js && cd desktop && npm run dist",
-
-    "desktop":        "cd desktop && npm start",
-    "desktop:dev":    "cd desktop && npm run dev"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "set-version": "node scripts/set-version.js",
+    "setup": "node scripts/setup.js",
+    "build": "node scripts/build.js",
+    "build:firefox": "node scripts/build.js firefox",
+    "build:chrome": "node scripts/build.js chrome",
+    "build:desktop": "cd desktop && npm run dist",
+    "build:all": "node scripts/build.js && cd desktop && npm run dist",
+    "desktop": "cd desktop && npm start",
+    "desktop:dev": "cd desktop && npm run dev"
   },
   "devDependencies": {
     "jest": "^29.7.0",
     "webextension-polyfill": "^0.12.0"
   },
   "jest": {
-    "reporters": ["default", "./scripts/commitReporter.js"],
+    "reporters": [
+      "default",
+      "./scripts/commitReporter.js"
+    ],
     "globalSetup": "./scripts/loadEnv.js",
     "testEnvironment": "node",
-    "testMatch": ["**/tests/**/*.test.js"],
-    "testPathIgnorePatterns": ["node_modules", "desktop/"],
-    "collectCoverageFrom": ["lib/**/*.js", "!lib/updater.js"],
-    "coverageReporters": ["text", "lcov", "html"],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "testPathIgnorePatterns": [
+      "node_modules",
+      "desktop/"
+    ],
+    "collectCoverageFrom": [
+      "lib/**/*.js",
+      "!lib/updater.js"
+    ],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
     "coverageThreshold": {
       "global": {
         "lines": 70,

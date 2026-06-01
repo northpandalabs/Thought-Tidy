@@ -128,6 +128,7 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       historyFull.push({
         id: uid(), timestamp: Date.now(), date: today, source: "extension",
         action: actionVal, provider: usedProvider, model: usedModel,
+        systemPrompt: systemPrompt.slice(0, 2000),
         inputText: selectedText.slice(0, 5000),
         outputs: [result.slice(0, 5000)],
         ...cost
@@ -208,6 +209,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     historyFull.push({
       id: uid(), timestamp: Date.now(), date: today, source: "extension",
       action: lastAction, provider: usedProvider, model: usedModel,
+      systemPrompt: systemPrompt.slice(0, 2000),
       inputText: selectedText.slice(0, 5000),
       outputs: results.map(r => r.slice(0, 5000)),
       ...cost

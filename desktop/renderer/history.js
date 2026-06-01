@@ -2,10 +2,14 @@
 /* global browser, btcAPI, formatCost */
 
 let allEntries = [];
+let devMode    = false;
 
 async function load() {
-  const { historyFull = [] } = await browser.storage.local.get("historyFull");
-  allEntries = [...historyFull].reverse(); // newest first
+  const data = await browser.storage.local.get(["historyFull", "devMode"]);
+  allEntries = [...(data.historyFull || [])].reverse(); // newest first
+  devMode    = data.devMode || false;
+  const badge = document.getElementById("dev-mode-badge");
+  if (badge) badge.style.display = devMode ? "inline-block" : "none";
   render(allEntries);
 }
 
@@ -66,8 +70,17 @@ function buildEntry(e) {
     const body = document.createElement("div");
     body.className = "he-body";
 
+    // System prompt — developer mode only
+    if (devMode && e.systemPrompt) {
+      const spLabel = document.createElement("div");
+      spLabel.className = "he-section-label he-prompt-label"; spLabel.textContent = "Prompt sent to AI";
+      const spBox = document.createElement("div");
+      spBox.className = "he-text-box he-prompt-box"; spBox.textContent = e.systemPrompt;
+      body.append(spLabel, spBox);
+    }
+
     const inLabel = document.createElement("div");
-    inLabel.className = "he-section-label"; inLabel.textContent = "Input";
+    inLabel.className = "he-section-label"; inLabel.textContent = "Input text";
     const inBox = document.createElement("div");
     inBox.className = "he-text-box"; inBox.textContent = e.inputText || "(no text saved)";
     body.append(inLabel, inBox);
@@ -133,11 +146,12 @@ document.getElementById("search-input").addEventListener("input", (e) => {
   const q = e.target.value.trim().toLowerCase();
   if (!q) { render(allEntries); return; }
   render(allEntries.filter(entry =>
-    (entry.action    || "").toLowerCase().includes(q) ||
-    (entry.inputText || "").toLowerCase().includes(q) ||
-    (entry.provider  || "").toLowerCase().includes(q) ||
-    (entry.model     || "").toLowerCase().includes(q) ||
-    (entry.outputs   || []).some(o => o.toLowerCase().includes(q))
+    (entry.action      || "").toLowerCase().includes(q) ||
+    (entry.inputText   || "").toLowerCase().includes(q) ||
+    (entry.systemPrompt|| "").toLowerCase().includes(q) ||
+    (entry.provider    || "").toLowerCase().includes(q) ||
+    (entry.model       || "").toLowerCase().includes(q) ||
+    (entry.outputs     || []).some(o => o.toLowerCase().includes(q))
   ));
 });
 

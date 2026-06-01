@@ -1,6 +1,6 @@
 {
   "name": "thought-tidy-desktop",
-  "version": "1.4.9",
+  "version": "1.5.0",
   "description": "Thought Tidy — AI writing assistant desktop app (tray + global hotkey)",
   "main": "main.js",
   "private": true,
@@ -71,7 +71,10 @@
     }
   },
   "jest": {
-    "reporters": ["default", "../scripts/commitReporter.js"],
+    "reporters": [
+      "default",
+      "../scripts/commitReporter.js"
+    ],
     "testEnvironment": "node",
     "testMatch": [
       "**/tests/**/*.test.js"
@@ -86,7 +89,11 @@
       "ipc-handlers.js",
       "!lib-node/updater.js"
     ],
-    "coverageReporters": ["text", "lcov", "html"],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
     "coverageThreshold": {
       "global": {
         "lines": 70,
