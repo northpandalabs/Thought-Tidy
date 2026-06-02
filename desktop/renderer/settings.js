@@ -669,44 +669,7 @@ function renderCustomPrompts() {
     promptSel.value = restorable ? curVal : "";
   }
 
-  const list = document.getElementById("custom-prompts-list");
-  list.textContent = "";
-  if (!customPrompts.length) {
-    const p = document.createElement("p");
-    p.className = "no-prompts hint"; p.textContent = "No custom actions yet — add one below.";
-    list.appendChild(p); return;
-  }
-  customPrompts.forEach((p, i) => {
-    const nameSpan  = document.createElement("span"); nameSpan.className = "cp-name"; nameSpan.textContent = p.name;
-    if (p.clarify) { const badge = document.createElement("span"); badge.className = "cp-clarify-badge"; badge.textContent = "clarify"; nameSpan.appendChild(badge); }
-    const orderSpan = document.createElement("span"); orderSpan.className = "cp-order"; orderSpan.textContent = `#${i + 1} in menu`;
-    const meta = document.createElement("div"); meta.className = "cp-meta"; meta.append(nameSpan, orderSpan);
-    const textDiv = document.createElement("div"); textDiv.className = "cp-text";
-    textDiv.textContent = p.prompt.length > 100 ? p.prompt.slice(0, 100) + "…" : p.prompt;
-    const mkBtn = (cls, label) => { const btn = document.createElement("button"); btn.className = `cp-btn ${cls}`; btn.dataset.id = p.id; btn.textContent = label; return btn; };
-    const actions = document.createElement("div"); actions.className = "cp-actions";
-    actions.append(mkBtn("cp-edit", "Edit"), mkBtn("cp-delete", "Delete"));
-    if (i > 0)                        actions.appendChild(mkBtn("cp-up",   "↑"));
-    if (i < customPrompts.length - 1) actions.appendChild(mkBtn("cp-down", "↓"));
-    const item = document.createElement("div"); item.className = "cp-item"; item.dataset.id = p.id;
-    item.append(meta, textDiv, actions); list.appendChild(item);
-  });
-  list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", async () => { customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id); await browser.storage.local.set({ customPrompts }); renderCustomPrompts(); }));
-  list.querySelectorAll(".cp-edit").forEach(btn => btn.addEventListener("click", () => {
-    const p = customPrompts.find(x => x.id === btn.dataset.id); if (!p) return;
-    document.getElementById("new-prompt-name").value = p.name;
-    document.getElementById("new-prompt-text").value = p.prompt;
-    customPrompts = customPrompts.filter(x => x.id !== p.id); renderCustomPrompts();
-    document.getElementById("add-prompt-form").scrollIntoView({ behavior: "smooth" });
-  }));
-  list.querySelectorAll(".cp-up").forEach(btn => btn.addEventListener("click", async () => {
-    const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
-    if (idx > 0) { [customPrompts[idx - 1], customPrompts[idx]] = [customPrompts[idx], customPrompts[idx - 1]]; await browser.storage.local.set({ customPrompts }); renderCustomPrompts(); }
-  }));
-  list.querySelectorAll(".cp-down").forEach(btn => btn.addEventListener("click", async () => {
-    const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
-    if (idx < customPrompts.length - 1) { [customPrompts[idx], customPrompts[idx + 1]] = [customPrompts[idx + 1], customPrompts[idx]]; await browser.storage.local.set({ customPrompts }); renderCustomPrompts(); }
-  }));
+  document.getElementById("custom-prompts-list").textContent = "";
 
   const addForm = document.getElementById("add-prompt-form");
   if (addForm) {
