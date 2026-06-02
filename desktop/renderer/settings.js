@@ -49,7 +49,7 @@ async function loadHistoryViewer() {
     const outT = e.outputTokens ?? e.outputLen ?? 0;
     const row  = document.createElement("div");
     row.className = "hv-entry";
-    row.innerHTML = `<span class="hv-time">${time}</span><span class="hv-action">${(e.action||"").replace(/-/g," ")}</span><span class="hv-meta">${[e.provider,e.model].filter(Boolean).join(" · ")}</span><span class="hv-words">${inT} → ${outT}</span>`;
+    [["hv-time", time], ["hv-action", (e.action||"").replace(/-/g," ")], ["hv-meta", [e.provider,e.model].filter(Boolean).join(" · ")], ["hv-words", `${inT} → ${outT}`]].forEach(([cls,txt]) => { const s = document.createElement("span"); s.className = cls; s.textContent = txt; row.appendChild(s); });
     list.appendChild(row);
   });
   document.getElementById("history-clear-btn")?.addEventListener("click", async () => {
