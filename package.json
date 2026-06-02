@@ -37,7 +37,9 @@
     ],
     "collectCoverageFrom": [
       "lib/**/*.js",
-      "!lib/updater.js"
+      "!lib/updater.js",
+      "!lib/shared-popup.js",
+      "!lib/shared-settings.js"
     ],
     "coverageReporters": [
       "text",
