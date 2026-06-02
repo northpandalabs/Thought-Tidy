@@ -1,6 +1,6 @@
 {
   "name": "thought-tidy",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "AI writing assistant for fast thinkers — Chrome and Firefox extension",
   "private": true,
   "scripts": {
