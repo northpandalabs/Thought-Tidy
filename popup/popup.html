@@ -21,7 +21,7 @@
   <!-- Quick-process panel -->
   <div class="section process-section">
     <label for="input-text">Paste or type text</label>
-    <textarea id="input-text" placeholder="Paste any text here and pick an action below…" rows="5"></textarea>
+    <textarea id="input-text" placeholder="Paste and pick an action…"></textarea>
 
     <div class="action-row">
       <select id="action-select"></select>
@@ -39,7 +39,7 @@
     <button id="run-selection-btn" title="Process highlighted text on the current page">Process Selected Text</button>
     <div id="run-selection-status" class="run-selection-status" style="display:none"></div>
     <div id="result-area" style="display:none">
-      <div id="result-loading" class="result-loading" style="display:none">
+      <div id="result-loading" class="result-loading" style="display:none" role="status" aria-live="polite" aria-label="Processing">
         <div class="mini-spinner"></div><span id="result-loading-text">Processing…</span>
       </div>
       <div id="clarify-area" style="display:none" class="clarify-wrap">
@@ -57,8 +57,8 @@
     <div class="ctx-sheet-header">
       <span class="ctx-sheet-title">Adjust for your reader</span>
       <div class="ctx-header-actions">
-        <button id="ctx-help-btn" class="ctx-help-btn" title="What is this?">?</button>
-        <button id="context-skip-btn" class="ctx-close-btn">✕ Skip</button>
+        <button id="ctx-help-btn" class="ctx-help-btn" title="What is this?" aria-label="What is context?">?</button>
+        <button id="context-skip-btn" class="ctx-close-btn" aria-label="Remove context">✕ Remove</button>
       </div>
     </div>
     <div id="ctx-help-text" class="ctx-help-text" style="display:none">
@@ -84,7 +84,7 @@
     <div id="history-list" class="history-list" style="display:none"></div>
   </div>
 
-  <button id="open-settings">Open Full Settings</button>
+  <button id="open-settings">Settings</button>
 
   <script src="../browser-polyfill.js"></script>
   <script src="../lib/text.js"></script>

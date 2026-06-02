@@ -1,4 +1,7 @@
-const { MENU_PROMPTS, buildPromptWithProfile } = require("../lib/prompts");
+const {
+  MENU_PROMPTS, buildPromptWithProfile, buildClarifyPrompt,
+  DEFAULT_ACTION_SETTINGS, LOCKED_ACTIONS, resolveActionSettings,
+} = require("../lib/prompts");
 
 // ── MENU_PROMPTS ──────────────────────────────────────────────────────────────
 
@@ -122,5 +125,154 @@ describe("buildPromptWithProfile", () => {
     expect(result).not.toContain("Role:");
     expect(result).not.toContain("Writing style");
     expect(result).not.toContain("Personal context");
+  });
+});
+
+// ── buildClarifyPrompt ────────────────────────────────────────────────────────
+
+describe("buildClarifyPrompt", () => {
+  const BASE = "Translate the following text to French. Return ONLY the translation:";
+
+  test("returns a string", () => {
+    expect(typeof buildClarifyPrompt(BASE)).toBe("string");
+  });
+
+  test("output contains the original base prompt verbatim", () => {
+    expect(buildClarifyPrompt(BASE)).toContain(BASE);
+  });
+
+  test("output contains the CLARIFY: block format marker", () => {
+    expect(buildClarifyPrompt(BASE)).toContain("CLARIFY:");
+  });
+
+  test("output instructs returning result OR CLARIFY block, never both", () => {
+    expect(buildClarifyPrompt(BASE)).toContain("Never both");
+  });
+
+  test("base prompt appears before the clarify instructions", () => {
+    const result = buildClarifyPrompt(BASE);
+    expect(result.indexOf(BASE)).toBeLessThan(result.indexOf("CLARIFY:"));
+  });
+
+  test("output contains bullet placeholder for clarifying questions", () => {
+    expect(buildClarifyPrompt(BASE)).toContain("•");
+  });
+
+  test("works with a multi-line base prompt", () => {
+    const multi = "Rewrite this.\n\nKeep the tone casual. Return ONLY the result:";
+    const result = buildClarifyPrompt(multi);
+    expect(result).toContain(multi);
+    expect(result).toContain("CLARIFY:");
+  });
+});
+
+// ── DEFAULT_ACTION_SETTINGS ───────────────────────────────────────────────────
+
+describe("DEFAULT_ACTION_SETTINGS", () => {
+  test("contains exactly 11 actions", () => {
+    expect(DEFAULT_ACTION_SETTINGS).toHaveLength(11);
+  });
+
+  test("every action has id (string), label (string), and enabled (boolean)", () => {
+    for (const action of DEFAULT_ACTION_SETTINGS) {
+      expect(typeof action.id).toBe("string");
+      expect(typeof action.label).toBe("string");
+      expect(typeof action.enabled).toBe("boolean");
+    }
+  });
+
+  test("all actions are enabled by default", () => {
+    DEFAULT_ACTION_SETTINGS.forEach(a => expect(a.enabled).toBe(true));
+  });
+
+  test("brain-to-prompt is the only action with clarify:true", () => {
+    const clarify = DEFAULT_ACTION_SETTINGS.filter(a => a.clarify === true);
+    expect(clarify).toHaveLength(1);
+    expect(clarify[0].id).toBe("brain-to-prompt");
+  });
+
+  test("no duplicate action IDs", () => {
+    const ids = DEFAULT_ACTION_SETTINGS.map(a => a.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test("fix-spelling is the first action (default selected)", () => {
+    expect(DEFAULT_ACTION_SETTINGS[0].id).toBe("fix-spelling");
+  });
+});
+
+// ── LOCKED_ACTIONS membership ─────────────────────────────────────────────────
+
+describe("LOCKED_ACTIONS membership", () => {
+  const SHOULD_BE_LOCKED = [
+    "fix-spelling", "sound-like-me", "professional",
+    "sound-human", "brain-dump", "improve", "brain-to-prompt",
+  ];
+  const SHOULD_NOT_BE_LOCKED = ["formal", "casual", "shorten", "expand"];
+
+  test("all core built-in action IDs are locked", () => {
+    SHOULD_BE_LOCKED.forEach(id => expect(LOCKED_ACTIONS.has(id)).toBe(true));
+  });
+
+  test("style and length actions are not locked (user can rename them)", () => {
+    SHOULD_NOT_BE_LOCKED.forEach(id => expect(LOCKED_ACTIONS.has(id)).toBe(false));
+  });
+
+  test("custom action IDs are not locked", () => {
+    ["custom-0", "custom-1", "my-custom-thing"].forEach(id => {
+      expect(LOCKED_ACTIONS.has(id)).toBe(false);
+    });
+  });
+});
+
+// ── resolveActionSettings (deep coverage) ────────────────────────────────────
+
+describe("resolveActionSettings — deep coverage", () => {
+  test("result contains all 11 default IDs when called with an empty array", () => {
+    const result = resolveActionSettings([]);
+    const ids = result.map(a => a.id);
+    DEFAULT_ACTION_SETTINGS.forEach(def => expect(ids).toContain(def.id));
+  });
+
+  test("result is a copy — mutating it does not change DEFAULT_ACTION_SETTINGS", () => {
+    const result = resolveActionSettings([]);
+    result[0].label = "MUTATED";
+    expect(DEFAULT_ACTION_SETTINGS[0].label).not.toBe("MUTATED");
+  });
+
+  test("missing action is inserted directly after its closest preceding default neighbor", () => {
+    // Remove 'improve' (default index 1). It should land right after 'fix-spelling' (index 0).
+    const stored = DEFAULT_ACTION_SETTINGS.filter(a => a.id !== "improve").map(a => ({ ...a }));
+    const result = resolveActionSettings(stored);
+    const fixIdx     = result.findIndex(a => a.id === "fix-spelling");
+    const improveIdx = result.findIndex(a => a.id === "improve");
+    expect(improveIdx).toBe(fixIdx + 1);
+  });
+
+  test("missing action with no preceding neighbor is inserted at the front", () => {
+    // Only 'expand' (the last default) is stored — 'fix-spelling' has no preceding neighbor.
+    const stored = [{ id: "expand", label: "Expand", enabled: true }];
+    const result = resolveActionSettings(stored);
+    expect(result[0].id).toBe("fix-spelling");
+  });
+
+  test("always returns all 11 defaults regardless of what is in stored", () => {
+    const stored = [{ id: "formal", label: "Formal", enabled: false }];
+    const result = resolveActionSettings(stored);
+    expect(result).toHaveLength(DEFAULT_ACTION_SETTINGS.length);
+  });
+
+  test("preserves user-set enabled:false for a stored action", () => {
+    const stored = DEFAULT_ACTION_SETTINGS.map(a => ({
+      ...a,
+      enabled: a.id === "shorten" ? false : a.enabled,
+    }));
+    const result = resolveActionSettings(stored);
+    expect(result.find(a => a.id === "shorten").enabled).toBe(false);
+  });
+
+  test("null stored argument returns full defaults", () => {
+    const result = resolveActionSettings(null);
+    expect(result).toHaveLength(DEFAULT_ACTION_SETTINGS.length);
   });
 });

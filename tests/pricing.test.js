@@ -106,4 +106,74 @@ describe("formatCost", () => {
     expect(formatCost(1.5)).toBe("$1.50");
     expect(formatCost(0.10)).toBe("$0.10");
   });
+
+  test("exactly $0.000001 → 6-decimal (at boundary, not sub-micro)", () => {
+    expect(formatCost(0.000001)).toBe("$0.000001");
+  });
+
+  test("exactly $0.001 → 4-decimal (crosses into next tier at boundary)", () => {
+    expect(formatCost(0.001)).toBe("$0.0010");
+  });
+
+  test("$0.0009999 → 6-decimal (just below 0.001 threshold)", () => {
+    expect(formatCost(0.0009999)).toMatch(/^\$0\.\d{6}$/);
+  });
+
+  test("$0.0010001 → 4-decimal (just above 0.001 threshold)", () => {
+    expect(formatCost(0.0010001)).toMatch(/^\$0\.\d{4}$/);
+  });
+});
+
+// ── estimateCost edge cases ───────────────────────────────────────────────────
+
+describe("estimateCost — edge cases", () => {
+  test("null model returns costUSD: null with correct token counts", () => {
+    const { costUSD, inputTokens } = estimateCost(null, "hello", "world");
+    expect(costUSD).toBeNull();
+    expect(inputTokens).toBeGreaterThan(0);
+  });
+
+  test("null inputText → 0 input tokens", () => {
+    const { inputTokens } = estimateCost("gpt-4o-mini", null, "output");
+    expect(inputTokens).toBe(0);
+  });
+
+  test("null outputTexts → 0 output tokens", () => {
+    const { outputTokens } = estimateCost("gpt-4o-mini", "input", null);
+    expect(outputTokens).toBe(0);
+  });
+
+  test("single string outputTexts (not array) is accepted", () => {
+    const { outputTokens } = estimateCost("gpt-4o-mini", "hi", "aaaa");
+    expect(outputTokens).toBe(1); // 4 chars → 1 token
+  });
+
+  test("gpt-4-turbo matches before gpt-4 (order matters)", () => {
+    const { costUSD: turboCost } = estimateCost("gpt-4-turbo", "a".repeat(4), "");
+    const { costUSD: gpt4Cost }  = estimateCost("gpt-4-plain", "a".repeat(4), "");
+    // turbo is cheaper than plain gpt-4; if order works correctly these differ
+    expect(turboCost).not.toBeNull();
+    expect(gpt4Cost).not.toBeNull();
+    expect(turboCost).toBeLessThan(gpt4Cost);
+  });
+});
+
+// ── tokensFrom edge cases ─────────────────────────────────────────────────────
+
+describe("tokensFrom — edge cases", () => {
+  test("single character → 1 token (ceil(1/4))", () => {
+    expect(tokensFrom("x")).toBe(1);
+  });
+
+  test("exactly 4 chars → 1 token (no rounding needed)", () => {
+    expect(tokensFrom("abcd")).toBe(1);
+  });
+
+  test("empty string → 0 tokens", () => {
+    expect(tokensFrom("")).toBe(0);
+  });
+
+  test("large input is proportional (1000 chars → 250 tokens)", () => {
+    expect(tokensFrom("x".repeat(1000))).toBe(250);
+  });
 });

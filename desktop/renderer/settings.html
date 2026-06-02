@@ -102,7 +102,7 @@
 </head>
 <body>
   <div class="app-titlebar">
-    <img id="titlebar-icon" src="../../icons/icon.png" onerror="this.style.display='none'" alt="">
+    <img id="titlebar-icon" src="../../icons/icon.png" alt="">
     <span class="app-titlebar-title" style="position:absolute; left:0; right:0; text-align:center; pointer-events:none; -webkit-app-region:no-drag;">Thought Tidy — Settings</span>
     <button id="activate-pro-link-btn" style="-webkit-app-region:no-drag; background:none; border:none; color:var(--accent); font-size:11.5px; font-weight:600; padding:4px 8px; border-radius:6px; cursor:pointer; margin-left:auto;">⚡ Activate Pro</button>
     <button id="display-panel-btn" style="-webkit-app-region:no-drag; background:none; border:1px solid var(--surface); color:var(--text-sub); font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; margin-left:8px;">Display ⚙</button>
@@ -113,7 +113,7 @@
     <div style="max-width:480px; margin:0 auto">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <span style="font-size:13px; font-weight:600; color:var(--text);">Display Settings</span>
-        <button id="display-panel-close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px;">✕</button>
+        <button id="display-panel-close" aria-label="Close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px;">✕</button>
       </div>
       <div class="field">
         <label for="app-theme">Theme</label>
@@ -143,22 +143,25 @@
   </div>
 
   <!-- Pro Activation Panel (fixed below titlebar) -->
-  <div id="pro-panel" style="display:none; position:fixed; top:44px; left:0; right:0; background:var(--bg-bar); border-bottom:1px solid var(--surface); padding:20px 18px; z-index:90; box-shadow:0 6px 30px rgba(0,0,0,0.7);">
+  <div id="pro-panel" role="dialog" aria-modal="true" aria-label="Pro activation" style="display:none; position:fixed; top:44px; left:0; right:0; background:var(--bg-bar); border-bottom:1px solid var(--surface); padding:20px 18px; z-index:90; box-shadow:0 6px 30px rgba(0,0,0,0.7);">
     <div style="max-width:480px; margin:0 auto">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
         <span style="font-size:13px; font-weight:700; color:var(--text);">⚡ Thought Tidy Pro</span>
-        <button id="pro-panel-close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px; -webkit-app-region:no-drag;">✕</button>
+        <button id="pro-panel-close" aria-label="Close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:15px; padding:2px 6px; border-radius:4px; -webkit-app-region:no-drag;">✕</button>
       </div>
       <div id="pro-locked-view">
-        <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
+        <p class="hint">Unlock Sound Like Me, Your Profile, Custom Actions, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
         <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro ($10 one-time) ↗</a>
         <div class="field" style="margin-top:12px">
           <label for="pro-email-input">Email used at purchase</label>
-          <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off" style="width:100%">
+          <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off" maxlength="128" style="width:100%">
         </div>
         <div class="field">
           <label for="pro-key-input">License Key</label>
-          <input type="text" id="pro-key-input" placeholder="80D8A918-7E81416E-8D2C26C0-2CE892A8" autocomplete="off" style="width:100%;font-family:monospace;letter-spacing:0.04em">
+          <div class="key-row">
+            <input type="text" id="pro-key-input" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" maxlength="35" style="font-family:monospace;letter-spacing:0.04em">
+            <button id="pro-key-show-btn" class="show-btn">Show</button>
+          </div>
         </div>
         <button id="activate-pro-btn" class="btn-primary">Activate</button>
         <div id="pro-status-msg" class="pro-status-msg"></div>
@@ -295,22 +298,6 @@
       </div><!-- /provider-wizard -->
     </section>
 
-    <!-- Behavior -->
-    <section>
-      <h2>Behavior</h2>
-      <div class="field">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
-          <input type="checkbox" id="launchAtLogin" checked>
-          Start with Windows
-        </label>
-        <p class="hint">Automatically start Thought Tidy when you log in.</p>
-      </div>
-      <div class="section-save-row">
-        <button class="section-save-btn" id="behavior-save-btn">Save</button>
-        <span class="section-save-status" id="behavior-save-status"></span>
-      </div>
-    </section>
-
     <!-- Custom Prompts -->
     <section id="custom-prompts-section" class="pro-gate">
       <div class="pro-overlay">
@@ -319,26 +306,26 @@
         <p><a class="pro-unlock-link">Unlock Pro to use this section</a></p>
       </div>
       <h2>
-        My Custom Prompts
-        <button id="toggle-prompts" class="link-btn" style="margin-left:auto">Manage Prompts →</button>
+        My Actions
+        <button id="toggle-prompts" class="link-btn" style="margin-left:auto">Manage Actions →</button>
       </h2>
       <p class="hint" style="margin-bottom:14px">
-        Saved prompts appear in the popup action menu (up to 8).
+        Saved actions appear in the popup action menu (up to 8).
         Use these to build your own actions: Email Reply, Slack Message, Meeting Notes…
       </p>
       <div id="prompts-panel" style="display:none">
       <div id="free-prompt-warning" style="display:none; color:#f9e2af; background:rgba(249,226,175,0.07); border:1px solid rgba(249,226,175,0.22); border-radius:6px; padding:9px 12px; margin-bottom:12px; font-size:12px; line-height:1.5;">
-        ⚠ Free tier — 1 permanent prompt only. Once added it cannot be edited or deleted until you upgrade to Pro.
+        ⚠ Free tier — you are limited to <strong>1 basic action</strong> and <strong>1 clarifying questions action</strong>. Upgrade to Pro to add more.
       </div>
       <div class="field" style="margin-bottom:12px">
-        <label for="prompt-quick-select">Select a prompt:</label>
+        <label for="prompt-quick-select">Select an action:</label>
         <select id="prompt-quick-select">
-          <option value="">— Add new prompt —</option>
+          <option value="">— Add new action —</option>
         </select>
       </div>
       <div id="custom-prompts-list"></div>
       <div class="add-prompt-form" id="add-prompt-form">
-        <h3 id="add-prompt-title">Add New Prompt</h3>
+        <h3 id="add-prompt-title">Add New Action</h3>
         <div class="field">
           <label for="new-prompt-name">Name (shown in popup menu)</label>
           <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
@@ -365,6 +352,8 @@
             data-prompt="Rewrite as a clear, friendly Slack message. Keep it short. Return ONLY the message:">Slack Message</button>
           <button class="example-btn" data-name="Bullet Points"
             data-prompt="Extract key points as clear bullet points. Return ONLY the bullet points:">Bullet Points</button>
+          <button class="example-btn" data-name="Translate → Spanish"
+            data-prompt="Translate the following text to Spanish. Return ONLY the translation:">→ Spanish</button>
         </div>
         <div style="display:flex; gap:8px; align-items:center; margin-top:10px">
           <button id="add-prompt-btn">Add to Menu</button>
@@ -532,6 +521,22 @@
       <p class="hint" style="margin-bottom:10px">Every AI action you run today. Clears automatically at midnight.</p>
       <p id="history-free-hint" class="hint" style="display:none; margin-top:4px; color:#f9e2af;">Free tier shows today's history only. <a id="history-upgrade-link" style="cursor:pointer; color:#b4befe;">Upgrade to Pro</a> for full history.</p>
       <div id="history-viewer-list" class="hv-list"></div>
+    </section>
+
+    <!-- Behavior -->
+    <section>
+      <h2>Behavior</h2>
+      <div class="field">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
+          <input type="checkbox" id="launchAtLogin" checked>
+          Start with Windows
+        </label>
+        <p class="hint">Automatically start Thought Tidy when you log in.</p>
+      </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="behavior-save-btn">Save</button>
+        <span class="section-save-status" id="behavior-save-status"></span>
+      </div>
     </section>
 
     <div class="footer">

@@ -1,7 +1,8 @@
 const {
   fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels, fetchOllamaModels,
   testOpenAI, testClaude, testGemini, testOllama,
-  isModelCacheStale, formatCacheAge, MODEL_CACHE_STALE_MS
+  isModelCacheStale, formatCacheAge, MODEL_CACHE_STALE_MS,
+  costTier,
 } = require("../lib/models");
 
 beforeEach(() => { global.fetch = jest.fn(); });
@@ -348,5 +349,75 @@ describe("formatCacheAge", () => {
   test("returns days for timestamps 24+ hours ago", () => {
     expect(formatCacheAge(Date.now() - 2 * 86_400_000)).toBe("2d ago");
     expect(formatCacheAge(Date.now() - 6 * 86_400_000)).toBe("6d ago");
+  });
+});
+
+// ── costTier ──────────────────────────────────────────────────────────────────
+
+describe("costTier", () => {
+  test("haiku → $ (cheap)", () => {
+    expect(costTier("claude-haiku-4-5")).toBe("$");
+    expect(costTier("claude-haiku-3")).toBe("$");
+  });
+
+  test("gpt-4o-mini → $ (cheap)", () => {
+    expect(costTier("gpt-4o-mini")).toBe("$");
+  });
+
+  test("gemini-2.0-flash → $ (cheap)", () => {
+    expect(costTier("gemini-2.0-flash")).toBe("$");
+  });
+
+  test("gemini flash-lite variant → $ (cheap)", () => {
+    expect(costTier("gemini-2.0-flash-lite")).toBe("$");
+  });
+
+  test("o3-mini → $$ (mid — caught by o[34]-mini cheap rule)", () => {
+    expect(costTier("o3-mini")).toBe("$");
+  });
+
+  test("o4-mini → $ (cheap)", () => {
+    expect(costTier("o4-mini")).toBe("$");
+  });
+
+  test("o1-mini → $$ (mid — NOT in cheap o[34]-mini set)", () => {
+    expect(costTier("o1-mini")).toBe("$$");
+  });
+
+  test("claude-opus → $$$ (expensive)", () => {
+    expect(costTier("claude-opus-4-7")).toBe("$$$");
+    expect(costTier("claude-opus-3")).toBe("$$$");
+  });
+
+  test("o1 (non-mini) → $$$ (expensive)", () => {
+    expect(costTier("o1")).toBe("$$$");
+  });
+
+  test("o3 (non-mini) → $$$ (expensive)", () => {
+    expect(costTier("o3")).toBe("$$$");
+  });
+
+  test("o4 (non-mini) → $$$ (expensive)", () => {
+    expect(costTier("o4")).toBe("$$$");
+  });
+
+  test("gpt-4o (full, non-mini) → $$ (mid)", () => {
+    expect(costTier("gpt-4o")).toBe("$$");
+  });
+
+  test("gpt-4o-mini is not caught by gpt-4o mid rule (mini rule wins)", () => {
+    expect(costTier("gpt-4o-mini")).toBe("$");
+  });
+
+  test("claude-sonnet → $$ (mid)", () => {
+    expect(costTier("claude-sonnet-4-6")).toBe("$$");
+  });
+
+  test("case insensitive — CLAUDE-HAIKU → $", () => {
+    expect(costTier("CLAUDE-HAIKU-4-5")).toBe("$");
+  });
+
+  test("unknown model → $$ (mid, safe default)", () => {
+    expect(costTier("mystery-model-xyz")).toBe("$$");
   });
 });

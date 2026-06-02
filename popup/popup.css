@@ -1,10 +1,11 @@
 /* ── Theme variables ─────────────────────────────────────────── */
+/* Z-index scale: result-overlay=20, panel=90, titlebar=100, modal=200 */
 :root {
   --bg-page: #181825; --bg-card: #1e1e2e; --bg-deeper: #1a1a2e;
-  --bg-bar: var(--bg-bar); --surface: #313244; --surface-hi: #45475a;
+  --bg-bar: #11111b; --surface: #313244; --surface-hi: #45475a;
   --surface-md: #494d64; --surface-tp: #545878;
-  --text: #cdd6f4; --text-sub: #a6adc8; --text-dim: var(--text-dim); --text-muted: #6c7086;
-  --accent: #89b4fa; --accent-bg: var(--accent-bg); --accent-sel: #1a2540;
+  --text: #cdd6f4; --text-sub: #a6adc8; --text-dim: #9399b2; --text-muted: #6c7086;
+  --accent: #89b4fa; --accent-bg: #1e2a3a; --accent-sel: #1a2540;
   --overlay-bg: rgba(17,17,27,0.55);
 }
 html[data-theme="light"] {
@@ -88,7 +89,9 @@ textarea {
   padding: 7px 9px;
   font-size: 12.5px;
   font-family: inherit;
-  resize: vertical;
+  resize: none;
+  overflow-y: hidden;
+  transition: height 0.1s ease;
   outline: none;
   line-height: 1.5;
   min-height: 72px;
@@ -191,6 +194,12 @@ select:focus { border-color: var(--accent); }
 }
 .result-text[contenteditable="true"]:focus {
   border-color: var(--accent);
+}
+
+#result-slots {
+  max-height: 55vh;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .result-slot {

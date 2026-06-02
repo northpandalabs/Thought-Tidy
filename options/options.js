@@ -11,7 +11,8 @@ const STORAGE_KEYS = [
 ];
 
 const GUMROAD_URL    = "https://northpandalabs.gumroad.com/l/thought-tidy";
-const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
+const PRO_ACTION_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand"]);
+const PRO_BADGE_GRADIENT = "linear-gradient(135deg, #7c3aed, #4f46e5)";
 
 function openGumroad() {
   browser.tabs.create({ url: GUMROAD_URL });
@@ -667,7 +668,7 @@ function renderActionEditor() {
       const divider = document.createElement("div");
       divider.className = "ae-pro-divider";
       divider.style.cssText = "font-size:11px; color:#6c7086; padding:4px 0; margin:4px 0; border-top:1px solid #313244; text-align:center;";
-      divider.textContent = "— Pro features (upgrade to reorder) —";
+      divider.innerHTML = `— <span style="font-size:10px;font-weight:700;color:#fff;background:${PRO_BADGE_GRADIENT};padding:1px 6px;border-radius:100px;vertical-align:middle">PRO</span> actions below — upgrade to reorder —`;
       list.appendChild(divider);
     }
 
@@ -831,7 +832,7 @@ function renderCustomPrompts() {
   const promptSel = document.getElementById("prompt-quick-select");
   if (promptSel) {
     const curVal = promptSel.value;
-    promptSel.innerHTML = '<option value="">— Add new prompt —</option>';
+    promptSel.innerHTML = '<option value="">— Add new action —</option>';
     const sep1 = document.createElement("option");
     sep1.disabled = true; sep1.textContent = "── Built-in ──";
     promptSel.appendChild(sep1);
@@ -846,11 +847,17 @@ function renderCustomPrompts() {
       const sep2 = document.createElement("option");
       sep2.disabled = true; sep2.textContent = "── Custom ──";
       promptSel.appendChild(sep2);
+      let freeBasicSeen = 0, freeClarifySeen = 0;
       customPrompts.forEach((p, i) => {
         const opt = document.createElement("option");
         opt.value = "custom-" + i;
-        if (!currentIsPro) { opt.textContent = p.name + " (Pro)"; opt.disabled = true; }
-        else                { opt.textContent = p.name; }
+        if (!currentIsPro) {
+          const overLimit = p.clarify ? (freeClarifySeen++ >= 1) : (freeBasicSeen++ >= 1);
+          opt.textContent = overLimit ? p.name + " (over limit)" : p.name;
+          opt.disabled    = overLimit;
+        } else {
+          opt.textContent = p.name;
+        }
         promptSel.appendChild(opt);
       });
     }
@@ -864,7 +871,7 @@ function renderCustomPrompts() {
   if (!customPrompts.length) {
     const hint = document.createElement("p");
     hint.className = "no-prompts hint";
-    hint.textContent = "No custom prompts yet — add one below.";
+    hint.textContent = "No custom actions yet — add one below.";
     list.appendChild(hint);
     return;
   }
@@ -898,16 +905,9 @@ function renderCustomPrompts() {
     };
     const actionsDiv = document.createElement("div");
     actionsDiv.className = "cp-actions";
-    if (currentIsPro) {
-      actionsDiv.append(mkBtn("cp-edit", "Edit"), mkBtn("cp-delete", "Delete"));
-      if (i > 0)                        actionsDiv.appendChild(mkBtn("cp-up",   "↑"));
-      if (i < customPrompts.length - 1) actionsDiv.appendChild(mkBtn("cp-down", "↓"));
-    } else {
-      const hint = document.createElement("span");
-      hint.className = "cp-pro-hint";
-      hint.textContent = "Upgrade to Pro to edit";
-      actionsDiv.appendChild(hint);
-    }
+    actionsDiv.append(mkBtn("cp-edit", "Edit"), mkBtn("cp-delete", "Delete"));
+    if (i > 0)                        actionsDiv.appendChild(mkBtn("cp-up",   "↑"));
+    if (i < customPrompts.length - 1) actionsDiv.appendChild(mkBtn("cp-down", "↓"));
 
     const item = document.createElement("div");
     item.className = "cp-item";
@@ -916,29 +916,28 @@ function renderCustomPrompts() {
     list.appendChild(item);
   });
 
-  if (currentIsPro) {
-    list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", () => {
-      customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id);
-      renderCustomPrompts();
-    }));
-    list.querySelectorAll(".cp-edit").forEach(btn => btn.addEventListener("click", () => {
-      const p = customPrompts.find(x => x.id === btn.dataset.id);
-      if (!p) return;
-      document.getElementById("new-prompt-name").value = p.name;
-      document.getElementById("new-prompt-text").value = p.prompt;
-      customPrompts = customPrompts.filter(x => x.id !== p.id);
-      renderCustomPrompts();
-      document.getElementById("add-prompt-form").scrollIntoView({ behavior: "smooth" });
-    }));
-    list.querySelectorAll(".cp-up").forEach(btn => btn.addEventListener("click", () => {
-      const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
-      if (idx > 0) { [customPrompts[idx - 1], customPrompts[idx]] = [customPrompts[idx], customPrompts[idx - 1]]; renderCustomPrompts(); }
-    }));
-    list.querySelectorAll(".cp-down").forEach(btn => btn.addEventListener("click", () => {
-      const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
-      if (idx < customPrompts.length - 1) { [customPrompts[idx], customPrompts[idx + 1]] = [customPrompts[idx + 1], customPrompts[idx]]; renderCustomPrompts(); }
-    }));
-  }
+  list.querySelectorAll(".cp-delete").forEach(btn => btn.addEventListener("click", async () => {
+    customPrompts = customPrompts.filter(p => p.id !== btn.dataset.id);
+    await cryptoSet({ customPrompts });
+    renderCustomPrompts();
+  }));
+  list.querySelectorAll(".cp-edit").forEach(btn => btn.addEventListener("click", () => {
+    const p = customPrompts.find(x => x.id === btn.dataset.id);
+    if (!p) return;
+    document.getElementById("new-prompt-name").value = p.name;
+    document.getElementById("new-prompt-text").value = p.prompt;
+    customPrompts = customPrompts.filter(x => x.id !== p.id);
+    renderCustomPrompts();
+    document.getElementById("add-prompt-form").scrollIntoView({ behavior: "smooth" });
+  }));
+  list.querySelectorAll(".cp-up").forEach(btn => btn.addEventListener("click", async () => {
+    const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
+    if (idx > 0) { [customPrompts[idx - 1], customPrompts[idx]] = [customPrompts[idx], customPrompts[idx - 1]]; await cryptoSet({ customPrompts }); renderCustomPrompts(); }
+  }));
+  list.querySelectorAll(".cp-down").forEach(btn => btn.addEventListener("click", async () => {
+    const idx = customPrompts.findIndex(p => p.id === btn.dataset.id);
+    if (idx < customPrompts.length - 1) { [customPrompts[idx], customPrompts[idx + 1]] = [customPrompts[idx + 1], customPrompts[idx]]; await cryptoSet({ customPrompts }); renderCustomPrompts(); }
+  }));
 
   const addForm = document.getElementById("add-prompt-form");
   if (addForm) {
@@ -962,25 +961,14 @@ function renderCustomPrompts() {
       clarifyEl.disabled = false;
     }
 
-    let warn = document.getElementById("free-prompt-warning");
-    if (!currentIsPro && addForm.style.display !== "none") {
-      if (!warn) {
-        warn = document.createElement("p");
-        warn.id = "free-prompt-warning";
-        warn.style.cssText = "color:#f9e2af; background:rgba(249,226,175,0.07); border:1px solid rgba(249,226,175,0.18); border-radius:6px; padding:8px 10px; margin-bottom:12px; font-size:12px; line-height:1.5;";
-        addForm.insertBefore(warn, addForm.firstChild);
-      }
-      warn.textContent = "⚠ Free tier: you get 1 basic prompt and 1 clarify prompt. Once added they are permanent — upgrade to Pro to edit or add more.";
-      warn.style.display = "block";
-    } else if (warn) {
-      warn.style.display = "none";
-    }
+    const warn = document.getElementById("free-prompt-warning");
+    if (warn) warn.style.display = !currentIsPro ? "block" : "none";
   }
 }
 
 function addPrompt() {
-  const name      = document.getElementById("new-prompt-name").value.trim();
-  const prompt    = document.getElementById("new-prompt-text").value.trim();
+  const name      = document.getElementById("new-prompt-name")?.value.trim() ?? "";
+  const prompt    = document.getElementById("new-prompt-text")?.value.trim() ?? "";
   const isClarify = document.getElementById("prompt-clarify")?.checked || false;
   if (!name || !prompt) { alert("Enter both a name and an instruction."); return; }
 
@@ -988,13 +976,12 @@ function addPrompt() {
   const editId = addBtn?.dataset.editId;
 
   if (editId) {
-    if (!currentIsPro) return;
     const idx = customPrompts.findIndex(p => p.id === editId);
     if (idx !== -1) customPrompts[idx] = { ...customPrompts[idx], name, prompt, clarify: isClarify };
     delete addBtn.dataset.editId;
     addBtn.textContent = "Add to Menu";
     const titleEl = document.getElementById("add-prompt-title");
-    if (titleEl) titleEl.textContent = "Add New Prompt";
+    if (titleEl) titleEl.textContent = "Add New Action";
     const delBtn = document.getElementById("delete-prompt-btn");
     if (delBtn)  delBtn.style.display = "none";
     const promptSel = document.getElementById("prompt-quick-select");
@@ -1003,10 +990,10 @@ function addPrompt() {
     if (!currentIsPro) {
       const hasBasic   = customPrompts.some(p => !p.clarify);
       const hasClarify = customPrompts.some(p => p.clarify);
-      if (isClarify && hasClarify)  { alert("Free tier: you already have a clarify prompt. Upgrade to Pro to add more."); return; }
-      if (!isClarify && hasBasic)   { alert("Free tier: you already have a basic prompt. Upgrade to Pro to add more."); return; }
+      if (isClarify && hasClarify)  { alert("Free tier: you already have a clarify action. Upgrade to Pro to add more."); return; }
+      if (!isClarify && hasBasic)   { alert("Free tier: you already have a basic action. Upgrade to Pro to add more."); return; }
     } else if (customPrompts.length >= 8) {
-      alert("Maximum 8 custom prompts.");
+      alert("Maximum 8 custom actions.");
       return;
     }
     customPrompts.push({ id: uid(), name, prompt, clarify: isClarify });
@@ -1214,49 +1201,60 @@ async function init() {
       const ce = document.getElementById("prompt-clarify");
       if (ce) { ce.checked = true; ce.disabled = false; }
       if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; addBtn.disabled = false; }
-      if (titleEl) titleEl.textContent = "Add New Prompt";
+      if (titleEl) titleEl.textContent = "Add New Action";
       if (delBtn)  delBtn.style.display = "none";
     };
 
-    if (!val) { resetForm(); return; }
+    if (!val) {
+      resetForm();
+      const addForm = document.getElementById("add-prompt-form");
+      if (addForm && !currentIsPro) {
+        const freeIsFull = customPrompts.some(p => !p.clarify) && customPrompts.some(p => p.clarify);
+        if (freeIsFull) addForm.style.display = "none";
+      }
+      return;
+    }
 
     if (val.startsWith("builtin-")) {
       const actionId = val.replace("builtin-", "");
       const action   = DEFAULT_ACTION_SETTINGS.find(a => a.id === actionId);
       if (!action) { resetForm(); return; }
       const isLocked = LOCKED_ACTIONS.has(actionId);
-      if (nameEl)  { nameEl.value = action.label; nameEl.readOnly = isLocked; }
-      if (textEl)  { textEl.value = MENU_PROMPTS[actionId] || ""; textEl.readOnly = isLocked; }
+      const ro = !currentIsPro || isLocked;
+      if (nameEl)  { nameEl.value = action.label; nameEl.readOnly = ro; }
+      if (textEl)  { textEl.value = MENU_PROMPTS[actionId] || ""; textEl.readOnly = ro; }
       const ce = document.getElementById("prompt-clarify");
-      if (ce) { ce.checked = !!action.clarify; ce.disabled = isLocked; }
-      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; addBtn.disabled = isLocked; }
+      if (ce) { ce.checked = !!action.clarify; ce.disabled = ro; }
+      if (addBtn)  { delete addBtn.dataset.editId; addBtn.textContent = "Add to Menu"; addBtn.disabled = ro; }
       if (delBtn)  delBtn.style.display = "none";
-      if (titleEl) titleEl.textContent = isLocked ? "Built-in Prompt (read-only)" : "Edit Prompt";
+      if (titleEl) titleEl.textContent = ro ? "Built-in Action (read-only)" : "Edit Action";
       return;
     }
 
     const idx = parseInt(val.replace("custom-", ""), 10);
     const p   = customPrompts[idx];
-    if (!p || !currentIsPro) return;
+    if (!p) return;
     if (nameEl)  { nameEl.value = p.name; nameEl.readOnly = false; }
     if (textEl)  { textEl.value = p.prompt; textEl.readOnly = false; }
     const clarifyEl = document.getElementById("prompt-clarify");
     if (clarifyEl) { clarifyEl.checked = !!p.clarify; clarifyEl.disabled = false; }
     if (addBtn)  { addBtn.dataset.editId = p.id; addBtn.textContent = "Save Changes"; addBtn.disabled = false; }
-    if (titleEl) titleEl.textContent = "Edit Prompt";
+    if (titleEl) titleEl.textContent = "Edit Action";
     if (delBtn)  delBtn.style.display = "";
+    document.getElementById("add-prompt-form")?.style.setProperty("display", "");
   });
 
-  document.getElementById("delete-prompt-btn")?.addEventListener("click", () => {
+  document.getElementById("delete-prompt-btn")?.addEventListener("click", async () => {
     const addBtn = document.getElementById("add-prompt-btn");
     const editId = addBtn?.dataset.editId;
-    if (!editId || !currentIsPro) return;
-    if (!confirm("Delete this prompt?")) return;
+    if (!editId) return;
+    if (!confirm("Delete this action? This cannot be undone.")) return;
     customPrompts = customPrompts.filter(p => p.id !== editId);
+    await cryptoSet({ customPrompts });
     delete addBtn.dataset.editId;
     addBtn.textContent = "Add to Menu";
     const titleEl = document.getElementById("add-prompt-title");
-    if (titleEl) titleEl.textContent = "Add New Prompt";
+    if (titleEl) titleEl.textContent = "Add New Action";
     const delBtn = document.getElementById("delete-prompt-btn");
     if (delBtn)  delBtn.style.display = "none";
     const promptSel = document.getElementById("prompt-quick-select");
@@ -1373,6 +1371,11 @@ async function init() {
   document.getElementById("actions-save-btn")?.addEventListener("click", saveActions);
   document.getElementById("sync-save-btn")?.addEventListener("click", saveSyncSetting);
 
+  // Theme toggle init
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) themeToggle.checked = (s.themeMode === "light");
+  document.getElementById("theme-save-btn")?.addEventListener("click", saveThemeSetting);
+
   document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
     const panel = document.getElementById("pro-panel");
     if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
@@ -1399,7 +1402,7 @@ async function init() {
     if (!panel) return;
     const open = panel.style.display === "none";
     panel.style.display = open ? "block" : "none";
-    btn.textContent     = open ? "← Close" : "Manage Prompts →";
+    btn.textContent     = open ? "← Close" : "Manage Actions →";
   });
 
   // Desktop sync toggle
@@ -1475,6 +1478,13 @@ async function saveSyncSetting() {
   showSectionStatus("sync-save-status", "Saved!");
 }
 
+async function saveThemeSetting() {
+  const mode = document.getElementById("themeToggle")?.checked ? "light" : "dark";
+  await browser.storage.local.set({ themeMode: mode });
+  document.documentElement.setAttribute("data-theme", mode);
+  showSectionStatus("theme-save-status", "Saved!");
+}
+
 // ── Pro gate ───────────────────────────────────────────────────────────────────
 
 function applyProGates(isPro) {
@@ -1501,7 +1511,7 @@ function applyProGates(isPro) {
 
   // Update pro button text
   const proBtn = document.getElementById("activate-pro-link-btn");
-  if (proBtn) proBtn.textContent = isPro ? "✓ Activated" : "⚡ Activate Pro";
+  if (proBtn) proBtn.textContent = isPro ? "⚡ Pro Active — Manage ↓" : "⚡ Activate Pro";
 
   // History title and hint
   const histTitle = document.getElementById("history-title-text");
@@ -1530,6 +1540,35 @@ function initProSection() {
 
   document.getElementById("pro-buy-link")?.addEventListener("click", openGumroad);
 
+  const proKeyInput   = document.getElementById("pro-key-input");
+  const proKeyShowBtn = document.getElementById("pro-key-show-btn");
+  let proKeyReal   = "";
+  let proKeyMasked = true;
+  const maskKey = (v) => v.replace(/[^-]/g, "•");
+
+  proKeyShowBtn?.addEventListener("click", () => {
+    proKeyMasked = !proKeyMasked;
+    proKeyShowBtn.textContent = proKeyMasked ? "Show" : "Hide";
+    if (proKeyInput) proKeyInput.value = proKeyMasked ? maskKey(proKeyReal) : proKeyReal;
+  });
+
+  proKeyInput?.addEventListener("input", (e) => {
+    const v = e.target.value;
+    if (!proKeyMasked) {
+      const raw = v.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      proKeyReal = (raw.match(/.{1,8}/g)?.join("-") ?? raw).slice(0, 35);
+      e.target.value = proKeyReal;
+    } else {
+      const oldAlpha = proKeyReal.replace(/-/g, "");
+      const kept  = v.split("").filter(c => c === "•").length;
+      const added = v.replace(/[•-]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const raw   = oldAlpha.slice(0, kept) + added;
+      proKeyReal  = (raw.match(/.{1,8}/g)?.join("-") ?? raw).slice(0, 35);
+      e.target.value = maskKey(proKeyReal);
+      e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+    }
+  });
+
   document.querySelectorAll(".pro-unlock-link").forEach(a => {
     a.addEventListener("click", () => {
       const panel = document.getElementById("pro-panel");
@@ -1537,9 +1576,13 @@ function initProSection() {
     });
   });
 
+  document.querySelectorAll(".pro-buy-direct").forEach(a => {
+    a.addEventListener("click", openGumroad);
+  });
+
   document.getElementById("activate-pro-btn")?.addEventListener("click", async () => {
     const email = document.getElementById("pro-email-input")?.value?.trim();
-    const key   = document.getElementById("pro-key-input")?.value?.trim();
+    const key   = proKeyReal;
     const msgEl = document.getElementById("pro-status-msg");
     const btn   = document.getElementById("activate-pro-btn");
     if (!email || !key) { msgEl.textContent = "Enter your email and license key."; msgEl.className = "pro-status-msg error"; return; }
@@ -1562,7 +1605,8 @@ function initProSection() {
   document.getElementById("deactivate-pro-btn")?.addEventListener("click", async () => {
     await browser.storage.local.remove(["licenseEmail", "licenseKey"]);
     document.getElementById("pro-email-input").value = "";
-    document.getElementById("pro-key-input").value   = "";
+    proKeyReal = "";
+    if (proKeyInput) proKeyInput.value = "";
     applyProGates(false);
     const panel = document.getElementById("pro-panel");
     if (panel) panel.style.display = "none";

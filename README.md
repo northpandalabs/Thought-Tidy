@@ -8,6 +8,32 @@ Highlight text, right-click, and let the AI clean it up instantly. No subscripti
 
 ---
 
+## Your Privacy & Data Safety
+
+Thought Tidy is built on one principle: **your writing stays yours.**
+
+- **No Thought Tidy servers.** Your text travels directly from your browser or desktop app to the AI provider you chose (OpenAI, Anthropic, or Google). Nothing passes through our infrastructure.
+- **No accounts, no sign-up.** You paste an API key. That's it.
+- **Local-only storage.** Your API keys, settings, and writing profile are stored on your own machine — never uploaded anywhere.
+- **One external call at activation.** When you activate Pro, a single verification request goes to [Gumroad](https://gumroad.com) to confirm your license. That is the only outbound call Thought Tidy ever makes that isn't to your chosen AI provider. No user data is sent — only your license key and email for verification.
+- **Open to audit.** The full source is on GitHub. Read every line before installing.
+
+### How the security tests back this up
+
+Every release runs automated checks that validate these guarantees (`tests/security.test.js`):
+
+| What's tested | How |
+| --- | --- |
+| XSS prevention | All user text rendered via `textContent` / `escHtml()` — never raw `innerHTML` |
+| API key protection | Keys never logged or sent in error messages |
+| Context isolation | Electron enforces `contextIsolation: true`, `nodeIntegration: false` |
+| No outbound telemetry | Tests assert no analytics or tracking calls are made |
+| Sync token auth | Local desktop sync server (127.0.0.1) requires a startup-generated token |
+
+If security tests fail in CI, the build is blocked — no release artifact is produced.
+
+---
+
 ## Downloads
 
 > Always get the latest stable build from the **[Releases page](https://github.com/northpandalabs/Thought-Tidy/releases/latest)**.
@@ -32,13 +58,13 @@ Thought Tidy has a **free tier** that works immediately with your own API key, a
 | --- | --- | --- |
 | Fix Spelling & Grammar | ✓ | ✓ |
 | Make Professional | ✓ | ✓ |
-| Sound Human | ✓ | ✓ |
+| Improve Writing | ✓ | ✓ |
 | Brain Dump → Clear Text | ✓ | ✓ |
 | Today's activity history | ✓ | ✓ |
 | Reorder built-in actions | ✓ | ✓ |
-| 1 custom prompt | ✓ | ✓ |
+| 1 custom action | ✓ | ✓ |
 | Sound Like Me (Your Profile) | — | ✓ |
-| Improve Writing | — | ✓ |
+| Sound Human | — | ✓ |
 | Make Formal / Casual | — | ✓ |
 | Shorten / Expand | — | ✓ |
 | Unlimited custom prompts | — | ✓ |
@@ -91,9 +117,9 @@ Right-click any selected text on any webpage:
 | **👤 Sound Like Me** | Rewrites in *your* voice using your saved profile — not generic AI, not formal, just you but clear *(Pro)* |
 | **✓ Fix Spelling & Grammar** | Cleans up mistakes without changing anything else |
 | **★ Make Professional** | Full grammar fix + ensures your full meaning comes through — sounds confident and articulate |
-| **💬 Sound Human** | Takes stiff or AI-sounding text and makes it feel like a real person wrote it |
+| **💬 Sound Human** | Takes stiff or AI-sounding text and makes it feel like a real person wrote it *(Pro)* |
 | **🧠 Brain Dump → Clear Text** | You vomit your thoughts, it organizes everything into clean readable text without losing a word |
-| **↑ Improve Writing** | Better clarity and flow, keeps your voice *(Pro)* |
+| **↑ Improve Writing** | Better clarity and flow, keeps your voice |
 | Make Formal / Casual | Shift the tone either direction *(Pro)* |
 | Shorten / Expand | Adjust the length *(Pro)* |
 | **⚡ Your Custom Prompts** | 1 free, unlimited with Pro — Email Reply, Slack Message, LinkedIn Post, anything |
@@ -425,7 +451,7 @@ You're loading the Chrome build in Firefox. Use `npm run build:firefox` and load
 Yes. Chrome: load `dist/chrome/` as an unpacked extension (stays loaded until you remove it). Firefox: load `dist/firefox/` as a temporary add-on (removed on browser restart — or self-sign with web-ext).
 
 **How do I add my own actions?**  
-Open the extension settings → scroll to **Custom Prompts** → add a name and a system prompt. Your custom action appears in the right-click menu. Free users get 1 custom prompt; Pro unlocks unlimited.
+Open the extension settings → scroll to **My Actions** → add a name and a system prompt. Your custom action appears in the right-click menu. Free users get 1 basic action + 1 clarifying questions action; Pro unlocks unlimited.
 
 **What is "Sound Like Me"?**  
 A Pro profile system where you describe yourself — your name, role, writing style, and any context the AI should know. When enabled, every action uses your profile as context, so the output matches your voice instead of sounding like generic AI.

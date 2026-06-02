@@ -13,7 +13,7 @@
       <span class="title-text">Thought Tidy</span>
       <span class="shortcut-hint">Ctrl+Shift+Space</span>
     </div>
-    <button id="close-btn" title="Hide">✕</button>
+    <button id="close-btn" title="Hide" aria-label="Hide window">✕</button>
   </div>
 
   <!-- Process panel -->
@@ -24,8 +24,7 @@
     </div>
     <p class="input-tip">Tip: Ctrl+C text → Ctrl+Shift+Space → Ctrl+V or Paste clipboard</p>
     <textarea id="input-text"
-      placeholder="Paste or type text here…"
-      rows="7"
+      placeholder="Paste and pick an action…"
       spellcheck="false"></textarea>
 
     <div class="action-row">
@@ -44,7 +43,7 @@
 
     <!-- Result -->
     <div id="result-area" style="display:none">
-      <div id="result-loading" class="result-loading" style="display:none">
+      <div id="result-loading" class="result-loading" style="display:none" role="status" aria-live="polite" aria-label="Processing">
         <div class="spinner"></div><span id="result-loading-text">Processing…</span>
       </div>
       <div id="clarify-area" style="display:none" class="clarify-wrap">
@@ -62,8 +61,8 @@
     <div class="ctx-sheet-header">
       <span class="ctx-sheet-title">Adjust for your reader</span>
       <div class="ctx-header-actions">
-        <button id="ctx-help-btn" class="ctx-help-btn" title="What is this?">?</button>
-        <button id="context-skip-btn" class="ctx-close-btn">✕ Skip</button>
+        <button id="ctx-help-btn" class="ctx-help-btn" title="What is this?" aria-label="What is context?">?</button>
+        <button id="context-skip-btn" class="ctx-close-btn" aria-label="Remove context">✕ Remove</button>
       </div>
     </div>
     <div id="ctx-help-text" class="ctx-help-text" style="display:none">

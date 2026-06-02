@@ -62,27 +62,42 @@ function buildAudiencePrompt(settings) {
   return BUILT_IN_AUDIENCE.find(a => a.value === sel.value)?.prompt || "";
 }
 
-const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
+const PRO_ACTION_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand"]);
 
 let currentSettings = {};
 
 function rebuildVariantsSelect(settings, isPro) {
   const sel = document.getElementById("variants-select");
   if (!sel) return;
+  if (!isPro) {
+    sel.style.display = "none";
+    return;
+  }
+  sel.style.display = "";
   const savedVal = parseInt(settings.variants) || 1;
   sel.innerHTML = "";
   for (let i = 1; i <= 4; i++) {
     const opt = document.createElement("option");
     opt.value = String(i);
-    if (i > 1 && !isPro) {
-      opt.textContent = `×${i} (Pro)`;
-      opt.disabled    = true;
-    } else {
-      opt.textContent = `×${i}`;
-    }
+    opt.textContent = `×${i}`;
     sel.appendChild(opt);
   }
-  sel.value = isPro ? String(Math.max(1, Math.min(4, savedVal))) : "1";
+  sel.value = String(Math.max(1, Math.min(4, savedVal)));
+}
+
+function initTextareaAutogrow() {
+  const ta = document.getElementById("input-text");
+  if (!ta) return;
+  const maxH   = () => window.innerHeight * 0.5;
+  const resize = () => {
+    ta.style.height    = "auto";
+    const h            = Math.min(ta.scrollHeight, maxH());
+    ta.style.height    = h + "px";
+    ta.style.overflowY = ta.scrollHeight > maxH() ? "auto" : "hidden";
+  };
+  ta.addEventListener("input", resize);
+  ta.addEventListener("focus", resize);
+  resize();
 }
 
 async function init() {
@@ -96,6 +111,7 @@ async function init() {
   updateProviderStatus(currentSettings);
 
   populateAudienceSelect(currentSettings);
+  initTextareaAutogrow();
 
   // Hide the "+ Add context" row if the user has disabled it in settings
   if (currentSettings.contextEnabled === false) {
@@ -156,17 +172,28 @@ async function init() {
   const storedActs  = resolveActionSettings(currentSettings.actionSettings || []);
   const cps         = currentSettings.customPrompts || [];
 
-  storedActs.filter(a => a.enabled).forEach(a => {
+  const enabledActs = storedActs.filter(a => a.enabled);
+  const freeEnabled = enabledActs.filter(a => !PRO_ACTION_IDS.has(a.id));
+  const proEnabled  = enabledActs.filter(a =>  PRO_ACTION_IDS.has(a.id));
+
+  freeEnabled.forEach(a => {
     const opt = document.createElement("option");
     opt.value = a.id;
-    if (PRO_ACTION_IDS.has(a.id) && !isPro) {
-      opt.textContent = a.label + " (Pro)";
-      opt.disabled    = true;
-    } else {
-      opt.textContent = a.label;
-    }
+    opt.textContent = a.label;
     actionSel.appendChild(opt);
   });
+  if (proEnabled.length) {
+    const sep = document.createElement("option");
+    sep.disabled = true; sep.textContent = "── Pro ──";
+    actionSel.appendChild(sep);
+    proEnabled.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = isPro ? a.label : a.label + " (Pro)";
+      if (!isPro) opt.disabled = true;
+      actionSel.appendChild(opt);
+    });
+  }
   if (cps.length) {
     const sep = document.createElement("option"); sep.disabled = true; sep.textContent = "── Custom ──";
     actionSel.appendChild(sep);
@@ -178,9 +205,9 @@ async function init() {
   }
   const lastAction = currentSettings.lastAction || "";
   if (PRO_ACTION_IDS.has(lastAction) && !isPro) {
-    actionSel.value = "fix-spelling";
+    actionSel.value = freeEnabled[0]?.id || "fix-spelling";
   } else {
-    actionSel.value = actionSel.querySelector(`option[value="${lastAction}"]`) ? lastAction : (storedActs.find(a => a.enabled)?.id || "");
+    actionSel.value = actionSel.querySelector(`option[value="${lastAction}"]`) ? lastAction : (freeEnabled[0]?.id || "");
   }
 
   // Setup CTA: shown when no providers configured
@@ -389,6 +416,7 @@ function showResult(results, error) {
   if (error) {
     const el = document.createElement("div");
     el.className   = "result-text result-error";
+    el.setAttribute("role", "alert");
     el.textContent = error;
     slots.appendChild(el);
     return;

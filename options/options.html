@@ -51,28 +51,35 @@
 <body>
 
   <!-- Pro Activation Panel (fixed, drops from header) -->
-  <div id="pro-panel" style="display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:700px; background:var(--bg-bar); border-bottom:1px solid var(--surface); padding:20px 24px; z-index:200; box-shadow:0 6px 30px rgba(0,0,0,0.7);">
+  <div id="pro-panel" role="dialog" aria-modal="true" aria-label="Pro activation" style="display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:700px; background:var(--bg-bar); border-bottom:1px solid var(--surface); padding:20px 24px; z-index:200; box-shadow:0 6px 30px rgba(0,0,0,0.7);">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
       <span style="font-size:14px; font-weight:700; color:var(--text);">⚡ Thought Tidy Pro</span>
-      <button id="pro-panel-close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px; padding:2px 7px; border-radius:4px;">✕</button>
+      <button id="pro-panel-close" aria-label="Close" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px; padding:2px 7px; border-radius:4px;">✕</button>
     </div>
     <div id="pro-locked-view">
-      <p class="hint">Unlock Sound Like Me, Your Profile, Custom Prompts, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
+      <p class="hint">Unlock Sound Like Me, Your Profile, Custom Actions, multiple suggestions, and the Action Editor. One-time payment. No subscription.</p>
       <a id="pro-buy-link" style="cursor:pointer; color:#b4befe; font-weight:600">Unlock Pro ↗</a>
       <div class="field" style="margin-top:12px">
         <label for="pro-email-input">Email used at purchase</label>
-        <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off" style="width:100%">
+        <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="off" maxlength="128" style="width:100%">
       </div>
       <div class="field">
         <label for="pro-key-input">License Key</label>
-        <input type="text" id="pro-key-input" placeholder="80D8A918-7E81416E-8D2C26C0-2CE892A8" autocomplete="off" style="width:100%;font-family:monospace;letter-spacing:0.04em">
+        <div class="key-row">
+          <input type="text" id="pro-key-input" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" maxlength="35" style="font-family:monospace;letter-spacing:0.04em">
+          <button id="pro-key-show-btn" class="show-btn">Show</button>
+        </div>
       </div>
       <button id="activate-pro-btn" class="btn-primary">Activate</button>
       <div id="pro-status-msg" class="pro-status-msg"></div>
     </div>
     <div id="pro-active-view" style="display:none">
       <div class="pro-active-row">
-        <span style="color:var(--text-muted); font-size:12px">✓ License active — <span id="pro-active-email"></span></span>
+        <div>
+          <span class="pro-active-badge">⚡ Pro Active</span>
+          <span id="pro-active-email" class="pro-active-email" style="margin-left:8px; font-size:13px"></span>
+          <span style="color:var(--text-muted); font-size:12px; display:block; margin-top:4px">Key: •••••••••••••••••••••••••••••••••••</span>
+        </div>
         <button id="deactivate-pro-btn" class="revert-btn" style="margin-left:auto">Deactivate</button>
       </div>
     </div>
@@ -195,24 +202,24 @@
     <!-- Custom Prompts -->
     <section id="custom-prompts-section" class="pro-gate">
       <h2>
-        My Custom Prompts
-        <button id="toggle-prompts" class="link-btn" style="margin-left:auto">Manage Prompts →</button>
+        My Actions
+        <button id="toggle-prompts" class="link-btn" style="margin-left:auto">Manage Actions →</button>
       </h2>
-      <p class="hint" style="margin-bottom:14px">Saved prompts appear in the right-click menu under Thought Tidy (up to 8). Use these to build your own actions: Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
+      <p class="hint" style="margin-bottom:14px">Saved actions appear in the right-click menu under Thought Tidy (up to 8). Use these to build your own actions: Email Reply, Slack Message, Meeting Notes, whatever you need.</p>
       <div id="prompts-panel" style="display:none">
       <div id="free-prompt-warning" style="display:none; color:#f9e2af; background:rgba(249,226,175,0.07); border:1px solid rgba(249,226,175,0.22); border-radius:6px; padding:9px 12px; margin-bottom:12px; font-size:12px; line-height:1.5;">
-        ⚠ Free tier — 1 permanent prompt only. Once added it cannot be edited or deleted until you upgrade to Pro.
+        ⚠ Free tier — you are limited to <strong>1 basic action</strong> and <strong>1 clarifying questions action</strong>. Upgrade to Pro to add more.
       </div>
       <div class="field" style="margin-bottom:12px">
-        <label for="prompt-quick-select">Select a prompt:</label>
+        <label for="prompt-quick-select">Select an action:</label>
         <select id="prompt-quick-select">
-          <option value="">— Add new prompt —</option>
+          <option value="">— Add new action —</option>
         </select>
       </div>
       <div id="custom-prompts-list"></div>
 
       <div class="add-prompt-form" id="add-prompt-form">
-        <h3 id="add-prompt-title">Add New Prompt</h3>
+        <h3 id="add-prompt-title">Add New Action</h3>
         <div class="field">
           <label for="new-prompt-name">Name (shown in right-click menu)</label>
           <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
@@ -234,7 +241,6 @@
           <span class="example-label">Examples:</span>
           <button class="example-btn" data-name="Email Reply" data-prompt="Rewrite as a professional, friendly email reply. Keep it concise. Return ONLY the email body:">Email Reply</button>
           <button class="example-btn" data-name="Slack Message" data-prompt="Rewrite as a clear, friendly Slack message. Keep it short and to the point. Return ONLY the message:">Slack Message</button>
-          <button class="example-btn" data-name="LinkedIn Post" data-prompt="Rewrite as an engaging LinkedIn post. Professional but human. Return ONLY the post text:">LinkedIn Post</button>
           <button class="example-btn" data-name="Bullet Points" data-prompt="Extract the key points from the following text and present them as clear bullet points. Return ONLY the bullet points:">Bullet Points</button>
           <button class="example-btn" data-name="Translate → Spanish" data-prompt="Translate the following text to Spanish. Return ONLY the translation:">→ Spanish</button>
         </div>
@@ -260,26 +266,6 @@
             <span class="section-save-status" id="actions-save-status"></span>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Desktop Sync -->
-    <section id="sync-section">
-      <h2>Desktop Sync</h2>
-      <p class="hint" style="margin-bottom:12px">Syncs your settings with the Thought Tidy desktop app when it's running on the same machine.</p>
-      <div class="field">
-        <label class="toggle-label">
-          <input type="checkbox" id="syncEnabled">
-          <span class="toggle-text">Enable desktop sync</span>
-        </label>
-      </div>
-      <p class="hint" style="margin-top:8px">
-        Requires the Thought Tidy desktop app to be open. Sync is local-only by default.
-        For remote sync, the desktop app requires user authentication.
-      </p>
-      <div class="section-save-row">
-        <button class="section-save-btn" id="sync-save-btn">Save</button>
-        <span class="section-save-status" id="sync-save-status"></span>
       </div>
     </section>
 
@@ -312,6 +298,7 @@
           <span class="pro-lock-icon">🔒</span>
           <p>Pro feature</p>
           <p><a class="pro-unlock-link" style="cursor:pointer">Unlock Pro to use this section ↗</a></p>
+          <p><a class="pro-buy-direct" style="cursor:pointer; color:#a6e3a1; font-size:12px">Get Pro ↗</a></p>
         </div>
         <p class="hint" style="margin-bottom:14px">Define specific audience types by profession or domain. These appear in the popup dropdown so you can pick them per run — the AI will use that group's vocabulary and frame explanations accordingly.</p>
         <div class="field" style="margin-bottom:10px">
@@ -438,6 +425,41 @@
       <p class="hint" style="margin-bottom:10px">Every AI action you run today. Clears automatically at midnight.</p>
       <p id="history-free-hint" class="hint" style="display:none; margin-top:4px; color:#f9e2af;">Free tier shows today's history only. <a id="history-upgrade-link" style="cursor:pointer; color:#b4befe;">Upgrade to Pro</a> for full history.</p>
       <div id="history-viewer-list" class="hv-list"></div>
+    </section>
+
+    <!-- Desktop Sync -->
+    <section id="sync-section">
+      <h2>Desktop Sync</h2>
+      <p class="hint" style="margin-bottom:12px">Syncs your settings with the Thought Tidy desktop app when it's running on the same machine.</p>
+      <div class="field">
+        <label class="toggle-label">
+          <input type="checkbox" id="syncEnabled">
+          <span class="toggle-text">Enable desktop sync</span>
+        </label>
+      </div>
+      <p class="hint" style="margin-top:8px">
+        Requires the Thought Tidy desktop app to be open. Sync is local-only by default.
+        For remote sync, the desktop app requires user authentication.
+      </p>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="sync-save-btn">Save</button>
+        <span class="section-save-status" id="sync-save-status"></span>
+      </div>
+    </section>
+
+    <!-- Appearance -->
+    <section id="theme-section">
+      <h2>Appearance</h2>
+      <div class="field">
+        <label class="toggle-label">
+          <input type="checkbox" id="themeToggle">
+          <span class="toggle-text">Light mode</span>
+        </label>
+      </div>
+      <div class="section-save-row">
+        <button class="section-save-btn" id="theme-save-btn">Save</button>
+        <span class="section-save-status" id="theme-save-status"></span>
+      </div>
     </section>
 
     <div class="footer">

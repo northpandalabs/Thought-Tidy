@@ -1,23 +1,25 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ── Theme tokens ─────────────────────────────────────── */
+/* Z-index scale: result-overlay=20, panel=90, titlebar=100, modal=200 */
 :root {
-  --bg-page:    #181825;
-  --bg-card:    #1e1e2e;
-  --bg-deeper:  #1a1a2e;
-  --bg-bar:     #11111b;
-  --surface:    #313244;
-  --surface-hi: #45475a;
-  --surface-md: #494d64;
-  --surface-tp: #545878;
-  --text:       #cdd6f4;
-  --text-sub:   #a6adc8;
-  --text-dim:   #9399b2;
-  --text-muted: #6c7086;
-  --accent:     #89b4fa;
-  --accent-bg:  #1e2a3a;
-  --accent-sel: #1a2540;
-  --overlay-bg: rgba(17,17,27,0.55);
+  --bg-page:      #181825;
+  --bg-card:      #1e1e2e;
+  --bg-deeper:    #1a1a2e;
+  --bg-bar:       #11111b;
+  --surface:      #313244;
+  --surface-hi:   #45475a;
+  --surface-md:   #494d64;
+  --surface-tp:   #545878;
+  --text:         #cdd6f4;
+  --text-sub:     #a6adc8;
+  --text-dim:     #9399b2;
+  --text-muted:   #6c7086;
+  --accent:       #89b4fa;
+  --accent-bg:    #1e2a3a;
+  --accent-sel:   #1a2540;
+  --overlay-bg:   rgba(17,17,27,0.55);
+  --pro-gradient: linear-gradient(135deg, #7c3aed, #4f46e5);
 }
 html[data-theme="light"] {
   --bg-page:    #eff1f5;

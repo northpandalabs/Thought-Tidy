@@ -5,7 +5,7 @@ const { isProUnlocked } = require("../lib/license");
 const { resolveActionSettings, LOCKED_ACTIONS, DEFAULT_ACTION_SETTINGS } = require("../lib/prompts");
 
 // Pro actions that are greyed out (disabled) for free users in the action dropdown
-const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
+const PRO_ACTION_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand"]);
 
 // ── isProUnlocked (gate function used by applyProGates) ───────────────────────
 
@@ -92,8 +92,8 @@ describe("PRO_ACTION_IDS — actions disabled for free tier in dropdown", () => 
     expect(PRO_ACTION_IDS.has("sound-like-me")).toBe(true);
   });
 
-  test("improve, formal, casual, shorten, expand are Pro actions", () => {
-    ["improve", "formal", "casual", "shorten", "expand"].forEach(id => {
+  test("sound-human, formal, casual, shorten, expand are Pro actions", () => {
+    ["sound-human", "formal", "casual", "shorten", "expand"].forEach(id => {
       expect(PRO_ACTION_IDS.has(id)).toBe(true);
     });
   });
@@ -102,8 +102,8 @@ describe("PRO_ACTION_IDS — actions disabled for free tier in dropdown", () => 
     expect(PRO_ACTION_IDS.has("fix-spelling")).toBe(false);
   });
 
-  test("professional, sound-human, brain-dump are NOT Pro actions", () => {
-    ["professional", "sound-human", "brain-dump"].forEach(id => {
+  test("improve, professional, brain-dump are NOT Pro actions", () => {
+    ["improve", "professional", "brain-dump"].forEach(id => {
       expect(PRO_ACTION_IDS.has(id)).toBe(false);
     });
   });

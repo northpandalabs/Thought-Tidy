@@ -16,7 +16,7 @@ const STORAGE_KEYS = [
   "lastContextAudience", "contextEnabled", "themeMode"
 ];
 
-const PRO_ACTION_IDS = new Set(["sound-like-me", "improve", "formal", "casual", "shorten", "expand"]);
+const PRO_ACTION_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand"]);
 
 let settings = {};
 
@@ -24,20 +24,20 @@ function rebuildVariantsSelect() {
   const sel    = document.getElementById("variants-select");
   if (!sel) return;
   const isPro    = isProUnlocked(settings);
+  if (!isPro) {
+    sel.style.display = "none";
+    return;
+  }
+  sel.style.display = "";
   const savedVal = parseInt(settings.variants) || 1;
   sel.innerHTML  = "";
   for (let i = 1; i <= 4; i++) {
     const opt = document.createElement("option");
     opt.value = String(i);
-    if (i > 1 && !isPro) {
-      opt.textContent = `×${i} (Pro)`;
-      opt.disabled    = true;
-    } else {
-      opt.textContent = `×${i}`;
-    }
+    opt.textContent = `×${i}`;
     sel.appendChild(opt);
   }
-  sel.value = isPro ? String(Math.max(1, Math.min(4, savedVal))) : "1";
+  sel.value = String(Math.max(1, Math.min(4, savedVal)));
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────────
@@ -121,6 +121,21 @@ function buildAudiencePrompt() {
   return BUILT_IN_AUDIENCE.find(a => a.value === sel.value)?.prompt || "";
 }
 
+function initTextareaAutogrow() {
+  const ta = document.getElementById("input-text");
+  if (!ta) return;
+  const maxH   = () => window.innerHeight * 0.5;
+  const resize = () => {
+    ta.style.height    = "auto";
+    const h            = Math.min(ta.scrollHeight, maxH());
+    ta.style.height    = h + "px";
+    ta.style.overflowY = ta.scrollHeight > maxH() ? "auto" : "hidden";
+  };
+  ta.addEventListener("input", resize);
+  ta.addEventListener("focus", resize);
+  resize();
+}
+
 async function init() {
   settings = await browser.storage.local.get(STORAGE_KEYS);
   document.documentElement.setAttribute("data-theme", settings.themeMode || "dark");
@@ -130,6 +145,7 @@ async function init() {
   populateContextSheet();
   restoreContextAudience();
   document.getElementById("input-text").focus();
+  initTextareaAutogrow();
 
   // Refresh settings + UI each time the popup is shown
   btcAPI.onPopupOpened(async () => {
@@ -236,17 +252,29 @@ function rebuildActionDropdown() {
   const cps        = settings.customPrompts || [];
 
   const isPro = isProUnlocked(settings);
-  storedActs.filter(a => a.enabled).forEach(a => {
+
+  const enabledActs = storedActs.filter(a => a.enabled);
+  const freeEnabled = enabledActs.filter(a => !PRO_ACTION_IDS.has(a.id));
+  const proEnabled  = enabledActs.filter(a =>  PRO_ACTION_IDS.has(a.id));
+
+  freeEnabled.forEach(a => {
     const opt = document.createElement("option");
     opt.value = a.id;
-    if (PRO_ACTION_IDS.has(a.id) && !isPro) {
-      opt.textContent = a.label + " (Pro)";
-      opt.disabled    = true;
-    } else {
-      opt.textContent = a.label;
-    }
+    opt.textContent = a.label;
     sel.appendChild(opt);
   });
+  if (proEnabled.length) {
+    const sep = document.createElement("option");
+    sep.disabled = true; sep.textContent = "── Pro ──";
+    sel.appendChild(sep);
+    proEnabled.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = isPro ? a.label : a.label + " (Pro)";
+      if (!isPro) opt.disabled = true;
+      sel.appendChild(opt);
+    });
+  }
   if (cps.length) {
     const sep = document.createElement("option"); sep.disabled = true; sep.textContent = "── Custom ──";
     sel.appendChild(sep);
@@ -258,11 +286,10 @@ function rebuildActionDropdown() {
   }
   const lastAction = prevValue || settings.lastAction || "";
   if (PRO_ACTION_IDS.has(lastAction) && !isPro) {
-    sel.value = storedActs.find(a => a.enabled && !PRO_ACTION_IDS.has(a.id))?.id || "";
+    sel.value = freeEnabled[0]?.id || "";
   } else {
     sel.value = lastAction;
-    // Empty string or unrecognised value — fall back to first enabled action
-    if (!sel.value || sel.value !== lastAction) sel.value = storedActs.find(a => a.enabled)?.id || "";
+    if (!sel.value || sel.value !== lastAction) sel.value = freeEnabled[0]?.id || "";
   }
 }
 
@@ -423,6 +450,7 @@ function showResult(results, error) {
   if (error) {
     const el = document.createElement("div");
     el.className   = "result-text is-error";
+    el.setAttribute("role", "alert");
     el.textContent = error;
     slots.appendChild(el);
     return;
