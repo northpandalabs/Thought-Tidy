@@ -121,6 +121,9 @@ async function init() {
   renderActionEditor();
 
   document.getElementById("add-provider-btn").addEventListener("click", showWizard);
+  const openGuide = () => browser.tabs.create({ url: browser.runtime.getURL("popup/guide.html") });
+  document.getElementById("open-setup-guide-btn")?.addEventListener("click", openGuide);
+  document.getElementById("open-setup-guide-empty-btn")?.addEventListener("click", openGuide);
   wireDevModeEasterEgg("add-provider-btn");
   document.getElementById("wizard-cancel-1").addEventListener("click", hideWizard);
   document.getElementById("wizard-back").addEventListener("click", () => {
@@ -166,6 +169,14 @@ async function init() {
   document.getElementById("actions-save-btn")?.addEventListener("click", saveActions);
   document.getElementById("sync-save-btn")?.addEventListener("click", saveSyncSetting);
   document.getElementById("theme-save-btn")?.addEventListener("click", saveThemeSetting);
+
+  // Auto-open wizard when redirected from popup setup CTA
+  const { _setupHint } = await browser.storage.local.get("_setupHint");
+  if (_setupHint && !(s.configuredProviders?.length)) {
+    await browser.storage.local.remove("_setupHint");
+    showWizard();
+    showWizardStep2(_setupHint);
+  }
 
   if (typeof BUILD_FLAGS !== "undefined" && BUILD_FLAGS.testBuild) {
     const banner = document.getElementById("test-only-banner");

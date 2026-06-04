@@ -113,11 +113,13 @@
       <h2>
         AI Providers
         <button id="add-provider-btn" class="add-provider-btn">+ Add Provider</button>
+        <button id="open-setup-guide-btn" style="background:none;border:none;color:var(--accent,#89b4fa);font-size:12px;font-weight:600;cursor:pointer;padding:0 0 0 10px;text-decoration:underline;">Setup Guide &amp; Privacy ↗</button>
       </h2>
 
       <!-- Empty state -->
       <div id="no-providers-state" style="display:none">
         <p class="hint" style="margin-bottom:14px">No AI providers configured yet. Add one to get started. You only need one API key.</p>
+        <p class="hint" style="margin-bottom:14px">Need help? <button id="open-setup-guide-empty-btn" style="background:none;border:none;color:var(--accent,#89b4fa);font-size:inherit;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;">View the step-by-step setup guide →</button></p>
       </div>
 
       <!-- Configured provider cards (rendered by JS) -->

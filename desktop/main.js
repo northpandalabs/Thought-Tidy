@@ -187,6 +187,30 @@ function openPopup() {
   popupWin.webContents.send("popup-opened");
 }
 
+// ── Results window (3+ suggestions) ───────────────────────────────────────────
+
+let resultsWin = null;
+
+function openResults() {
+  if (resultsWin && !resultsWin.isDestroyed()) { resultsWin.focus(); return; }
+  resultsWin = new BrowserWindow({
+    width:    900,
+    height:   680,
+    minWidth: 560,
+    title:    "Thought Tidy — Suggestions",
+    icon:     APP_ICON,
+    webPreferences: {
+      preload:          path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration:  false
+    }
+  });
+  resultsWin.setMenu(null);
+  resultsWin.loadFile(path.join(__dirname, "..", "popup", "results.html"));
+  resultsWin.webContents.on("did-finish-load", () => applyZoomToWindow(resultsWin));
+  resultsWin.on("closed", () => { resultsWin = null; });
+}
+
 // ── History window ─────────────────────────────────────────────────────────────
 
 let historyWin = null;
@@ -444,6 +468,7 @@ app.whenReady().then(() => {
     clipboard,
     openSettings,
     openHistory,
+    openResults,
     closePopup: () => { if (popupWin) popupWin.hide(); },
     openURL:    (url) => shell.openExternal(url)
   });

@@ -31,6 +31,8 @@ html[data-theme="light"] {
 
 body {
   width: 320px;
+  max-height: 600px;
+  overflow-y: auto;
   background: var(--bg-card);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -244,6 +246,20 @@ select:focus { border-color: var(--accent); }
 }
 .replace-btn:hover { background: var(--surface) !important; color: var(--text) !important; }
 
+.result-toggle-btn {
+  background: none;
+  border: 1px solid var(--surface);
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 3px 7px;
+  border-radius: 4px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.result-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.result-toggle-btn.expanded { border-color: var(--accent); color: var(--accent); background: rgba(137,180,250,0.08); }
+
 /* ── Clarify area ────────────────────────────────────────────────── */
 .clarify-wrap {
   background: rgba(137,180,250,0.06);
@@ -352,7 +368,12 @@ select:focus { border-color: var(--accent); }
   color: var(--text-dim);
   margin-bottom: 8px;
 }
-#open-settings-cta {
+.setup-cta-hint {
+  color: var(--text-sub) !important;
+  font-size: 11.5px !important;
+  margin-bottom: 10px !important;
+}
+#open-settings-gemini-cta {
   width: 100%;
   background: var(--accent);
   color: var(--bg-card);
@@ -362,8 +383,39 @@ select:focus { border-color: var(--accent); }
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  margin-bottom: 6px;
 }
-#open-settings-cta:hover { opacity: 0.88; }
+#open-settings-gemini-cta:hover { opacity: 0.88; }
+#open-settings-cta {
+  width: 100%;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--surface-hi);
+  border-radius: 7px;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+#open-settings-cta:hover { background: var(--surface); color: var(--text); }
+.setup-oss-note {
+  font-size: 10.5px !important;
+  color: var(--text-muted) !important;
+  margin-bottom: 4px !important;
+  letter-spacing: 0.01em;
+}
+.setup-guide-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.setup-guide-link:hover { opacity: 0.8; }
 
 /* ── History ─────────────────────────────────────────────────────── */
 .history-toggle {

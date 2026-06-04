@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // Window management
   openSettings:   ()         => ipcRenderer.invoke("open-settings"),
   openHistory:    ()         => ipcRenderer.invoke("open-history"),
+  openResults:    ()         => ipcRenderer.invoke("open-results"),
   closePopup:     ()         => ipcRenderer.invoke("close-popup"),
 
   // External links

@@ -137,6 +137,13 @@ async function init() {
   document.getElementById("open-settings-cta")?.addEventListener("click", () => {
     browser.runtime.openOptionsPage();
   });
+  document.getElementById("open-settings-gemini-cta")?.addEventListener("click", async () => {
+    await browser.storage.local.set({ _setupHint: "gemini" });
+    browser.runtime.openOptionsPage();
+  });
+  document.getElementById("open-guide-btn")?.addEventListener("click", () => {
+    browser.tabs.create({ url: browser.runtime.getURL("popup/guide.html") });
+  });
   document.getElementById("process-btn").addEventListener("click", runProcess);
   document.getElementById("run-selection-btn").addEventListener("click", runFromSelection);
 

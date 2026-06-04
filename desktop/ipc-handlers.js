@@ -43,7 +43,7 @@ function makeClipboardWriteHandler(clipboard) {
 // Registers all handlers onto an ipcMain instance.
 // The callbacks for open-settings, close-popup, and open-url come
 // from main.js since they touch BrowserWindow state.
-function registerAll(ipcMain, { store, clipboard, openSettings, openHistory, closePopup, openURL }) {
+function registerAll(ipcMain, { store, clipboard, openSettings, openHistory, openResults, closePopup, openURL }) {
   ipcMain.handle("store-get",       makeStoreGetHandler(store));
   ipcMain.handle("store-set",       makeStoreSetHandler(store));
   ipcMain.handle("store-delete",    makeStoreDeleteHandler(store));
@@ -51,6 +51,7 @@ function registerAll(ipcMain, { store, clipboard, openSettings, openHistory, clo
   ipcMain.handle("write-clipboard", makeClipboardWriteHandler(clipboard));
   ipcMain.handle("open-settings",   () => openSettings());
   ipcMain.handle("open-history",    () => openHistory && openHistory());
+  ipcMain.handle("open-results",    () => openResults && openResults());
   ipcMain.handle("close-popup",     () => closePopup());
   ipcMain.handle("open-url",        (_, url) => openURL(url));
 }
