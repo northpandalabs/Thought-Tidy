@@ -63,19 +63,9 @@ If security tests fail in CI, the build is blocked — no release artifact is pr
 
 ---
 
-## Downloads
-
-> Always get the latest stable build from the **[Releases page](https://github.com/northpandalabs/Thought-Tidy/releases/latest)**.
-
-| Platform | File |
-| --- | --- |
-| Chrome Extension | `thought-tidy-chrome.zip` — load unpacked in Chrome |
-| Firefox Extension | `thought-tidy-firefox.zip` — load as temporary add-on or submit to AMO |
-| Windows Desktop | `Thought Tidy Setup x.x.x.exe` — NSIS installer |
-| macOS Desktop | `Thought Tidy-x.x.x.dmg` — drag-to-Applications |
-| Linux Desktop | `thought-tidy_x.x.x_amd64.deb` or `Thought Tidy-x.x.x.AppImage` |
-
-> **CI test builds** — every push to `main` also produces a TEST ONLY Windows portable `.exe` (no installer) available as a GitHub Actions artifact. Test builds display **⚠ TEST ONLY** banners in the settings page and tray menu — they are not stable releases.
+<p align="center">
+  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
+</p>
 
 ---
 
@@ -511,9 +501,3 @@ Built because we needed it. Source available under the project LICENSE.
 ## License
 
 Source available — see LICENSE. Not open source.
-
----
-
-<p align="center">
-  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
-</p>
