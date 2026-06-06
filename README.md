@@ -6,6 +6,19 @@ Highlight text, right-click, and let the AI clean it up instantly. No subscripti
 
 > Built by **[North Panda Labs](https://github.com/northpandalabs)**. Source available — see LICENSE.
 
+<p align="center">
+  <img alt="Extension Tests" src="https://img.shields.io/badge/Extension_Tests-607_passing_%7C_2_skip-brightgreen?style=flat-square" />
+  <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
+  <img alt="Ext Line Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.33%25_lines-brightgreen?style=flat-square" />
+  <img alt="Desktop Line Coverage" src="https://img.shields.io/badge/Desktop_Coverage-100%25_lines-brightgreen?style=flat-square" />
+  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.1_%40_701e61a-lightgrey?style=flat-square" />
+  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest"><img alt="Download Latest Release" src="https://custom-icon-badges.demolab.com/badge/-Download_Latest_Release-0a66c2?style=for-the-badge&logo=download&logoColor=white" /></a>
+</p>
+
 ---
 
 ## Your Privacy & Data Safety
@@ -35,6 +48,26 @@ If security tests fail in CI, the build is blocked — no release artifact is pr
 ---
 
 ## Downloads
+
+<p align="center">
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip">
+    <img alt="Chrome Extension" src="https://img.shields.io/badge/-Chrome_Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
+  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip">
+    <img alt="Firefox Extension" src="https://img.shields.io/badge/-Firefox_Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" />
+  </a>
+</p>
+<p align="center">
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest">
+    <img alt="Windows Installer" src="https://img.shields.io/badge/-Windows_Installer-.exe-0078D4?style=for-the-badge&logo=windows11&logoColor=white" />
+  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest">
+    <img alt="macOS DMG" src="https://img.shields.io/badge/-macOS_DMG-.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" />
+  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest">
+    <img alt="Linux AppImage" src="https://img.shields.io/badge/-Linux_AppImage-.AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" />
+  </a>
+</p>
 
 > Always get the latest stable build from the **[Releases page](https://github.com/northpandalabs/Thought-Tidy/releases/latest)**.
 
@@ -383,12 +416,19 @@ CLAUDE_API_KEY=sk-ant-...
 
 ### Code coverage
 
-Coverage is measured per suite and reported in the GitHub Release notes for every tagged release.
+Coverage numbers are from the most recent run (`v1.5.1 @ 701e61a`):
 
-| Suite | Command | Output |
+| Suite | Statements | Branches | Functions | Lines | Tests |
+| --- | --- | --- | --- | --- | --- |
+| Extension | 96.57% (367/380) | 81.11% (232/286) | 97.29% (72/74) | **98.33%** (295/300) | 607 pass / 2 skip / 609 total |
+| Desktop | 96.77% (90/93) | 90.56% (48/53) | 86.36% (19/22) | **100%** (82/82) | 98 pass / 98 total |
+
+Coverage reports (generated locally):
+
+| Suite | Command | Report |
 | --- | --- | --- |
-| Extension (`tests/`) | `npm test -- --coverage` | `coverage/lcov-report/index.html` |
-| Desktop (`desktop/tests/`) | `cd desktop && npm test -- --coverage` | `desktop/coverage/lcov-report/index.html` |
+| Extension | `npm test -- --coverage` | `coverage/lcov-report/index.html` |
+| Desktop | `cd desktop && npm test -- --coverage` | `desktop/coverage/lcov-report/index.html` |
 
 Both suites must pass in CI before any release is tagged. Coverage thresholds are enforced in Jest config — a drop below the threshold fails the build.
 

@@ -31,14 +31,18 @@ window.platformSaveBackup = (content, filename) => { triggerDownload(content, fi
 window.platformOpenBackup = () => new Promise((resolve) => {
   const input = document.createElement("input");
   input.type = "file"; input.accept = ".ttbackup"; input.style.display = "none";
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) { input.remove(); resolve(null); return; }
+  let settled = false;
+  const settle = (val) => { if (settled) return; settled = true; input.remove(); resolve(val); };
+  input.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (!file) { settle(null); return; }
     const reader = new FileReader();
-    reader.onload  = (ev) => { input.remove(); resolve(ev.target.result); };
-    reader.onerror = ()   => { input.remove(); resolve(null); };
+    reader.onload  = (ev) => settle(ev.target.result);
+    reader.onerror = ()   => settle(null);
     reader.readAsText(file);
-  };
+  });
+  // Resolve null when the user cancels the picker (window regains focus without a change event)
+  window.addEventListener("focus", () => setTimeout(() => settle(null), 300), { once: true });
   document.body.appendChild(input);
   input.click();
 });
