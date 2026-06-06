@@ -1,11 +1,3 @@
-# Thought Tidy
-
-**AI writing assistant for fast thinkers — people who know exactly what they mean but struggle to make it look that way on screen.**
-
-Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
-
-> Built by **[North Panda Labs](https://github.com/northpandalabs)**. Source available — see LICENSE.
-
 <p align="center">
   <img alt="Extension Tests" src="https://img.shields.io/badge/Extension_Tests-607_passing_%7C_2_skip-brightgreen?style=flat-square" />
   <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
@@ -14,9 +6,12 @@ Highlight text, right-click, and let the AI clean it up instantly. No subscripti
   <img alt="Build" src="https://img.shields.io/badge/build-v1.5.1_%40_701e61a-lightgrey?style=flat-square" />
 </p>
 
-<p align="center">
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest"><img alt="Download Latest Release" src="https://custom-icon-badges.demolab.com/badge/-Download_Latest_Release-0a66c2?style=for-the-badge&logo=download&logoColor=white" /></a>
-</p>
+# Thought Tidy
+
+**AI writing assistant for fast thinkers — people who know exactly what they mean but struggle to make it look that way on screen.**
+
+Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
+
 <p align="center">
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip">
     <img alt="Chrome Extension" src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
@@ -61,13 +56,17 @@ Every release runs automated checks that validate these guarantees (`tests/secur
 
 If security tests fail in CI, the build is blocked — no release artifact is produced.
 
----
-
 <p align="center">
-  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest"><img alt="Download Latest Release" src="https://custom-icon-badges.demolab.com/badge/-Download_Latest_Release-0a66c2?style=for-the-badge&logo=download&logoColor=white" /></a>
 </p>
 
 ---
+
+<p align="center">
+  <a href="https://northpandalabs.gumroad.com/l/thought-tidy">
+    <img alt="Upgrade to Pro" src="https://img.shields.io/badge/⚡_Pro_Upgrade-one--time_purchase-FFB800?style=for-the-badge&logo=gumroad&logoColor=white" />
+  </a>
+</p>
 
 ## Free vs Pro
 
@@ -501,3 +500,9 @@ Built because we needed it. Source available under the project LICENSE.
 ## License
 
 Source available — see LICENSE. Not open source.
+
+---
+
+<p align="center">
+  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
+</p>
