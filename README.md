@@ -15,7 +15,7 @@ Highlight text, right-click, and let the AI clean it up instantly. No subscripti
 <p align="center">
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip"><img alt="Chrome Extension" src="https://custom-icon-badges.demolab.com/badge/-Chrome_Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" /></a>
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip"><img alt="Firefox Extension" src="https://custom-icon-badges.demolab.com/badge/-Firefox_Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" /></a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy%20Setup%201.5.1.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-0078D4?style=for-the-badge&logo=windows&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy%20Setup%201.5.1.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-57A639?style=for-the-badge&logo=windows&logoColor=white" /></a>
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1-arm64.dmg"><img alt="macOS" src="https://custom-icon-badges.demolab.com/badge/-macOS_Desktop-000000?style=for-the-badge&logo=apple&logoColor=white" /></a>
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1.AppImage"><img alt="Linux" src="https://custom-icon-badges.demolab.com/badge/-Linux_Desktop-FCC624?style=for-the-badge&logo=linux&logoColor=black" /></a>
 </p>
@@ -52,13 +52,13 @@ If security tests fail in CI, the build is blocked — no release artifact is pr
 
 ---
 
+## Free vs Pro
+
+Thought Tidy has a **free tier** that works immediately with your own API key, and an optional one-time Pro upgrade.
+
 <p align="center">
   <a href="https://northpandalabs.gumroad.com/l/thought-tidy"><img alt="Upgrade to Pro" src="https://custom-icon-badges.demolab.com/badge/-Upgrade_to_Pro-FFB800?style=for-the-badge&logo=gumroad&logoColor=white" /></a>
 </p>
-
-## Free vs Pro
-
-Thought Tidy has a **free tier** that works immediately with your own API key, and an optional **one-time Pro upgrade** from [North Panda Labs](https://northpandalabs.gumroad.com/l/thought-tidy).
 
 | Feature | Free | Pro |
 | --- | --- | --- |
