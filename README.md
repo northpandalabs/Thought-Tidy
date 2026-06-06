@@ -12,11 +12,27 @@ Highlight text, right-click, and let the AI clean it up instantly. No subscripti
   <img alt="Ext Line Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.33%25_lines-brightgreen?style=flat-square" />
   <img alt="Desktop Line Coverage" src="https://img.shields.io/badge/Desktop_Coverage-100%25_lines-brightgreen?style=flat-square" />
   <img alt="Build" src="https://img.shields.io/badge/build-v1.5.1_%40_701e61a-lightgrey?style=flat-square" />
-  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
 </p>
 
 <p align="center">
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest"><img alt="Download Latest Release" src="https://custom-icon-badges.demolab.com/badge/-Download_Latest_Release-0a66c2?style=for-the-badge&logo=download&logoColor=white" /></a>
+</p>
+<p align="center">
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip">
+    <img alt="Chrome Extension" src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
+  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip">
+    <img alt="Firefox Extension" src="https://img.shields.io/badge/Firefox-Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" />
+  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy%20Setup%201.5.1.exe">
+    <img alt="Windows Installer" src="https://img.shields.io/badge/Windows-Setup.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" />
+  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1-arm64.dmg">
+    <img alt="macOS DMG" src="https://img.shields.io/badge/macOS-arm64.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" />
+  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1.AppImage">
+    <img alt="Linux AppImage" src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" />
+  </a>
 </p>
 
 ---
@@ -48,26 +64,6 @@ If security tests fail in CI, the build is blocked — no release artifact is pr
 ---
 
 ## Downloads
-
-<p align="center">
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip">
-    <img alt="Chrome Extension" src="https://img.shields.io/badge/-Chrome_Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
-  </a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip">
-    <img alt="Firefox Extension" src="https://img.shields.io/badge/-Firefox_Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest">
-    <img alt="Windows Installer" src="https://img.shields.io/badge/-Windows_Installer-.exe-0078D4?style=for-the-badge&logo=windows11&logoColor=white" />
-  </a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest">
-    <img alt="macOS DMG" src="https://img.shields.io/badge/-macOS_DMG-.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" />
-  </a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest">
-    <img alt="Linux AppImage" src="https://img.shields.io/badge/-Linux_AppImage-.AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" />
-  </a>
-</p>
 
 > Always get the latest stable build from the **[Releases page](https://github.com/northpandalabs/Thought-Tidy/releases/latest)**.
 
@@ -515,3 +511,9 @@ Built because we needed it. Source available under the project LICENSE.
 ## License
 
 Source available — see LICENSE. Not open source.
+
+---
+
+<p align="center">
+  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
+</p>
