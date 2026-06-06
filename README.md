@@ -13,21 +13,11 @@
 Highlight text, right-click, and let the AI clean it up instantly. No subscriptions. No accounts. No one reading your writing. Just your API key and a model that does what you tell it.
 
 <p align="center">
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip">
-    <img alt="Chrome Extension" src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
-  </a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip">
-    <img alt="Firefox Extension" src="https://img.shields.io/badge/Firefox-Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" />
-  </a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy%20Setup%201.5.1.exe">
-    <img alt="Windows Installer" src="https://img.shields.io/badge/Windows-Setup.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" />
-  </a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1-arm64.dmg">
-    <img alt="macOS DMG" src="https://img.shields.io/badge/macOS-arm64.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" />
-  </a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1.AppImage">
-    <img alt="Linux AppImage" src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" />
-  </a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip"><img alt="Chrome Extension" src="https://custom-icon-badges.demolab.com/badge/-Chrome_Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip"><img alt="Firefox Extension" src="https://custom-icon-badges.demolab.com/badge/-Firefox_Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy%20Setup%201.5.1.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-0078D4?style=for-the-badge&logo=windows&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1-arm64.dmg"><img alt="macOS" src="https://custom-icon-badges.demolab.com/badge/-macOS_Desktop-000000?style=for-the-badge&logo=apple&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1.AppImage"><img alt="Linux" src="https://custom-icon-badges.demolab.com/badge/-Linux_Desktop-FCC624?style=for-the-badge&logo=linux&logoColor=black" /></a>
 </p>
 
 ---
@@ -63,9 +53,7 @@ If security tests fail in CI, the build is blocked — no release artifact is pr
 ---
 
 <p align="center">
-  <a href="https://northpandalabs.gumroad.com/l/thought-tidy">
-    <img alt="Upgrade to Pro" src="https://img.shields.io/badge/⚡_Pro_Upgrade-one--time_purchase-FFB800?style=for-the-badge&logo=gumroad&logoColor=white" />
-  </a>
+  <a href="https://northpandalabs.gumroad.com/l/thought-tidy"><img alt="Upgrade to Pro" src="https://custom-icon-badges.demolab.com/badge/-Upgrade_to_Pro-FFB800?style=for-the-badge&logo=gumroad&logoColor=white" /></a>
 </p>
 
 ## Free vs Pro
@@ -500,9 +488,3 @@ Built because we needed it. Source available under the project LICENSE.
 ## License
 
 Source available — see LICENSE. Not open source.
-
----
-
-<p align="center">
-  <a href="https://repo2txt.simplewebsite.me/?url=https://github.com/northpandalabs/Thought-Tidy"><img alt="Open in repo2txt" src="https://img.shields.io/badge/Open_in-repo2txt-blue?style=flat-square" /></a>
-</p>
