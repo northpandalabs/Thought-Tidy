@@ -7,7 +7,7 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "lastContextAudience",
-  "themeMode"
+  "themeMode", "historyPin", "grammarFilters"
 ];
 
 window.RUN_BTN_ID   = "process-btn";
@@ -54,6 +54,7 @@ function updateProviderStatus(s) {
 }
 
 async function loadHistory() {
+  if (await isHistoryPinLocked()) return;
   const { historyLog = [] } = await browser.storage.local.get("historyLog");
   const entries = purgeOldLog(historyLog);
   const section = document.getElementById("history-section");

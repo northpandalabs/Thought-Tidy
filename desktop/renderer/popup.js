@@ -33,7 +33,7 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
-  "lastContextAudience", "contextEnabled", "themeMode"
+  "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters"
 ];
 
 function updateFooter() {
@@ -56,6 +56,7 @@ function updateFooter() {
 let _historyToggleWired = false;
 
 async function loadHistory() {
+  if (await isHistoryPinLocked()) return;
   const { historyFull = [] } = await browser.storage.local.get("historyFull");
   const today   = todayDate();
   const entries = historyFull.filter(e => e.date === today);

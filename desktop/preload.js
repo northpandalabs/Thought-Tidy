@@ -29,6 +29,10 @@ contextBridge.exposeInMainWorld("btcAPI", {
   getLoginItemEnabled: ()      => ipcRenderer.invoke("get-login-item"),
   setLoginItemEnabled: (val)   => ipcRenderer.invoke("set-login-item", val),
 
+  // Backup export / import (.ttbackup)
+  saveBackup: (content, filename) => ipcRenderer.invoke("save-backup", { content, filename }),
+  openBackup: ()                  => ipcRenderer.invoke("open-backup"),
+
   // Display zoom
   setZoom: (zoom) => ipcRenderer.invoke("set-zoom", zoom),
 

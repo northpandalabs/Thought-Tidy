@@ -9,13 +9,40 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "syncEnabled", "contextPresets", "contextEnabled",
-  "audienceLevel", "devMode", "themeMode"
+  "audienceLevel", "devMode", "themeMode", "historyPin", "grammarFilters"
 ];
 
 window.platformOpenURL = url => browser.tabs.create({ url });
 window.onProvidersSaved = () => syncWithDesktop().catch(() => {});
 window.onProActivated   = () => syncWithDesktop().catch(() => {});
 window.proActiveBtnText = "⚡ Pro Active — Manage ↓";
+
+function triggerDownload(content, filename) {
+  const blob = new Blob([content], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+window.platformSaveBackup = (content, filename) => { triggerDownload(content, filename); return Promise.resolve(); };
+window.platformOpenBackup = () => new Promise((resolve) => {
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = ".ttbackup"; input.style.display = "none";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) { input.remove(); resolve(null); return; }
+    const reader = new FileReader();
+    reader.onload  = (ev) => { input.remove(); resolve(ev.target.result); };
+    reader.onerror = ()   => { input.remove(); resolve(null); };
+    reader.readAsText(file);
+  };
+  document.body.appendChild(input);
+  input.click();
+});
+window.syncWithDesktopAfterImport = () => syncWithDesktop();
 
 async function loadHistoryViewer() {
   const stored = await browser.storage.local.get(["historyLog", "licenseEmail", "licenseKey"]);
@@ -156,7 +183,10 @@ async function init() {
 
   initCommonSettingsWiring(s);
   initProSection();
+  initExportImportSection(s);
   loadHistoryViewer();
+  initHistoryPinSection(s);
+  initGrammarFiltersSection(s);
 
   document.getElementById("view-full-history-btn")?.addEventListener("click", () => {
     browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });

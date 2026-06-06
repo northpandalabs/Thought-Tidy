@@ -40,6 +40,34 @@ function makeClipboardWriteHandler(clipboard) {
   return (_, text) => clipboard.writeText(text);
 }
 
+// Returns { saveBackup, openBackup } handler functions for .ttbackup file I/O.
+// dialog: Electron dialog module; fs: Node fs module (or duck-typed mock).
+function makeBackupHandlers(dialog, fs) {
+  return {
+    saveBackup: async (_, { content, filename }) => {
+      const result = await dialog.showSaveDialog({
+        defaultPath: filename,
+        filters: [{ name: "Thought Tidy Backup", extensions: ["ttbackup"] }]
+      });
+      if (result.canceled || !result.filePath) return { success: false };
+      fs.writeFileSync(result.filePath, content, "utf8");
+      return { success: true };
+    },
+    openBackup: async () => {
+      const result = await dialog.showOpenDialog({
+        filters: [{ name: "Thought Tidy Backup", extensions: ["ttbackup"] }],
+        properties: ["openFile"]
+      });
+      if (result.canceled || !result.filePaths.length) return null;
+      try {
+        return fs.readFileSync(result.filePaths[0], "utf8");
+      } catch {
+        return null;
+      }
+    }
+  };
+}
+
 // Registers all handlers onto an ipcMain instance.
 // The callbacks for open-settings, close-popup, and open-url come
 // from main.js since they touch BrowserWindow state.
@@ -62,5 +90,6 @@ module.exports = {
   makeStoreDeleteHandler,
   makeClipboardReadHandler,
   makeClipboardWriteHandler,
+  makeBackupHandlers,
   registerAll
 };

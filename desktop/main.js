@@ -8,7 +8,8 @@ const {
 } = require("electron");
 const path  = require("path");
 const Store = require("electron-store");
-const { registerAll } = require("./ipc-handlers");
+const { registerAll, makeBackupHandlers } = require("./ipc-handlers");
+const fs = require("fs");
 const { todayDate, purgeOldLog } = require("../lib/text");
 
 const store = new Store({ name: "thought-tidy-settings" });
@@ -472,6 +473,10 @@ app.whenReady().then(() => {
     closePopup: () => { if (popupWin) popupWin.hide(); },
     openURL:    (url) => shell.openExternal(url)
   });
+
+  const backupHandlers = makeBackupHandlers(dialog, fs);
+  ipcMain.handle("save-backup", backupHandlers.saveBackup);
+  ipcMain.handle("open-backup", backupHandlers.openBackup);
 
   ipcMain.handle("get-app-config", () => ({
     isTestBuild:     IS_TEST_BUILD,

@@ -150,7 +150,7 @@ describe("makeClipboardWriteHandler", () => {
 // ── registerAll ────────────────────────────────────────────────────────────────
 
 describe("registerAll", () => {
-  test("registers all 7 expected IPC channel names", () => {
+  test("registers all expected IPC channel names", () => {
     const registered = [];
     const fakeIpc = { handle: (name) => registered.push(name) };
     registerAll(fakeIpc, {
@@ -158,15 +158,16 @@ describe("registerAll", () => {
       clipboard:    makeClipboard(),
       openSettings: jest.fn(),
       openHistory:  jest.fn(),
+      openResults:  jest.fn(),
       closePopup:   jest.fn(),
       openURL:      jest.fn()
     });
     expect(registered).toEqual(expect.arrayContaining([
       "store-get", "store-set", "store-delete",
       "read-clipboard", "write-clipboard",
-      "open-settings", "open-history", "close-popup", "open-url"
+      "open-settings", "open-history", "open-results", "close-popup", "open-url"
     ]));
-    expect(registered).toHaveLength(9);
+    expect(registered).toHaveLength(10);
   });
 
   test("open-settings handler calls the provided callback", () => {

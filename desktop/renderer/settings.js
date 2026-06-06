@@ -7,11 +7,13 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "audienceLevel", "devMode",
-  "zoomLevel", "themeMode"
+  "zoomLevel", "themeMode", "historyPin", "grammarFilters"
 ];
 
-window.platformOpenURL = url => btcAPI.openURL(url);
-window.proActiveBtnText = "✓ Activated";
+window.platformOpenURL    = url => btcAPI.openURL(url);
+window.proActiveBtnText   = "✓ Activated";
+window.platformSaveBackup = (content, filename) => btcAPI.saveBackup(content, filename);
+window.platformOpenBackup = () => btcAPI.openBackup();
 window.applyProGateExtras = (isPro) => {
   const btn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
   if (btn) { btn.disabled = !isPro; btn.title = isPro ? "" : "Pro feature. Unlock Pro to use Ollama."; }
@@ -198,7 +200,10 @@ async function init() {
   });
 
   initProSection();
+  initExportImportSection(s);
   loadHistoryViewer();
+  initHistoryPinSection(s);
+  initGrammarFiltersSection(s);
   document.getElementById("view-full-history-btn")?.addEventListener("click", () => btcAPI.openHistory());
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {
