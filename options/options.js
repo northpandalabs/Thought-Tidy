@@ -49,11 +49,20 @@ window.platformOpenBackup = () => new Promise((resolve) => {
 window.syncWithDesktopAfterImport = () => syncWithDesktop();
 
 async function loadHistoryViewer() {
-  const stored = await browser.storage.local.get(["historyLog", "licenseEmail", "licenseKey"]);
+  const stored = await browser.storage.local.get(["historyLog", "licenseEmail", "licenseKey", "historyPin"]);
   const isPro    = isProUnlocked(stored);
   const entries  = isPro ? [...(stored.historyLog||[])] : purgeOldLog(stored.historyLog||[]);
   const section  = document.getElementById("history-viewer-section");
   if (!section) return;
+  if (!isPro) { section.style.display = "none"; return; }
+  const titleEl = document.getElementById("history-title-text");
+  if (stored.historyPin) {
+    if (titleEl) titleEl.textContent = "🔒 History";
+    document.getElementById("history-viewer-count").textContent = "";
+    document.getElementById("history-clear-btn")?.style.setProperty("display", "none");
+    return;
+  }
+  if (titleEl) titleEl.textContent = "Today's History";
   if (!entries.length) { section.style.display = "none"; return; }
   document.getElementById("history-viewer-count").textContent = entries.length;
   const list = document.getElementById("history-viewer-list");
@@ -193,7 +202,7 @@ async function init() {
   initGrammarFiltersSection(s);
 
   document.getElementById("view-full-history-btn")?.addEventListener("click", () => {
-    browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
+    window.open(browser.runtime.getURL("history/history.html"), "_blank");
   });
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {

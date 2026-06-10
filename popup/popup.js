@@ -53,19 +53,47 @@ function updateProviderStatus(s) {
   }
 }
 
+let _historyToggleWired = false;
+
 async function loadHistory() {
-  if (await isHistoryPinLocked()) return;
+  const pinLocked = await isHistoryPinLocked();
   const { historyLog = [] } = await browser.storage.local.get("historyLog");
   const entries = purgeOldLog(historyLog);
   const section = document.getElementById("history-section");
-  if (!entries.length) { if (section) section.style.display = "none"; return; }
+  if (!section) return;
+  if (!entries.length && !pinLocked) { section.style.display = "none"; return; }
   section.style.display = "block";
-  document.getElementById("history-count").textContent = entries.length;
-  document.getElementById("history-toggle").addEventListener("click", () => {
-    const list = document.getElementById("history-list");
-    list.style.display = list.style.display === "none" ? "block" : "none";
-  });
-  const list = document.getElementById("history-list");
+  const toggle = document.getElementById("history-toggle");
+  const list   = document.getElementById("history-list");
+  if (pinLocked) {
+    if (toggle) toggle.innerHTML = "🔒 History locked";
+    if (!_historyToggleWired && toggle && list) {
+      _historyToggleWired = true;
+      toggle.addEventListener("click", () => {
+        const open = list.style.display !== "none";
+        list.style.display = open ? "none" : "block";
+        if (!open && !list.children.length) {
+          const btn = document.createElement("button");
+          btn.textContent = "View history";
+          btn.style.cssText = "margin:6px 0;padding:5px 12px;font-size:12px;cursor:pointer";
+          btn.addEventListener("click", () => {
+            browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
+            window.close();
+          });
+          list.appendChild(btn);
+        }
+      });
+    }
+    return;
+  }
+  if (toggle) document.getElementById("history-count").textContent = entries.length;
+  if (!_historyToggleWired && toggle && list) {
+    _historyToggleWired = true;
+    toggle.addEventListener("click", () => {
+      list.style.display = list.style.display === "none" ? "block" : "none";
+    });
+  }
+  list.innerHTML = "";
   entries.slice(-10).reverse().forEach(e => {
     const item = document.createElement("div");
     item.className = "history-item";

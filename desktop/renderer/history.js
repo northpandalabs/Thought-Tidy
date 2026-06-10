@@ -1,12 +1,43 @@
 'use strict';
-/* global browser, btcAPI, formatCost */
+/* global browser, btcAPI, formatCost, verifyPin */
 
 let allEntries = [];
 let devMode    = false;
 
 async function load() {
-  const data = await browser.storage.local.get(["historyFull", "devMode"]);
-  allEntries = [...(data.historyFull || [])].reverse(); // newest first
+  const data = await browser.storage.local.get(["historyFull", "devMode", "historyPin"]);
+  if (data.historyPin) { showPinGate(data); return; }
+  loadHistory(data);
+}
+
+function showPinGate(data) {
+  const page = document.querySelector(".page");
+  const gate = document.createElement("div");
+  gate.style.cssText = "display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px";
+  gate.innerHTML = `
+    <div style="font-size:32px">🔒</div>
+    <p style="font-weight:700;font-size:16px">History is locked</p>
+    <p style="color:var(--text-muted,#a6adc8);font-size:13px">Enter your passcode to view your processing history.</p>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <input type="password" id="pin-gate-input" placeholder="Passcode" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid var(--surface,#313244);background:var(--bg-card,#1e1e2e);color:var(--text,#cdd6f4);font-size:13px;width:180px">
+      <button id="pin-gate-btn" style="padding:7px 18px;border-radius:6px;background:var(--accent,#89b4fa);color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Unlock</button>
+    </div>
+    <p id="pin-gate-err" style="color:#f38ba8;font-size:12px;display:none">Incorrect passcode.</p>
+  `;
+  page.prepend(gate);
+  document.getElementById("pin-gate-input").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("pin-gate-btn").click(); });
+  document.getElementById("pin-gate-btn").addEventListener("click", async () => {
+    const pin = document.getElementById("pin-gate-input").value;
+    if (!pin) return;
+    const ok = await verifyPin(pin, data.historyPin);
+    if (!ok) { document.getElementById("pin-gate-err").style.display = ""; return; }
+    gate.remove();
+    loadHistory(data);
+  });
+}
+
+function loadHistory(data) {
+  allEntries = [...(data.historyFull || [])].reverse();
   devMode    = data.devMode || false;
   const badge = document.getElementById("dev-mode-badge");
   if (badge) badge.style.display = devMode ? "inline-block" : "none";

@@ -33,15 +33,25 @@ function wireLinks() {
 }
 
 async function loadHistoryViewer() {
-  const stored = await browser.storage.local.get(["historyFull", "historyLog"]);
+  const stored = await browser.storage.local.get(["historyFull", "historyLog", "licenseEmail", "licenseKey", "historyPin"]);
+  const isPro   = isProUnlocked(stored);
   const today  = todayDate();
   const src    = (stored.historyFull||[]).length ? stored.historyFull : (stored.historyLog||[]);
   const entries = src.filter(e => e.date === today);
   const section = document.getElementById("history-viewer-section");
   if (!section) return;
-  document.getElementById("history-viewer-count").textContent = entries.length;
-  if (!entries.length) { section.style.display = "none"; return; }
+  if (!isPro) { section.style.display = "none"; return; }
   section.style.display = "";
+  const titleEl = document.getElementById("history-title-text");
+  if (stored.historyPin) {
+    if (titleEl) titleEl.textContent = "🔒 History";
+    document.getElementById("history-viewer-count").textContent = "";
+    document.getElementById("history-clear-btn")?.style.setProperty("display", "none");
+    return;
+  }
+  if (titleEl) titleEl.textContent = "Today's History";
+  if (!entries.length) { section.style.display = "none"; return; }
+  document.getElementById("history-viewer-count").textContent = entries.length;
   const list = document.getElementById("history-viewer-list");
   list.innerHTML = "";
   [...entries].reverse().forEach(e => {
