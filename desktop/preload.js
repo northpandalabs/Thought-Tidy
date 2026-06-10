@@ -36,6 +36,9 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // Display zoom
   setZoom: (zoom) => ipcRenderer.invoke("set-zoom", zoom),
 
+  // Resize popup for multi-column results
+  resizePopup: (count) => ipcRenderer.invoke("resize-popup", count),
+
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {
     ipcRenderer.on("popup-opened", () => callback());

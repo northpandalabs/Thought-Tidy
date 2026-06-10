@@ -256,6 +256,50 @@ select:focus { border-color: var(--accent); }
   scroll-behavior: smooth;
 }
 
+/* Expand toggle button (appears for 2-result runs on desktop) */
+#result-expand-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 6px;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+#result-expand-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Multi-column layout when popup is expanded for 2+ results */
+#result-slots.multi-col {
+  flex-direction: row;
+  align-items: stretch;
+  max-height: 55vh;
+  overflow: hidden;
+  gap: 0;
+}
+#result-slots.multi-col .result-slot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+}
+#result-slots.multi-col .result-slot:first-child { padding-left: 0; }
+#result-slots.multi-col .result-slot:last-child  { padding-right: 0; border-right: none; }
+#result-slots.multi-col .result-text {
+  flex: 1;
+  max-height: none;
+  overflow-y: auto;
+}
+#result-slots.multi-col .result-actions { flex-shrink: 0; }
+#result-slots.multi-col .result-toggle-btn { display: none; }
+
 .result-slot-label {
   font-size: 10px;
   font-weight: 700;

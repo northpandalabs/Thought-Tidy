@@ -490,6 +490,19 @@ app.whenReady().then(() => {
     updateAvailable: encStore.get("updateAvailable") || null
   }));
 
+  ipcMain.handle("resize-popup", (_, count) => {
+    if (!popupWin || popupWin.isDestroyed()) return;
+    const cols = Math.max(1, Math.min(4, count || 1));
+    const w    = cols * 360;
+    const h    = 660;
+    const { workAreaSize } = screen.getPrimaryDisplay();
+    popupWin.setBounds({
+      x: Math.max(0, workAreaSize.width  - w - 16),
+      y: workAreaSize.height - h - 16,
+      width: w, height: h
+    });
+  });
+
   ipcMain.handle("set-zoom", (_, zoom) => {
     encStore.set("zoomLevel", zoom);
     const factor = (!zoom || zoom === "auto") ? 1.0 : parseFloat(zoom);

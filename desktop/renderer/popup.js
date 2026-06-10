@@ -129,6 +129,10 @@ async function init() {
     rebuildVariantsSelect();
     populateAudienceSelect();
     restoreContextAudience();
+    // Reset multi-column layout if a previous run left it expanded
+    document.getElementById("result-expand-btn")?.remove();
+    document.getElementById("result-slots")?.classList.remove("multi-col");
+    btcAPI.resizePopup(1);
     _historyToggleWired = false;
     loadHistory();
     document.getElementById("input-text").focus();
