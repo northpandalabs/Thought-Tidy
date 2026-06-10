@@ -276,6 +276,7 @@ select:focus { border-color: var(--accent); }
 
 /* Multi-column layout when popup is expanded for 2+ results */
 #result-slots.multi-col {
+  display: flex;
   flex-direction: row;
   align-items: stretch;
   max-height: 55vh;
