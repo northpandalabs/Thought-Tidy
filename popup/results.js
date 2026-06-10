@@ -64,7 +64,9 @@ async function init() {
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "Copy";
     copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(body.innerText || body.textContent || "").catch(() => {});
+      const txt = body.innerText || body.textContent || "";
+      if (typeof btcAPI !== "undefined") { btcAPI.writeClipboard(txt); }
+      else { navigator.clipboard.writeText(txt).catch(() => {}); }
       copyBtn.textContent = "Copied!";
       copyBtn.classList.add("btn-copy-done");
       setTimeout(() => { copyBtn.textContent = "Copy"; copyBtn.classList.remove("btn-copy-done"); }, 1600);
@@ -76,4 +78,7 @@ async function init() {
   });
 }
 
-init();
+init().catch(err => {
+  const c = document.getElementById("results-container");
+  if (c) c.textContent = "Error loading results: " + (err?.message || err);
+});

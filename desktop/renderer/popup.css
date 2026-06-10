@@ -432,6 +432,17 @@ select:focus { border-color: var(--accent); }
 }
 .history-item:first-child { border-top: none; }
 .history-action { color: var(--sub); font-weight: 500; }
+.history-view-btn {
+  margin: 6px 0;
+  padding: 5px 14px;
+  background: var(--accent, #89b4fa);
+  color: #1e1e2e;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 /* ── Context toggle row ───────────────────────────────────────────── */
 .ctx-toggle-row {

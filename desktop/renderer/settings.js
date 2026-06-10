@@ -226,6 +226,7 @@ async function init() {
   document.querySelector(".page").addEventListener("input",  () => { isDirty = true; });
   document.querySelector(".page").addEventListener("change", () => { isDirty = true; });
   window.addEventListener("beforeunload", e => { if (isDirty) e.returnValue = ""; });
+  window.addEventListener("focus", () => loadHistoryViewer());
 }
 
 init();

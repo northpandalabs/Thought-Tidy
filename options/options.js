@@ -204,6 +204,11 @@ async function init() {
   document.getElementById("view-full-history-btn")?.addEventListener("click", () => {
     window.open(browser.runtime.getURL("history/history.html"), "_blank");
   });
+
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !("historyPin" in changes)) return;
+    loadHistoryViewer();
+  });
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();

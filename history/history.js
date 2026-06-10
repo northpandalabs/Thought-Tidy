@@ -1,5 +1,5 @@
 'use strict';
-/* global browser, estimateCost, formatCost, purgeOldLog */
+/* global browser, estimateCost, formatCost, purgeOldLog, verifyPin, hashPin */
 
 let allEntries = [];
 let devMode    = false;
@@ -11,7 +11,12 @@ async function load() {
 }
 
 function showPinGate(data) {
-  const page = document.querySelector(".page");
+  const page     = document.querySelector(".page");
+  const header   = document.querySelector(".page-header");
+  const statsBar = document.getElementById("stats-bar");
+  if (header)   header.style.display   = "none";
+  if (statsBar) statsBar.style.display = "none";
+
   const gate = document.createElement("div");
   gate.style.cssText = "display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px";
   gate.innerHTML = `
@@ -32,7 +37,123 @@ function showPinGate(data) {
     const ok = await verifyPin(pin, data.historyPin);
     if (!ok) { document.getElementById("pin-gate-err").style.display = ""; return; }
     gate.remove();
-    loadHistory(data);
+    if (header) header.style.display = "";
+    const fresh = await browser.storage.local.get(["historyFull", "devMode", "historyPin"]);
+    showPinManagement(fresh.historyPin || data.historyPin);
+    loadHistory(fresh);
+  });
+}
+
+function showPinManagement(initialHash) {
+  let currentHash = initialHash;
+  const statsBar = document.getElementById("stats-bar");
+
+  const dropWrap = document.createElement("div");
+  dropWrap.style.cssText = "position:relative;display:inline-block;margin-left:auto";
+
+  const mainBtn = document.createElement("button");
+  mainBtn.textContent = "🔒 Passcode active ▾";
+  mainBtn.style.cssText = "padding:4px 10px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap";
+
+  const dropdown = document.createElement("div");
+  dropdown.style.cssText = "position:absolute;top:calc(100% + 4px);right:0;left:auto;background:#1e1e2e;border:1px solid #313244;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.35);display:none;flex-direction:column;min-width:170px;overflow:hidden;z-index:100";
+
+  const changeOpt = document.createElement("button");
+  changeOpt.textContent = "Change Passcode";
+  changeOpt.style.cssText = "padding:9px 14px;background:none;border:none;border-bottom:1px solid #313244;color:#cdd6f4;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;width:100%";
+
+  const removeOpt = document.createElement("button");
+  removeOpt.textContent = "Remove Passcode";
+  removeOpt.style.cssText = "padding:9px 14px;background:none;border:none;color:#f38ba8;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;width:100%";
+
+  [changeOpt, removeOpt].forEach(o => {
+    o.addEventListener("mouseover", () => o.style.background = "#313244");
+    o.addEventListener("mouseout",  () => o.style.background = "none");
+  });
+
+  dropdown.append(changeOpt, removeOpt);
+  dropWrap.append(mainBtn, dropdown);
+  statsBar.appendChild(dropWrap);
+
+  mainBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
+  });
+  document.addEventListener("click", () => { dropdown.style.display = "none"; });
+
+  let formEl = null;
+
+  function clearForm() {
+    if (formEl) { formEl.remove(); formEl = null; }
+  }
+
+  function showForm(html, onMounted) {
+    if (formEl) { formEl.remove(); formEl = null; }
+    dropdown.style.display = "none";
+    formEl = document.createElement("div");
+    formEl.style.cssText = "margin:12px auto;max-width:360px;background:#181825;border:1px solid #313244;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px";
+    formEl.innerHTML = html;
+    statsBar.insertAdjacentElement("afterend", formEl);
+    onMounted();
+  }
+
+  changeOpt.addEventListener("click", () => {
+    showForm(`
+      <p style="font-weight:700;font-size:14px;color:#cdd6f4">Change Passcode</p>
+      <input type="password" id="pin-current" placeholder="Current passcode" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
+      <input type="password" id="pin-new" placeholder="New passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
+      <input type="password" id="pin-confirm" placeholder="Confirm new passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
+      <p id="pin-change-err" style="color:#f38ba8;font-size:12px;display:none"></p>
+      <div style="display:flex;gap:8px">
+        <button id="pin-change-save" style="padding:6px 18px;border-radius:6px;background:#89b4fa;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Save</button>
+        <button id="pin-change-cancel" style="padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>
+      </div>
+    `, () => {
+      document.getElementById("pin-change-cancel").addEventListener("click", clearForm);
+      document.getElementById("pin-change-save").addEventListener("click", async () => {
+        const curr    = document.getElementById("pin-current").value;
+        const newPin  = document.getElementById("pin-new").value;
+        const confirm = document.getElementById("pin-confirm").value;
+        const errEl   = document.getElementById("pin-change-err");
+        errEl.style.display = "none";
+        if (!curr || !newPin || !confirm) { errEl.textContent = "All fields are required."; errEl.style.display = ""; return; }
+        if (newPin !== confirm) { errEl.textContent = "New passcodes do not match."; errEl.style.display = ""; return; }
+        const ok = await verifyPin(curr, currentHash);
+        if (!ok) { errEl.textContent = "Current passcode is incorrect."; errEl.style.display = ""; return; }
+        const newHash = await hashPin(newPin);
+        await browser.storage.local.set({ historyPin: newHash });
+        currentHash = newHash;
+        clearForm();
+      });
+      document.getElementById("pin-current").focus();
+    });
+  });
+
+  removeOpt.addEventListener("click", () => {
+    showForm(`
+      <p style="font-weight:700;font-size:14px;color:#cdd6f4">Remove Passcode</p>
+      <p style="font-size:12.5px;color:#a6adc8">Enter your current passcode to remove the lock from history.</p>
+      <input type="password" id="pin-remove-current" placeholder="Current passcode" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
+      <p id="pin-remove-err" style="color:#f38ba8;font-size:12px;display:none">Incorrect passcode.</p>
+      <div style="display:flex;gap:8px">
+        <button id="pin-remove-confirm" style="padding:6px 18px;border-radius:6px;background:#f38ba8;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Remove</button>
+        <button id="pin-remove-cancel" style="padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>
+      </div>
+    `, () => {
+      document.getElementById("pin-remove-cancel").addEventListener("click", clearForm);
+      document.getElementById("pin-remove-confirm").addEventListener("click", async () => {
+        const curr  = document.getElementById("pin-remove-current").value;
+        const errEl = document.getElementById("pin-remove-err");
+        errEl.style.display = "none";
+        if (!curr) return;
+        const ok = await verifyPin(curr, currentHash);
+        if (!ok) { errEl.style.display = ""; return; }
+        await browser.storage.local.remove("historyPin");
+        if (formEl) { formEl.remove(); formEl = null; }
+        dropWrap.remove();
+      });
+      document.getElementById("pin-remove-current").focus();
+    });
   });
 }
 
@@ -149,15 +270,14 @@ function buildEntry(e) {
     // Actions row
     const actRow = document.createElement("div");
     actRow.className = "he-actions-row";
-    const outputs2 = outputs;
-    if (outputs2.length > 0) {
+    if (outputs.length > 0) {
       const copyBtn = document.createElement("button");
       copyBtn.className = "he-copy-btn";
-      copyBtn.textContent = outputs2.length > 1 ? "Copy Output 1" : "Copy Output";
+      copyBtn.textContent = outputs.length > 1 ? "Copy Output 1" : "Copy Output";
       copyBtn.addEventListener("click", () => {
-        navigator.clipboard.writeText(outputs2[0]).catch(() => {});
+        navigator.clipboard.writeText(outputs[0]).catch(() => {});
         copyBtn.textContent = "Copied!";
-        setTimeout(() => (copyBtn.textContent = outputs2.length > 1 ? "Copy Output 1" : "Copy Output"), 1600);
+        setTimeout(() => (copyBtn.textContent = outputs.length > 1 ? "Copy Output 1" : "Copy Output"), 1600);
       });
       actRow.appendChild(copyBtn);
     }

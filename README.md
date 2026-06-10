@@ -3,7 +3,7 @@
   <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
   <img alt="Ext Line Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.33%25_lines-brightgreen?style=flat-square" />
   <img alt="Desktop Line Coverage" src="https://img.shields.io/badge/Desktop_Coverage-100%25_lines-brightgreen?style=flat-square" />
-  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.1_%40_701e61a-lightgrey?style=flat-square" />
+  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.2-lightgrey?style=flat-square" />
 </p>
 
 # Thought Tidy
@@ -15,9 +15,9 @@ Highlight text, right-click, and let the AI clean it up instantly. No subscripti
 <p align="center">
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip"><img alt="Chrome Extension" src="https://custom-icon-badges.demolab.com/badge/-Chrome_Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" /></a>
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip"><img alt="Firefox Extension" src="https://custom-icon-badges.demolab.com/badge/-Firefox_Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" /></a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy%20Setup%201.5.1.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-57A639?style=for-the-badge&logo=windows&logoColor=white" /></a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1-arm64.dmg"><img alt="macOS" src="https://custom-icon-badges.demolab.com/badge/-macOS_Desktop-000000?style=for-the-badge&logo=apple&logoColor=white" /></a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.1.AppImage"><img alt="Linux" src="https://custom-icon-badges.demolab.com/badge/-Linux_Desktop-FCC624?style=for-the-badge&logo=linux&logoColor=black" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy%20Setup%201.5.2.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-57A639?style=for-the-badge&logo=windows&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.2-arm64.dmg"><img alt="macOS" src="https://custom-icon-badges.demolab.com/badge/-macOS_Desktop-000000?style=for-the-badge&logo=apple&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought%20Tidy-1.5.2.AppImage"><img alt="Linux" src="https://custom-icon-badges.demolab.com/badge/-Linux_Desktop-FCC624?style=for-the-badge&logo=linux&logoColor=black" /></a>
 </p>
 
 ---
@@ -389,7 +389,7 @@ CLAUDE_API_KEY=sk-ant-...
 
 ### Code coverage
 
-Coverage numbers are from the most recent run (`v1.5.1 @ 701e61a`):
+Coverage numbers are from the most recent run (`v1.5.2`):
 
 | Suite | Statements | Branches | Functions | Lines | Tests |
 | --- | --- | --- | --- | --- | --- |

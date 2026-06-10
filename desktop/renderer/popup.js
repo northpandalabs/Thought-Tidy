@@ -76,7 +76,7 @@ async function loadHistory() {
         if (!open && !list.children.length) {
           const btn = document.createElement("button");
           btn.textContent = "View history";
-          btn.style.cssText = "margin:6px 0;padding:5px 12px;font-size:12px;cursor:pointer";
+          btn.className = "history-view-btn";
           btn.addEventListener("click", () => btcAPI.openHistory());
           list.appendChild(btn);
         }
@@ -129,6 +129,7 @@ async function init() {
     rebuildVariantsSelect();
     populateAudienceSelect();
     restoreContextAudience();
+    _historyToggleWired = false;
     loadHistory();
     document.getElementById("input-text").focus();
   });

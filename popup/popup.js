@@ -75,7 +75,7 @@ async function loadHistory() {
         if (!open && !list.children.length) {
           const btn = document.createElement("button");
           btn.textContent = "View history";
-          btn.style.cssText = "margin:6px 0;padding:5px 12px;font-size:12px;cursor:pointer";
+          btn.className = "history-view-btn";
           btn.addEventListener("click", () => {
             browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
             window.close();
@@ -183,3 +183,9 @@ async function init() {
 }
 
 init();
+
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !("historyPin" in changes)) return;
+  _historyToggleWired = false;
+  loadHistory();
+});

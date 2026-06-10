@@ -193,7 +193,12 @@ function openPopup() {
 let resultsWin = null;
 
 function openResults() {
-  if (resultsWin && !resultsWin.isDestroyed()) { resultsWin.focus(); return; }
+  const resultsHtml = path.join(__dirname, "renderer", "results.html");
+  if (resultsWin && !resultsWin.isDestroyed()) {
+    resultsWin.loadFile(resultsHtml);
+    resultsWin.focus();
+    return;
+  }
   resultsWin = new BrowserWindow({
     width:    900,
     height:   680,
@@ -207,8 +212,9 @@ function openResults() {
     }
   });
   resultsWin.setMenu(null);
-  resultsWin.loadFile(path.join(__dirname, "..", "popup", "results.html"));
+  resultsWin.loadFile(resultsHtml);
   resultsWin.webContents.on("did-finish-load", () => applyZoomToWindow(resultsWin));
+  if (isDev || IS_TEST_BUILD) resultsWin.webContents.openDevTools({ mode: "detach" });
   resultsWin.on("closed", () => { resultsWin = null; });
 }
 
