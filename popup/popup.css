@@ -81,7 +81,7 @@ label {
 }
 
 /* ── Process panel ───────────────────────────────────────────────── */
-.process-section { background: var(--bg-page); }
+.process-section { background: var(--bg-page); padding-top: 14px; }
 
 textarea {
   width: 100%;
@@ -541,7 +541,11 @@ select:focus { border-color: var(--accent); }
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+.process-section > label {
+  margin-top: 6px;
 }
 #run-selection-btn {
   flex: 1;
