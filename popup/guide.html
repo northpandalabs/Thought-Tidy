@@ -508,20 +508,7 @@
 
   </div><!-- /page -->
 
-  <script>
-    function _loadScript(src, cb) {
-      var s = document.createElement("script"); s.src = src;
-      if (cb) s.onload = cb;
-      document.body.appendChild(s);
-    }
-    if (typeof window.btcAPI !== "undefined") {
-      // Desktop: use btcAPI-backed shim; skip polyfill (it throws outside extensions)
-      window.browser = { storage: { local: { get: function(k) { return btcAPI.getSettings(typeof k === "string" ? [k] : k); } } }, runtime: {} };
-      _loadScript("guide.js");
-    } else {
-      // Extension: load polyfill first, then guide.js
-      _loadScript("../browser-polyfill.js", function() { _loadScript("guide.js"); });
-    }
-  </script>
+  <script src="../browser-polyfill.js"></script>
+  <script src="guide.js"></script>
 </body>
 </html>

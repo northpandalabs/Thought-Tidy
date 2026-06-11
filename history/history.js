@@ -8,6 +8,53 @@ async function load() {
   const data = await browser.storage.local.get(["historyFull", "devMode", "historyPin"]);
   if (data.historyPin) { showPinGate(data); return; }
   loadHistory(data);
+  showSetPinBtn();
+}
+
+function showSetPinBtn() {
+  const controls = document.querySelector(".header-controls");
+  if (!controls || document.getElementById("set-pin-btn")) return;
+
+  const btn = document.createElement("button");
+  btn.id        = "set-pin-btn";
+  btn.textContent = "🔒 Set Passcode";
+  btn.style.cssText = "padding:5px 12px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap";
+  btn.addEventListener("mouseover", () => btn.style.background = "#45475a");
+  btn.addEventListener("mouseout",  () => btn.style.background = "#313244");
+  controls.insertBefore(btn, controls.firstChild);
+
+  let formEl = null;
+  btn.addEventListener("click", () => {
+    if (formEl) { formEl.remove(); formEl = null; return; }
+    formEl = document.createElement("div");
+    formEl.style.cssText = "margin:12px auto;max-width:380px;background:#1e1e2e;border:1px solid #313244;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px";
+    formEl.innerHTML = `
+      <p style="font-weight:700;font-size:14px;color:#cdd6f4">Set History Passcode</p>
+      <p style="font-size:12.5px;color:#a6adc8">Lock your history behind a passcode. You'll need to enter it each time you open the history page.</p>
+      <input type="password" id="pin-set-new" placeholder="New passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
+      <input type="password" id="pin-set-confirm" placeholder="Confirm passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
+      <p id="pin-set-err" style="color:#f38ba8;font-size:12px;display:none"></p>
+      <div style="display:flex;gap:8px">
+        <button id="pin-set-save" style="padding:6px 18px;border-radius:6px;background:#89b4fa;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Set Passcode</button>
+        <button id="pin-set-cancel" style="padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>
+      </div>`;
+    document.querySelector(".page-header").insertAdjacentElement("afterend", formEl);
+    document.getElementById("pin-set-new").focus();
+    document.getElementById("pin-set-cancel").addEventListener("click", () => { formEl.remove(); formEl = null; });
+    document.getElementById("pin-set-save").addEventListener("click", async () => {
+      const newP  = document.getElementById("pin-set-new").value;
+      const conf  = document.getElementById("pin-set-confirm").value;
+      const errEl = document.getElementById("pin-set-err");
+      errEl.style.display = "none";
+      if (!newP || !conf) { errEl.textContent = "Both fields are required."; errEl.style.display = ""; return; }
+      if (newP !== conf)  { errEl.textContent = "Passcodes do not match.";   errEl.style.display = ""; return; }
+      const hash = await hashPin(newP);
+      await browser.storage.local.set({ historyPin: hash });
+      formEl.remove(); formEl = null;
+      btn.remove();
+      showPinManagement(hash);
+    });
+  });
 }
 
 function showPinGate(data) {

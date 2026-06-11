@@ -611,10 +611,28 @@ input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer;
   margin-top: 12px;
   padding-top: 14px;
 }
-#wizard-step-2 h3 {
-  font-size: 14px; font-weight: 600; color: var(--text);
-  margin-bottom: 14px; text-transform: none; letter-spacing: 0;
+.wizard-step2-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
+.wizard-step2-header h3 {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  margin-bottom: 0; text-transform: none; letter-spacing: 0;
+}
+.wizard-guide-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.wizard-guide-btn:hover { opacity: 0.75; }
 .wizard-provider-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

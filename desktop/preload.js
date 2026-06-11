@@ -40,7 +40,7 @@ contextBridge.exposeInMainWorld("btcAPI", {
   resizePopup: (count) => ipcRenderer.invoke("resize-popup", count),
 
   // Setup guide window
-  openGuide: () => ipcRenderer.invoke("open-guide"),
+  openGuide: (hash) => ipcRenderer.invoke("open-guide", hash),
 
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {

@@ -224,7 +224,7 @@ let guideWin = null;
 
 function openGuide(hash) {
   if (guideWin && !guideWin.isDestroyed()) {
-    if (hash) guideWin.webContents.loadFile(path.join(__dirname, "..", "popup", "guide.html"), { hash });
+    if (hash) guideWin.webContents.loadFile(path.join(__dirname, "renderer", "guide.html"), { hash });
     guideWin.focus();
     return;
   }
@@ -241,7 +241,7 @@ function openGuide(hash) {
     }
   });
   guideWin.setMenu(null);
-  guideWin.loadFile(path.join(__dirname, "..", "popup", "guide.html"), hash ? { hash } : {});
+  guideWin.loadFile(path.join(__dirname, "renderer", "guide.html"), hash ? { hash } : {});
   guideWin.on("closed", () => { guideWin = null; });
 }
 
