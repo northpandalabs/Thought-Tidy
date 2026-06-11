@@ -193,7 +193,7 @@ function openPopup() {
 let resultsWin = null;
 
 function openResults() {
-  const resultsHtml = path.join(__dirname, "renderer", "results.html");
+  const resultsHtml = path.join(__dirname, "..", "popup", "results.html");
   if (resultsWin && !resultsWin.isDestroyed()) {
     resultsWin.loadFile(resultsHtml);
     resultsWin.focus();

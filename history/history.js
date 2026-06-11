@@ -92,7 +92,7 @@ function showPinManagement(initialHash) {
     dropdown.style.display = "none";
     formEl = document.createElement("div");
     formEl.style.cssText = "margin:12px auto;max-width:360px;background:#181825;border:1px solid #313244;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px";
-    formEl.innerHTML = html;
+    formEl.innerHTML = `${html}`;
     statsBar.insertAdjacentElement("afterend", formEl);
     onMounted();
   }

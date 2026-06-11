@@ -57,8 +57,8 @@ let _historyToggleWired = false;
 
 async function loadHistory() {
   const pinLocked = await isHistoryPinLocked();
-  const { historyLog = [] } = await browser.storage.local.get("historyLog");
-  const entries = purgeOldLog(historyLog);
+  const { historyFull = [] } = await browser.storage.local.get("historyFull");
+  const entries = purgeOldLog(historyFull);
   const section = document.getElementById("history-section");
   if (!section) return;
   if (!entries.length && !pinLocked) { section.style.display = "none"; return; }
