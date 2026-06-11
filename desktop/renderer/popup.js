@@ -129,10 +129,14 @@ async function init() {
     rebuildVariantsSelect();
     populateAudienceSelect();
     restoreContextAudience();
-    // Reset multi-column layout if a previous run left it expanded
-    document.getElementById("result-expand-btn")?.remove();
+    // Reset multi-column layout but keep the toggle button visible
+    const expandBtn = document.getElementById("result-expand-btn");
+    if (expandBtn) {
+      expandBtn.dataset.expanded = "0";
+      expandBtn.textContent = "⇔ Side by side";
+    }
     document.getElementById("result-slots")?.classList.remove("multi-col");
-    btcAPI.resizePopup(1);
+    if (typeof btcAPI.resizePopup === "function") btcAPI.resizePopup(1);
     _historyToggleWired = false;
     loadHistory();
     document.getElementById("input-text").focus();
