@@ -157,6 +157,7 @@ async function init() {
   }
 
   initSharedSettings(s);
+  renderSetupOverview(s);
   renderProviderCards();
   renderActionEditor();
 

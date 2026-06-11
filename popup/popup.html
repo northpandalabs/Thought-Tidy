@@ -40,7 +40,10 @@
     <div class="ctx-toggle-row">
       <button id="toggle-context-btn" class="ctx-toggle-btn">+ Add context</button>
     </div>
-    <button id="run-selection-btn" title="Process highlighted text on the current page">Process Selected Text</button>
+    <div class="run-selection-row">
+      <button id="run-selection-btn">Process Selected Text</button>
+      <button class="run-selection-info" title="Runs the chosen action on text you've already highlighted on the current page — no copy-paste needed.">?</button>
+    </div>
     <div id="run-selection-status" class="run-selection-status" style="display:none"></div>
     <div id="result-area" style="display:none">
       <div id="result-loading" class="result-loading" style="display:none" role="status" aria-live="polite" aria-label="Processing">
