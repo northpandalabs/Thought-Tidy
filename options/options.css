@@ -136,6 +136,9 @@ h1 {
 .sov-badge-pro     { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
 .sov-badge-free    { background: var(--surface); color: var(--text-muted); }
 .sov-badge-profile { background: rgba(137,180,250,0.12); color: var(--accent); border: 1px solid rgba(137,180,250,0.25); }
+.sov-guide-row     { margin-top: 8px; }
+.sov-guide-link    { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; }
+.sov-guide-link:hover { opacity: 0.8; }
 
 /* ── Sections ────────────────────────────────────────────────── */
 section {

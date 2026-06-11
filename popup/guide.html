@@ -293,7 +293,7 @@
             <div class="step-num">1</div>
             <div class="step-body">
               <h4>Open the Anthropic Console</h4>
-              <p>Go to <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com ↗</a> and create an account or sign in.</p>
+              <p>Go to <a href="https://platform.claude.com" target="_blank" rel="noopener">platform.claude.com ↗</a> and create an account or sign in.</p>
             </div>
           </div>
 
@@ -301,11 +301,11 @@
             <div class="step-num">2</div>
             <div class="step-body">
               <h4>Go to API Keys</h4>
-              <p>In the left sidebar click <strong>Settings → API keys</strong>. Or go to <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com/settings/keys ↗</a></p>
+              <p>In the left sidebar click <strong>Settings → API keys</strong>. Or go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com/settings/keys ↗</a></p>
               <div class="screen-mock compact">
                 <div class="mock-bar">
                   <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
-                  <span class="mock-url">console.anthropic.com/settings/keys</span>
+                  <span class="mock-url">platform.claude.com/settings/keys</span>
                 </div>
                 <div class="mock-body col">
                   <div class="mock-page-title">API keys</div>
@@ -332,7 +332,7 @@
             <div class="step-num">4</div>
             <div class="step-body">
               <h4>Add billing credits</h4>
-              <p>Add prepaid credits at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">console.anthropic.com/settings/billing ↗</a>. Claude Haiku is very affordable — $1 of credit covers roughly 2–3 million tokens of input.</p>
+              <p>Add prepaid credits at <a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener">platform.claude.com/settings/billing ↗</a>. Claude Haiku is very affordable — $1 of credit covers roughly 2–3 million tokens of input.</p>
             </div>
           </div>
 
@@ -508,7 +508,20 @@
 
   </div><!-- /page -->
 
-  <script src="../browser-polyfill.js"></script>
-  <script src="guide.js"></script>
+  <script>
+    function _loadScript(src, cb) {
+      var s = document.createElement("script"); s.src = src;
+      if (cb) s.onload = cb;
+      document.body.appendChild(s);
+    }
+    if (typeof window.btcAPI !== "undefined") {
+      // Desktop: use btcAPI-backed shim; skip polyfill (it throws outside extensions)
+      window.browser = { storage: { local: { get: function(k) { return btcAPI.getSettings(typeof k === "string" ? [k] : k); } } }, runtime: {} };
+      _loadScript("guide.js");
+    } else {
+      // Extension: load polyfill first, then guide.js
+      _loadScript("../browser-polyfill.js", function() { _loadScript("guide.js"); });
+    }
+  </script>
 </body>
 </html>

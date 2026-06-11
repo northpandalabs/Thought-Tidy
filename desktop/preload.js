@@ -39,6 +39,9 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // Resize popup for multi-column results
   resizePopup: (count) => ipcRenderer.invoke("resize-popup", count),
 
+  // Setup guide window
+  openGuide: () => ipcRenderer.invoke("open-guide"),
+
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {
     ipcRenderer.on("popup-opened", () => callback());

@@ -108,9 +108,6 @@
       <div class="built-by">Built by <a href="https://github.com/northpandalabs" target="_blank" rel="noopener">North Panda Labs</a> · No servers, no tracking</div>
     </div>
 
-    <!-- Setup overview -->
-    <div id="setup-overview"></div>
-
     <!-- AI Providers -->
     <section id="providers-section">
       <h2>
@@ -155,7 +152,10 @@
 
         <!-- Step 2: enter key + pick model -->
         <div id="wizard-step-2" style="display:none">
-          <h3 id="wizard-provider-title"></h3>
+          <div class="wizard-step2-header">
+            <h3 id="wizard-provider-title"></h3>
+            <button id="wizard-guide-btn" class="wizard-guide-btn" type="button" style="display:none">Setup Guide ↗</button>
+          </div>
           <div id="wizard-api-key-row" class="field">
             <label>
               API Key

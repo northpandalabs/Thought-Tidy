@@ -24,6 +24,11 @@
 
   <!-- Quick-process panel -->
   <div class="section process-section">
+    <div class="run-selection-row">
+      <button id="run-selection-btn">Process Selected Text</button>
+      <button class="run-selection-info" title="Runs the chosen action on text you've already highlighted on the current page — no copy-paste needed.">?</button>
+    </div>
+    <div id="run-selection-status" class="run-selection-status" style="display:none"></div>
     <label for="input-text">Paste or type text</label>
     <textarea id="input-text" placeholder="Paste and pick an action…"></textarea>
 
@@ -40,11 +45,6 @@
     <div class="ctx-toggle-row">
       <button id="toggle-context-btn" class="ctx-toggle-btn">+ Add context</button>
     </div>
-    <div class="run-selection-row">
-      <button id="run-selection-btn">Process Selected Text</button>
-      <button class="run-selection-info" title="Runs the chosen action on text you've already highlighted on the current page — no copy-paste needed.">?</button>
-    </div>
-    <div id="run-selection-status" class="run-selection-status" style="display:none"></div>
     <div id="result-area" style="display:none">
       <div id="result-loading" class="result-loading" style="display:none" role="status" aria-live="polite" aria-label="Processing">
         <div class="mini-spinner"></div><span id="result-loading-text">Processing…</span>
@@ -91,7 +91,10 @@
     <div id="history-list" class="history-list" style="display:none"></div>
   </div>
 
-  <button id="open-settings">Settings</button>
+  <div class="bottom-row">
+    <button id="open-history-btn">History</button>
+    <button id="open-settings">Settings</button>
+  </div>
 
   <script src="../browser-polyfill.js"></script>
   <script src="../lib/text.js"></script>

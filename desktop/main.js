@@ -218,6 +218,33 @@ function openResults() {
   resultsWin.on("closed", () => { resultsWin = null; });
 }
 
+// ── Guide window ───────────────────────────────────────────────────────────────
+
+let guideWin = null;
+
+function openGuide(hash) {
+  if (guideWin && !guideWin.isDestroyed()) {
+    if (hash) guideWin.webContents.loadFile(path.join(__dirname, "..", "popup", "guide.html"), { hash });
+    guideWin.focus();
+    return;
+  }
+  guideWin = new BrowserWindow({
+    width:    700,
+    height:   780,
+    minWidth: 500,
+    title:    "Setup Guide & Privacy",
+    icon:     APP_ICON,
+    webPreferences: {
+      preload:          path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration:  false
+    }
+  });
+  guideWin.setMenu(null);
+  guideWin.loadFile(path.join(__dirname, "..", "popup", "guide.html"), hash ? { hash } : {});
+  guideWin.on("closed", () => { guideWin = null; });
+}
+
 // ── History window ─────────────────────────────────────────────────────────────
 
 let historyWin = null;
@@ -479,6 +506,8 @@ app.whenReady().then(() => {
     closePopup: () => { if (popupWin) popupWin.hide(); },
     openURL:    (url) => shell.openExternal(url)
   });
+
+  ipcMain.handle("open-guide", (_, hash) => openGuide(hash));
 
   const backupHandlers = makeBackupHandlers(dialog, fs);
   ipcMain.handle("save-backup", backupHandlers.saveBackup);

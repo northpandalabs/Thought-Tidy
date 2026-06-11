@@ -7,7 +7,7 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "lastContextAudience",
-  "themeMode", "historyPin", "grammarFilters"
+  "themeMode", "historyPin", "grammarFilters", "inputTextDraft"
 ];
 
 window.RUN_BTN_ID   = "process-btn";
@@ -151,6 +151,14 @@ async function init() {
   wireContextSheetHandlers();
   rebuildActionDropdown();
 
+  const ta = document.getElementById("input-text");
+  if (ta && s.inputTextDraft) { ta.value = s.inputTextDraft; ta.dispatchEvent(new Event("input")); }
+  let _draftTimer;
+  ta?.addEventListener("input", () => {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(() => browser.storage.local.set({ inputTextDraft: ta.value }), 400);
+  });
+
   const providers    = s.configuredProviders;
   const hasProvider  = Array.isArray(providers) && providers.length > 0;
   const hasLegacyKey = s.openaiKey || s.claudeKey || s.geminiKey;
@@ -159,6 +167,10 @@ async function init() {
 
   document.getElementById("variants-select")?.addEventListener("change", (e) => {
     window.appSet({ variants: e.target.value });
+  });
+  document.getElementById("open-history-btn").addEventListener("click", () => {
+    browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
+    window.close();
   });
   document.getElementById("open-settings").addEventListener("click", () => {
     browser.runtime.openOptionsPage();

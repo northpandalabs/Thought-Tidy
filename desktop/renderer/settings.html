@@ -201,9 +201,6 @@
       No account needed.
     </div>
 
-    <!-- Setup overview -->
-    <div id="setup-overview"></div>
-
     <!-- AI Providers -->
     <section id="providers-section">
       <h2>
@@ -246,7 +243,10 @@
         </div>
 
         <div id="wizard-step-2" style="display:none">
-          <h3 id="wizard-provider-title"></h3>
+          <div class="wizard-step2-header">
+            <h3 id="wizard-provider-title"></h3>
+            <button id="wizard-guide-btn" class="wizard-guide-btn" type="button" style="display:none">Setup Guide ↗</button>
+          </div>
           <div id="wizard-api-key-row" class="field">
             <label>
               API Key
