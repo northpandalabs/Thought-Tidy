@@ -241,6 +241,7 @@ function openGuide(hash) {
     }
   });
   guideWin.setMenu(null);
+  guideWin.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: "deny" }; });
   guideWin.loadFile(path.join(__dirname, "renderer", "guide.html"), hash ? { hash } : {});
   guideWin.on("closed", () => { guideWin = null; });
 }
