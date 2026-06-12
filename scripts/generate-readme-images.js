@@ -250,10 +250,10 @@ function makePopupDemo() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMAGE 3: before-after.svg  (880 × 252)
+// IMAGE 3: before-after.svg  (880 × 268)
 // ═══════════════════════════════════════════════════════════════════════════════
 function makeBeforeAfter() {
-  const W = 880, H = 252;
+  const W = 880, H = 268;
   const panelW = 370;
   const leftX  = 20;
   const rightX = W - 20 - panelW;
@@ -283,15 +283,14 @@ function makeBeforeAfter() {
 
   // ── arrow (drawn without marker so no inline defs needed) ───────────────────
   const midX  = (leftX + panelW + rightX) / 2;
-  const midY  = H / 2;
-  // arrow body
+  const midY  = panelY + panelH / 2;
+  // small label pill well above the arrowhead
+  els.push(rect(midX - 20, midY - 28, 40, 14, C.purpleSoft, { r: 3 }));
+  els.push(text(midX, midY - 18, "Brain Dump", C.accent, { size: 8, anchor: "middle" }));
+  // arrow body — starts below pill, clear gap before arrowhead
   els.push(`<line x1="${midX - 18}" y1="${midY}" x2="${midX + 10}" y2="${midY}" stroke="${C.purple}" stroke-width="2"/>`);
   // arrowhead as path
   els.push(`<path d="M${midX+8},${midY-6} L${midX+20},${midY} L${midX+8},${midY+6}" fill="${C.purple}"/>`);
-  // label pill above arrow
-  els.push(rect(midX - 22, midY - 28, 44, 17, C.purpleSoft, { r: 4 }));
-  els.push(text(midX, midY - 17, "Brain Dump", C.accent, { size: 9, anchor: "middle" }));
-  els.push(text(midX, midY - 4, "Run", C.accent, { size: 10, anchor: "middle" }));
 
   // ── right panel ─────────────────────────────────────────────────────────────
   els.push(rect(rightX, panelY, panelW, panelH, C.card, { r: 10, stroke: C.green, sw: 1.5 }));
@@ -432,17 +431,17 @@ function inlineArrow(x1, y, x2, color, sw = 2) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMAGE 5: setup-add-provider.svg  (880 × 330)
+// IMAGE 5: setup-add-provider.svg  (880 × 346)
 // ═══════════════════════════════════════════════════════════════════════════════
 function makeSetupAddProvider() {
-  const W = 880, H = 330;
+  const W = 880, H = 346;
   let els = [];
   els.push(rect(0, 0, W, H, C.bg, { r: 12 }));
 
   // ── Title bar ────────────────────────────────────────────────────────────────
   els.push(text(W / 2, 26, "First-time setup — add a provider in 60 seconds", C.muted, { size: 12, anchor: "middle" }));
 
-  const panelY = 38, panelH = 280;
+  const panelY = 38, panelH = 296;
   const leftX = 20, rightX = 460, panelW = 400;
 
   // ── LEFT: Provider picker ────────────────────────────────────────────────────
@@ -513,9 +512,9 @@ function makeSetupAddProvider() {
   els.push(rect(rightX + 14, ry + 204, panelW - 28, 32, C.purple, { r: 8 }));
   els.push(text(rightX + panelW / 2, ry + 225, "Save Provider", C.white, { size: 12, weight: "600", anchor: "middle" }));
 
-  // Middle arrow
+  // Middle arrow — centred on panel height, not SVG height
   const midArrowX = (leftX + panelW + rightX) / 2;
-  els.push(inlineArrow(midArrowX - 14, H / 2, midArrowX + 14, C.dimmed, 1.5));
+  els.push(inlineArrow(midArrowX - 14, panelY + panelH / 2, midArrowX + 14, C.dimmed, 1.5));
 
   return svg(W, H, els.join("\n  "), "");
 }
@@ -673,15 +672,18 @@ function makeExportImport() {
   els.push(rect(leftX + 14, panelY + 148, panelW - 28, 26, C.purpleSoft, { r: 6, stroke: C.purple }));
   els.push(text(leftX + panelW / 2, panelY + 166, "Export  .ttbackup", C.accent, { size: 11, weight: "600", anchor: "middle" }));
 
-  // ── MIDDLE: file + arrow ─────────────────────────────────────────────────────
+  // ── MIDDLE: file icon ────────────────────────────────────────────────────────
   const midX = (leftX + panelW + rightX) / 2;
   const midY = panelY + panelH / 2;
 
-  // file icon
-  els.push(rect(midX - 16, midY - 26, 32, 38, C.cardAlt, { r: 4, stroke: C.border }));
-  els.push(`<path d="M${midX+2},${midY-26} L${midX+16},${midY-12}" stroke="${C.border}" stroke-width="1"/>`);
-  els.push(`<path d="M${midX+2},${midY-26} V${midY-12} H${midX+16}" fill="${C.card}" stroke="${C.border}" stroke-width="1"/>`);
-  els.push(text(midX, midY - 4, ".ttbackup", C.dimmed, { size: 8, anchor: "middle" }));
+  // cleaner file icon — body + dog-ear fold at top-right
+  const fLeft = midX - 18, fTop = midY - 28, fW = 36, fH = 46;
+  const fFold = 10;
+  // body (with clipped top-right corner for fold)
+  els.push(`<path d="M${fLeft+4},${fTop} H${fLeft+fW-fFold} L${fLeft+fW},${fTop+fFold} V${fTop+fH-4} A4,4 0 0 1 ${fLeft+fW-4},${fTop+fH} H${fLeft+4} A4,4 0 0 1 ${fLeft},${fTop+fH-4} V${fTop+4} A4,4 0 0 1 ${fLeft+4},${fTop} Z" fill="${C.cardAlt}" stroke="${C.border}" stroke-width="1"/>`);
+  // fold triangle (top-right corner)
+  els.push(`<path d="M${fLeft+fW-fFold},${fTop} L${fLeft+fW-fFold},${fTop+fFold} L${fLeft+fW},${fTop+fFold}" fill="${C.bg}" stroke="${C.border}" stroke-width="1"/>`);
+  els.push(text(midX, midY - 4, ".ttbackup", C.muted, { size: 9, anchor: "middle" }));
   els.push(text(midX, midY + 10, "encrypted", C.dimmed, { size: 8, anchor: "middle" }));
 
   // ── RIGHT: Import ─────────────────────────────────────────────────────────────
@@ -689,11 +691,10 @@ function makeExportImport() {
   els.push(rectTop(rightX, panelY, panelW, 30, C.cardAlt, 10));
   els.push(text(rightX + panelW / 2, panelY + 20, "Import & Restore", C.text, { size: 12, weight: "600", anchor: "middle" }));
 
-  // drag/drop zone
+  // drag/drop zone — text only, no icon overlap
   els.push(rect(rightX + 14, panelY + 38, panelW - 28, 68, C.cardAlt, { r: 8, stroke: C.border }));
-  els.push(text(rightX + panelW / 2, panelY + 64, "Select .ttbackup file", C.muted, { size: 11, anchor: "middle" }));
-  els.push(text(rightX + panelW / 2, panelY + 82, "Works on any computer with the same Pro key", C.dimmed, { size: 9, anchor: "middle" }));
-  els.push(iconImport(rightX + panelW / 2 - 50, panelY + 70, C.dimmed));
+  els.push(text(rightX + panelW / 2, panelY + 69, "Select .ttbackup file", C.muted, { size: 11, anchor: "middle" }));
+  els.push(text(rightX + panelW / 2, panelY + 87, "Works on any computer with the same Pro key", C.dimmed, { size: 9, anchor: "middle" }));
 
   // Import button
   els.push(rect(rightX + 14, panelY + 114, panelW - 28, 22, C.purpleSoft, { r: 6, stroke: C.purple }));

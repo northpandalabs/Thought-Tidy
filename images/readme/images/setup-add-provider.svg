@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="330" viewBox="0 0 880 330">
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="346" viewBox="0 0 880 346">
   <defs>
     <style>text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }</style>
     
   </defs>
-  <rect x="0" y="0" width="880" height="330" rx="12" fill="#0f0f1a"  />
+  <rect x="0" y="0" width="880" height="346" rx="12" fill="#0f0f1a"  />
   <text x="440" y="26" fill="#94a3b8" font-size="12" font-weight="normal" text-anchor="middle" >First-time setup — add a provider in 60 seconds</text>
-  <rect x="20" y="38" width="400" height="280" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <rect x="20" y="38" width="400" height="296" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
   <path d="M30,38 H410 A10,10 0 0 1 420,48 V70 H20 V48 A10,10 0 0 1 30,38 Z" fill="#16213e" />
   <text x="34" y="59" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="start" >Step 1</text>
   <text x="74" y="59" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="start" >Choose your provider</text>
@@ -22,7 +22,7 @@
   <rect x="34" y="216" width="372" height="52" rx="8" fill="#16213e" stroke="#2d2d4a" stroke-width="1" />
   <text x="50" y="238" fill="#94a3b8" font-size="13" font-weight="600" text-anchor="start" >Claude</text>
   <text x="50" y="254" fill="#4a5568" font-size="10" font-weight="normal" text-anchor="start" >Anthropic · Strong writing</text>
-  <rect x="460" y="38" width="400" height="280" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <rect x="460" y="38" width="400" height="296" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
   <path d="M470,38 H850 A10,10 0 0 1 860,48 V70 H460 V48 A10,10 0 0 1 470,38 Z" fill="#16213e" />
   <rect x="474" y="46" width="32" height="16" rx="8" fill="#7c3aed"  />
   <text x="490" y="58" fill="#ffffff" font-size="10" font-weight="700" text-anchor="middle" >2</text>
@@ -44,6 +44,6 @@
   <text x="832" y="266" fill="#94a3b8" font-size="11" font-weight="normal" text-anchor="start" >▾</text>
   <rect x="474" y="286" width="372" height="32" rx="8" fill="#7c3aed"  />
   <text x="660" y="307" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle" >Save Provider</text>
-  <line x1="426" y1="165" x2="448" y2="165" stroke="#4a5568" stroke-width="1.5"/>
-  <path d="M447,160 L454,165 L447,170" fill="#4a5568"/>
+  <line x1="426" y1="186" x2="448" y2="186" stroke="#4a5568" stroke-width="1.5"/>
+  <path d="M447,181 L454,186 L447,191" fill="#4a5568"/>
 </svg>
