@@ -1,0 +1,39 @@
+{
+  "_comment": "Source of truth for download URLs. Update version + desktop filenames on each release. Fetch from: https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/downloads.json",
+  "version": "1.5.2",
+  "released": "2026-06-11",
+  "pro_url": "https://northpandalabs.gumroad.com/l/thought-tidy",
+  "github_url": "https://github.com/northpandalabs/Thought-Tidy",
+  "platforms": {
+    "chrome": {
+      "label": "Chrome Extension",
+      "url": "https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip",
+      "filename": "thought-tidy-chrome.zip",
+      "note": "version-agnostic — always points to latest"
+    },
+    "firefox": {
+      "label": "Firefox Extension",
+      "url": "https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip",
+      "filename": "thought-tidy-firefox.zip",
+      "note": "version-agnostic — always points to latest"
+    },
+    "windows": {
+      "label": "Windows Desktop",
+      "url": "https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy.Setup.1.5.2.exe",
+      "filename": "Thought.Tidy.Setup.1.5.2.exe",
+      "note": "update filename on each release"
+    },
+    "macos": {
+      "label": "macOS Desktop",
+      "url": "https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy-1.5.2-arm64.dmg",
+      "filename": "Thought.Tidy-1.5.2-arm64.dmg",
+      "note": "update filename on each release"
+    },
+    "linux": {
+      "label": "Linux Desktop",
+      "url": "https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy-1.5.2.AppImage",
+      "filename": "Thought.Tidy-1.5.2.AppImage",
+      "note": "update filename on each release"
+    }
+  }
+}

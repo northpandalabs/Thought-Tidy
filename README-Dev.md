@@ -215,15 +215,67 @@ Before uploading, bump `version` in both `package.json` and `manifest.json` to m
 1. Bump version in `manifest.json` and `desktop/package.json` (must match)
 2. Run `npm test` and `cd desktop && npm test` — both must pass
 3. Run `npm run build:chrome` and `npm run build:firefox` — both must succeed
-4. Commit with a descriptive message
-5. Create an annotated tag:
+4. Update `legal/downloads.json` — bump `version`, `released`, and the three desktop filenames (`windows`, `macos`, `linux`) to match the new version number
+5. Commit with a descriptive message
+6. Create an annotated tag:
    ```bash
    git tag -a v1.x.x -m "v1.x.x — short description"
    git push origin v1.x.x
    ```
-6. The GitHub Actions release workflow (`.github/workflows/release.yml`) triggers automatically — runs tests, builds all platform installers, and publishes the GitHub Release with artifacts
+7. The GitHub Actions release workflow (`.github/workflows/release.yml`) triggers automatically — runs tests, builds all platform installers, and publishes the GitHub Release with artifacts
 
 > `npm run release` (from `desktop/`) requires a `GH_TOKEN` env var with `repo` scope.
+
+---
+
+## Website Download URLs (`legal/downloads.json`)
+
+`legal/downloads.json` is the single source of truth for all platform download links. Website pages fetch this file at runtime so that updating one JSON file is all that's needed when a new version ships — no touching HTML.
+
+**Raw URL (use this in `fetch()` calls):**
+```
+https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/downloads.json
+```
+
+**Structure:**
+```json
+{
+  "version": "1.5.2",
+  "released": "2026-06-11",
+  "pro_url": "https://northpandalabs.gumroad.com/l/thought-tidy",
+  "platforms": {
+    "chrome":   { "label": "...", "url": "...", "filename": "..." },
+    "firefox":  { "label": "...", "url": "...", "filename": "..." },
+    "windows":  { "label": "...", "url": "...", "filename": "..." },
+    "macos":    { "label": "...", "url": "...", "filename": "..." },
+    "linux":    { "label": "...", "url": "...", "filename": "..." }
+  }
+}
+```
+
+**What to update on each release:** `version`, `released`, and the `url` + `filename` for `windows`, `macos`, and `linux` (desktop filenames contain the version number). Chrome and Firefox URLs use `/releases/latest/download/` and are version-agnostic — leave them alone.
+
+**How to wire it up in HTML:**
+
+```html
+<!-- add data-dl="chrome|firefox|windows|macos|linux" to any <a> tag -->
+<a data-dl="chrome" href="#">Download for Chrome</a>
+<span data-version></span>
+
+<script>
+  fetch('https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/downloads.json')
+    .then(r => r.json())
+    .then(d => {
+      document.querySelectorAll('[data-dl]').forEach(el => {
+        const p = d.platforms[el.dataset.dl];
+        if (p) el.href = p.url;
+      });
+      document.querySelectorAll('[data-version]').forEach(el => {
+        el.textContent = d.version;
+      });
+    });
+</script>
+```
 
 ---
 
