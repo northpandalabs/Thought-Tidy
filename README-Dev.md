@@ -245,7 +245,7 @@ https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/le
   "pro_url": "https://northpandalabs.gumroad.com/l/thought-tidy",
   "platforms": {
     "chrome":   { "label": "...", "url": "...", "filename": "..." },
-    "firefox":  { "label": "...", "url": "...", "filename": "..." },
+    "firefox":  { "label": "...", "store_url": "...", "store_label": "Add to Firefox", "preferred": "store", "url": "...", "filename": "...", "download_label": "Download Build" },
     "windows":  { "label": "...", "url": "...", "filename": "..." },
     "macos":    { "label": "...", "url": "...", "filename": "..." },
     "linux":    { "label": "...", "url": "...", "filename": "..." }
@@ -253,7 +253,7 @@ https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/le
 }
 ```
 
-**What to update on each release:** `version`, `released`, and the `url` + `filename` for `windows`, `macos`, and `linux` (desktop filenames contain the version number). Chrome and Firefox URLs use `/releases/latest/download/` and are version-agnostic — leave them alone.
+**What to update on each release:** `version`, `released`, and the `url` + `filename` for `windows`, `macos`, and `linux` (desktop filenames contain the version number). Chrome and Firefox download URLs use `/releases/latest/download/` and are version-agnostic — leave them alone. The Firefox `store_url` is permanent and never changes.
 
 **How to wire it up in HTML:**
 

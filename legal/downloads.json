@@ -13,9 +13,13 @@
     },
     "firefox": {
       "label": "Firefox Extension",
+      "store_url": "https://addons.mozilla.org/en-US/firefox/addon/thought-tidy/",
+      "store_label": "Add to Firefox",
+      "preferred": "store",
       "url": "https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip",
       "filename": "thought-tidy-firefox.zip",
-      "note": "version-agnostic — always points to latest"
+      "download_label": "Download Build",
+      "note": "store_url is preferred install; url is manual zip for sideloading"
     },
     "windows": {
       "label": "Windows Desktop",
