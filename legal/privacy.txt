@@ -1,7 +1,7 @@
-PRIVACY POLICY -- BLUR-TO-CLEAR
+PRIVACY POLICY -- THOUGHT TIDY
 
 Effective date: 2026-05-25
-Last updated: 2026-05-25
+Last updated: 2026-06-11
 Contact: northpandalabs@gmail.com
 
 ------------------------------------------------------------------------
@@ -10,8 +10,7 @@ WHO WE ARE
 
 Thought Tidy is an AI writing assistant browser extension and desktop
 application developed by NorthPanda Labs, a product of Panda Automation LLC.
-Source code:
-https://github.com/northpandalabs/Thought Tidy
+Source code: https://github.com/northpandalabs/Thought-Tidy
 
 ------------------------------------------------------------------------
 
@@ -29,12 +28,19 @@ WHAT DATA IS INVOLVED AND WHERE IT GOES
 
 1. Text you process
 
-When you run an action (Fix Grammar, Make Professional, etc.), your text is
-sent directly from your device to the AI provider you have configured. It
-passes through no Thought Tidy server. We cannot see it, log it, or
-access it.
+When you run an action (Fix Spelling & Grammar, Improve Writing, Make
+Professional, Brain Dump -> Clear Text, Idea -> Prompt, Sound Like Me,
+Sound Human, Make Formal, Make Casual, Shorten, Expand, or any custom
+prompt you create), your text is sent directly from your device to the AI
+provider you have configured. It passes through no Thought Tidy server.
+We cannot see it, log it, or access it.
 
-Ollama runs entirely on your own machine -- no text leaves your device at all.
+When you request multiple suggestions (up to 4 variants), each variant is
+a separate request to the same provider under the same conditions. No
+additional data is collected.
+
+Ollama runs entirely on your own machine -- no text leaves your device at
+all when using Ollama.
 
 2. API keys
 
@@ -58,20 +64,55 @@ Gumroad's privacy policy: https://gumroad.com/privacy
 4. Usage history
 
 Every action you run is logged locally: timestamp, action name, provider,
-model, input/output length, and estimated cost. Stored on your device only,
-never transmitted. You can clear it from Settings at any time.
+model, input/output text, token counts, and estimated cost. Stored on your
+device only, never transmitted. You can clear it from Settings at any time,
+or protect it with an optional PIN (SHA-256 hash stored locally -- the raw
+PIN is never saved). Free tier stores today's history only; Pro tier stores
+full all-time history.
 
-5. Profile data
+5. Profile data (Sound Like Me)
 
 Your name, role, writing style, and personal context are stored locally only.
 This data is included in prompts sent to your AI provider when using
-profile-based actions; it is not sent to us.
+profile-based actions (Sound Like Me, Inject into every prompt). It is not
+sent to us.
 
-6. Settings sync (extension + desktop)
+If you load a profile from a URL or GitHub Gist, that URL is accessed
+directly from your device. No request is routed through our servers.
+
+6. Export / Import backup (.ttbackup)
+
+Pro users may export their full configuration as a .ttbackup file. This file
+is saved directly to your device via a browser/OS file-save dialog. The file
+contains:
+
+  - AI provider entries and API keys (encrypted with PBKDF2 + AES-256-GCM)
+  - Your profile (name, role, writing style, personal context)
+  - Custom prompt actions
+  - Full history (if Pro history is enabled)
+  - All settings
+
+This file is created and stored entirely on your device. We never receive,
+transmit, or have access to .ttbackup files. Importing a .ttbackup file
+restores your settings directly from your local file -- no server involved.
+
+7. Grammar sanitizer
+
+The grammar sanitizer (Pro) post-processes AI output locally before it is
+shown to you. No additional network requests are made; this processing
+happens entirely in your browser or desktop app.
+
+8. Settings sync (extension + desktop)
 
 When both the extension and desktop app run simultaneously, settings sync
 over 127.0.0.1 (loopback only). This never leaves your machine and is
 protected by a random per-session token.
+
+9. Custom prompts
+
+Custom prompt actions you create are stored locally only. When you run a
+custom action, your text plus your custom prompt text is sent directly to
+your configured AI provider. We never see custom prompt contents.
 
 ------------------------------------------------------------------------
 
@@ -83,6 +124,7 @@ WHAT WE DO NOT COLLECT
 - No cookies
 - No third-party tracking or advertising SDKs
 - No user accounts required for the free tier
+- No telemetry of any kind
 
 ------------------------------------------------------------------------
 
@@ -113,6 +155,7 @@ We hold no personal data on any server. To remove all locally stored data:
   - Extension: Clear the extension's storage via your browser's extension
     management page, or uninstall the extension.
   - Desktop app: Uninstalling removes all locally stored settings and history.
+  - .ttbackup files: Delete any exported backup files from your device.
 
 For data held by Gumroad related to a purchase, contact Gumroad directly.
 
@@ -122,7 +165,9 @@ DATA SECURITY
 
 All sensitive local data (API keys, license credentials) is encrypted.
 API keys use AES-256-GCM on the extension and OS-level credential stores on
-the desktop. No sensitive data is stored in plaintext.
+the desktop. Exported .ttbackup files encrypt API keys using PBKDF2 key
+derivation and AES-256-GCM. No sensitive data is stored or exported in
+plaintext.
 
 ------------------------------------------------------------------------
 
