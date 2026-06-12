@@ -1,43 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="220" viewBox="0 0 880 220">
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="264" viewBox="0 0 880 264">
   <defs>
     <style>text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }</style>
     
   </defs>
-  <rect x="0" y="0" width="880" height="220" rx="12" fill="#0f0f1a"  />
-  <rect x="20" y="12" width="400" height="196" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <rect x="0" y="0" width="880" height="264" rx="12" fill="#0f0f1a"  />
+  <rect x="20" y="12" width="400" height="240" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
   <path d="M30,12 H410 A10,10 0 0 1 420,22 V44 H20 V22 A10,10 0 0 1 30,12 Z" fill="#065f46" />
   <text x="220" y="33" fill="#10b981" font-size="12" font-weight="700" text-anchor="middle" >FREE  —  always available</text>
-  <text x="38" y="56" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
-  <text x="56" y="56" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Fix Spelling &amp; Grammar</text>
-  <text x="38" y="80" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
-  <text x="56" y="80" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Improve Writing</text>
-  <text x="38" y="104" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
-  <text x="56" y="104" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Make Professional</text>
-  <text x="38" y="128" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
-  <text x="56" y="128" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Brain Dump → Clear Text</text>
-  <text x="38" y="152" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
-  <text x="56" y="152" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Idea → Prompt</text>
-  <text x="38" y="176" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
-  <text x="56" y="176" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >1 Custom Action</text>
-  <text x="38" y="200" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
-  <text x="56" y="200" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Today's History</text>
-  <rect x="460" y="12" width="400" height="196" rx="10" fill="#1a1a2e" stroke="#7c3aed" stroke-width="1.5" />
+  <text x="38" y="68" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
+  <text x="56" y="68" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Fix Spelling &amp; Grammar</text>
+  <text x="38" y="92" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
+  <text x="56" y="92" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Improve Writing</text>
+  <text x="38" y="116" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
+  <text x="56" y="116" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Make Professional</text>
+  <text x="38" y="140" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
+  <text x="56" y="140" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Brain Dump → Clear Text</text>
+  <text x="38" y="164" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
+  <text x="56" y="164" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Idea → Prompt</text>
+  <text x="38" y="188" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
+  <text x="56" y="188" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >1 Custom Action</text>
+  <text x="38" y="212" fill="#10b981" font-size="13" font-weight="700" text-anchor="start" >✓</text>
+  <text x="56" y="212" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Today's History</text>
+  <rect x="460" y="12" width="400" height="240" rx="10" fill="#1a1a2e" stroke="#7c3aed" stroke-width="1.5" />
   <path d="M470,12 H850 A10,10 0 0 1 860,22 V44 H460 V22 A10,10 0 0 1 470,12 Z" fill="#4c1d95" />
   <text x="660" y="33" fill="#a78bfa" font-size="12" font-weight="700" text-anchor="middle" >PRO  —  $10 one time</text>
-  <text x="478" y="56" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="56" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Sound Like Me</text>
-  <text x="478" y="80" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="80" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Sound Human</text>
-  <text x="478" y="104" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="104" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Make Formal / Casual</text>
-  <text x="478" y="128" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="128" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Shorten / Expand</text>
-  <text x="478" y="152" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="152" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Unlimited Custom Actions</text>
-  <text x="478" y="176" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="176" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Multiple Suggestions (4×)</text>
-  <text x="478" y="200" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="200" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Full History + PIN Lock</text>
-  <text x="478" y="224" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
-  <text x="496" y="224" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Ollama (local AI)</text>
+  <text x="478" y="68" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="68" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Sound Like Me</text>
+  <text x="478" y="92" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="92" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Sound Human</text>
+  <text x="478" y="116" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="116" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Make Formal / Casual</text>
+  <text x="478" y="140" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="140" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Shorten / Expand</text>
+  <text x="478" y="164" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="164" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Unlimited Custom Actions</text>
+  <text x="478" y="188" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="188" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Multiple Suggestions (4×)</text>
+  <text x="478" y="212" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="212" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Full History + PIN Lock</text>
+  <text x="478" y="236" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="start" >★</text>
+  <text x="496" y="236" fill="#e2e8f0" font-size="12" font-weight="normal" text-anchor="start" >Ollama (local AI, zero API cost)</text>
 </svg>

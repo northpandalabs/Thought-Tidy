@@ -11,6 +11,13 @@
 Highlight text, right-click, pick an action, done. No subscriptions. No accounts. Your API key, your data, nobody watching.
 
 <p align="center">
+  <a href="#install--setup">Setup Guide</a> &nbsp;·&nbsp;
+  <a href="https://northpandalabs.gumroad.com/l/thought-tidy">Upgrade to Pro — $10</a> &nbsp;·&nbsp;
+  <a href="README-Dev.md">Developer Docs</a> &nbsp;·&nbsp;
+  <a href="https://github.com/northpandalabs/Thought-Tidy">GitHub</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip"><img alt="Chrome Extension" src="https://custom-icon-badges.demolab.com/badge/-Chrome_Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" /></a>
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip"><img alt="Firefox Extension" src="https://custom-icon-badges.demolab.com/badge/-Firefox_Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" /></a>
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy.Setup.1.5.2.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-57A639?style=for-the-badge&logo=windows&logoColor=white" /></a>

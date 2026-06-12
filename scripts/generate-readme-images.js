@@ -237,9 +237,9 @@ function makePopupDemo() {
   // ── run button ──────────────────────────────────────────────────────────────
   els.push(rect(14, 348, W - 28, 38, C.purple, { r: 9 }));
   els.push(`<rect x="14" y="348" width="${W - 28}" height="38" rx="9" fill="url(#btnGrad)"/>`);
-  // ▶ drawn as path to avoid emoji risk
-  els.push(`<path d="M${W/2 - 20},${373 - 7} L${W/2 - 20},${373 + 7} L${W/2 - 10},${373}" fill="${C.white}"/>`);
-  els.push(text(W / 2 - 4, 376, "Run", C.white, { size: 14, weight: "600", anchor: "middle" }));
+  // ▶ icon + "Run" text centered together (icon ends at W/2-12, text starts at W/2-4)
+  els.push(`<path d="M${W/2 - 22},${373 - 7} L${W/2 - 22},${373 + 7} L${W/2 - 12},${373}" fill="${C.white}"/>`);
+  els.push(text(W / 2 + 9, 376, "Run", C.white, { size: 14, weight: "600", anchor: "middle" }));
 
   const popupDefs = `<linearGradient id="btnGrad" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12"/>
@@ -250,10 +250,10 @@ function makePopupDemo() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMAGE 3: before-after.svg  (880 × 230)
+// IMAGE 3: before-after.svg  (880 × 252)
 // ═══════════════════════════════════════════════════════════════════════════════
 function makeBeforeAfter() {
-  const W = 880, H = 230;
+  const W = 880, H = 252;
   const panelW = 370;
   const leftX  = 20;
   const rightX = W - 20 - panelW;
@@ -317,10 +317,10 @@ function makeBeforeAfter() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMAGE 4: features-grid.svg  (880 × 220)
+// IMAGE 4: features-grid.svg  (880 × 264)
 // ═══════════════════════════════════════════════════════════════════════════════
 function makeFeaturesGrid() {
-  const W = 880, H = 220;
+  const W = 880, H = 264;
   let els = [];
   els.push(rect(0, 0, W, H, C.bg, { r: 12 }));
 
@@ -342,14 +342,14 @@ function makeFeaturesGrid() {
     ["★", "Unlimited Custom Actions"],
     ["★", "Multiple Suggestions (4×)"],
     ["★", "Full History + PIN Lock"],
-    ["★", "Ollama (local AI)"],
+    ["★", "Ollama (local AI, zero API cost)"],
   ];
 
   const colW  = 400;
   const leftX = 20;
   const rightX = W / 2 + 20;
   const rowH  = 24;
-  const startY = 56;
+  const startY = 68;
 
   // ── FREE column ─────────────────────────────────────────────────────────────
   els.push(rect(leftX, 12, colW, H - 24, C.card, { r: 10, stroke: C.border, sw: 1 }));
@@ -432,17 +432,17 @@ function inlineArrow(x1, y, x2, color, sw = 2) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMAGE 5: setup-add-provider.svg  (880 × 290)
+// IMAGE 5: setup-add-provider.svg  (880 × 330)
 // ═══════════════════════════════════════════════════════════════════════════════
 function makeSetupAddProvider() {
-  const W = 880, H = 290;
+  const W = 880, H = 330;
   let els = [];
   els.push(rect(0, 0, W, H, C.bg, { r: 12 }));
 
   // ── Title bar ────────────────────────────────────────────────────────────────
   els.push(text(W / 2, 26, "First-time setup — add a provider in 60 seconds", C.muted, { size: 12, anchor: "middle" }));
 
-  const panelY = 38, panelH = 238;
+  const panelY = 38, panelH = 280;
   const leftX = 20, rightX = 460, panelW = 400;
 
   // ── LEFT: Provider picker ────────────────────────────────────────────────────
@@ -670,9 +670,8 @@ function makeExportImport() {
     els.push(text(leftX + 34, panelY + 53 + i * 24, it, C.muted, { size: 11 }));
   });
 
-  els.push(rect(leftX + 14, panelY + 148, panelW - 28, 22, C.purpleSoft, { r: 6, stroke: C.purple }));
-  els.push(text(leftX + panelW / 2, panelY + 163, "Export  .ttbackup", C.accent, { size: 11, weight: "600", anchor: "middle" }));
-  els.push(iconExport(leftX + panelW / 2 - 38, panelY + 157, C.accent));
+  els.push(rect(leftX + 14, panelY + 148, panelW - 28, 26, C.purpleSoft, { r: 6, stroke: C.purple }));
+  els.push(text(leftX + panelW / 2, panelY + 166, "Export  .ttbackup", C.accent, { size: 11, weight: "600", anchor: "middle" }));
 
   // ── MIDDLE: file + arrow ─────────────────────────────────────────────────────
   const midX = (leftX + panelW + rightX) / 2;

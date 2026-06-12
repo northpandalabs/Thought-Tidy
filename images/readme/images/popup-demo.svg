@@ -35,6 +35,6 @@
   <text x="316" y="323" fill="#94a3b8" font-size="12" font-weight="normal" text-anchor="start" >▾</text>
   <rect x="14" y="348" width="312" height="38" rx="9" fill="#7c3aed"  />
   <rect x="14" y="348" width="312" height="38" rx="9" fill="url(#btnGrad)"/>
-  <path d="M150,366 L150,380 L160,373" fill="#ffffff"/>
-  <text x="166" y="376" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle" >Run</text>
+  <path d="M148,366 L148,380 L158,373" fill="#ffffff"/>
+  <text x="179" y="376" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle" >Run</text>
 </svg>

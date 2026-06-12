@@ -28,16 +28,31 @@ function showSetPinBtn() {
     if (formEl) { formEl.remove(); formEl = null; return; }
     formEl = document.createElement("div");
     formEl.style.cssText = "margin:12px auto;max-width:380px;background:#1e1e2e;border:1px solid #313244;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px";
-    formEl.innerHTML = `
-      <p style="font-weight:700;font-size:14px;color:#cdd6f4">Set History Passcode</p>
-      <p style="font-size:12.5px;color:#a6adc8">Lock your history behind a passcode. You'll need to enter it each time you open the history page.</p>
-      <input type="password" id="pin-set-new" placeholder="New passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
-      <input type="password" id="pin-set-confirm" placeholder="Confirm passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
-      <p id="pin-set-err" style="color:#f38ba8;font-size:12px;display:none"></p>
-      <div style="display:flex;gap:8px">
-        <button id="pin-set-save" style="padding:6px 18px;border-radius:6px;background:#89b4fa;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Set Passcode</button>
-        <button id="pin-set-cancel" style="padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>
-      </div>`;
+    const inpCss = "padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px";
+    const title = document.createElement("p");
+    title.style.cssText = "font-weight:700;font-size:14px;color:#cdd6f4";
+    title.textContent = "Set History Passcode";
+    const desc = document.createElement("p");
+    desc.style.cssText = "font-size:12.5px;color:#a6adc8";
+    desc.textContent = "Lock your history behind a passcode. You'll need to enter it each time you open the history page.";
+    const pinNew = document.createElement("input");
+    pinNew.type = "password"; pinNew.id = "pin-set-new"; pinNew.placeholder = "New passcode"; pinNew.autocomplete = "new-password"; pinNew.style.cssText = inpCss;
+    const pinConf = document.createElement("input");
+    pinConf.type = "password"; pinConf.id = "pin-set-confirm"; pinConf.placeholder = "Confirm passcode"; pinConf.autocomplete = "new-password"; pinConf.style.cssText = inpCss;
+    const errEl = document.createElement("p");
+    errEl.id = "pin-set-err"; errEl.style.cssText = "color:#f38ba8;font-size:12px;display:none";
+    const saveBtn = document.createElement("button");
+    saveBtn.id = "pin-set-save"; saveBtn.type = "button"; saveBtn.textContent = "Set Passcode";
+    saveBtn.style.cssText = "padding:6px 18px;border-radius:6px;background:#89b4fa;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px";
+    const cancelBtn = document.createElement("button");
+    cancelBtn.id = "pin-set-cancel"; cancelBtn.type = "button"; cancelBtn.textContent = "Cancel";
+    cancelBtn.style.cssText = "padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px";
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display:flex;gap:8px";
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(cancelBtn);
+    formEl.appendChild(title); formEl.appendChild(desc); formEl.appendChild(pinNew);
+    formEl.appendChild(pinConf); formEl.appendChild(errEl); formEl.appendChild(btnRow);
     document.querySelector(".page-header").insertAdjacentElement("afterend", formEl);
     document.getElementById("pin-set-new").focus();
     document.getElementById("pin-set-cancel").addEventListener("click", () => { formEl.remove(); formEl = null; });
@@ -66,16 +81,28 @@ function showPinGate(data) {
 
   const gate = document.createElement("div");
   gate.style.cssText = "display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px";
-  gate.innerHTML = `
-    <div style="font-size:32px">🔒</div>
-    <p style="font-weight:700;font-size:16px">History is locked</p>
-    <p style="color:var(--text-muted,#a6adc8);font-size:13px">Enter your passcode to view your processing history.</p>
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <input type="password" id="pin-gate-input" placeholder="Passcode" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid var(--surface,#313244);background:var(--bg-card,#1e1e2e);color:var(--text,#cdd6f4);font-size:13px;width:180px">
-      <button id="pin-gate-btn" style="padding:7px 18px;border-radius:6px;background:var(--accent,#89b4fa);color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Unlock</button>
-    </div>
-    <p id="pin-gate-err" style="color:#f38ba8;font-size:12px;display:none">Incorrect passcode.</p>
-  `;
+  const lockIcon = document.createElement("div");
+  lockIcon.style.cssText = "font-size:32px"; lockIcon.textContent = "🔒";
+  const gateTitle = document.createElement("p");
+  gateTitle.style.cssText = "font-weight:700;font-size:16px"; gateTitle.textContent = "History is locked";
+  const gateDesc = document.createElement("p");
+  gateDesc.style.cssText = "color:var(--text-muted,#a6adc8);font-size:13px";
+  gateDesc.textContent = "Enter your passcode to view your processing history.";
+  const gateRow = document.createElement("div");
+  gateRow.style.cssText = "display:flex;gap:8px;margin-top:4px";
+  const gateInput = document.createElement("input");
+  gateInput.type = "password"; gateInput.id = "pin-gate-input"; gateInput.placeholder = "Passcode";
+  gateInput.autocomplete = "off";
+  gateInput.style.cssText = "padding:7px 10px;border-radius:6px;border:1px solid var(--surface,#313244);background:var(--bg-card,#1e1e2e);color:var(--text,#cdd6f4);font-size:13px;width:180px";
+  const gateBtn = document.createElement("button");
+  gateBtn.id = "pin-gate-btn"; gateBtn.type = "button"; gateBtn.textContent = "Unlock";
+  gateBtn.style.cssText = "padding:7px 18px;border-radius:6px;background:var(--accent,#89b4fa);color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px";
+  const gateErr = document.createElement("p");
+  gateErr.id = "pin-gate-err"; gateErr.style.cssText = "color:#f38ba8;font-size:12px;display:none";
+  gateErr.textContent = "Incorrect passcode.";
+  gateRow.appendChild(gateInput); gateRow.appendChild(gateBtn);
+  gate.appendChild(lockIcon); gate.appendChild(gateTitle); gate.appendChild(gateDesc);
+  gate.appendChild(gateRow); gate.appendChild(gateErr);
   page.prepend(gate);
   document.getElementById("pin-gate-input").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("pin-gate-btn").click(); });
   document.getElementById("pin-gate-btn").addEventListener("click", async () => {
@@ -134,28 +161,51 @@ function showPinManagement(initialHash) {
     if (formEl) { formEl.remove(); formEl = null; }
   }
 
-  function showForm(html, onMounted) {
+  function showForm(buildFn, onMounted) {
     if (formEl) { formEl.remove(); formEl = null; }
     dropdown.style.display = "none";
     formEl = document.createElement("div");
     formEl.style.cssText = "margin:12px auto;max-width:360px;background:#181825;border:1px solid #313244;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px";
-    formEl.innerHTML = `${html}`;
+    buildFn(formEl);
     statsBar.insertAdjacentElement("afterend", formEl);
     onMounted();
   }
 
+  function mkInput(id, placeholder, autocomplete) {
+    const inp = document.createElement("input");
+    inp.type = "password"; inp.id = id; inp.placeholder = placeholder;
+    inp.autocomplete = autocomplete;
+    inp.style.cssText = "padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px";
+    return inp;
+  }
+
+  function mkBtn(id, label, primary) {
+    const btn = document.createElement("button");
+    btn.id = id; btn.type = "button"; btn.textContent = label;
+    btn.style.cssText = primary
+      ? "padding:6px 18px;border-radius:6px;background:#89b4fa;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px"
+      : "padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px";
+    return btn;
+  }
+
   changeOpt.addEventListener("click", () => {
-    showForm(`
-      <p style="font-weight:700;font-size:14px;color:#cdd6f4">Change Passcode</p>
-      <input type="password" id="pin-current" placeholder="Current passcode" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
-      <input type="password" id="pin-new" placeholder="New passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
-      <input type="password" id="pin-confirm" placeholder="Confirm new passcode" autocomplete="new-password" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
-      <p id="pin-change-err" style="color:#f38ba8;font-size:12px;display:none"></p>
-      <div style="display:flex;gap:8px">
-        <button id="pin-change-save" style="padding:6px 18px;border-radius:6px;background:#89b4fa;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Save</button>
-        <button id="pin-change-cancel" style="padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>
-      </div>
-    `, () => {
+    showForm(form => {
+      const title = document.createElement("p");
+      title.style.cssText = "font-weight:700;font-size:14px;color:#cdd6f4";
+      title.textContent = "Change Passcode";
+      const errEl = document.createElement("p");
+      errEl.id = "pin-change-err"; errEl.style.cssText = "color:#f38ba8;font-size:12px;display:none";
+      const btnRow = document.createElement("div");
+      btnRow.style.cssText = "display:flex;gap:8px";
+      btnRow.appendChild(mkBtn("pin-change-save", "Save", true));
+      btnRow.appendChild(mkBtn("pin-change-cancel", "Cancel", false));
+      form.appendChild(title);
+      form.appendChild(mkInput("pin-current", "Current passcode", "off"));
+      form.appendChild(mkInput("pin-new", "New passcode", "new-password"));
+      form.appendChild(mkInput("pin-confirm", "Confirm new passcode", "new-password"));
+      form.appendChild(errEl);
+      form.appendChild(btnRow);
+    }, () => {
       document.getElementById("pin-change-cancel").addEventListener("click", clearForm);
       document.getElementById("pin-change-save").addEventListener("click", async () => {
         const curr    = document.getElementById("pin-current").value;
@@ -177,16 +227,28 @@ function showPinManagement(initialHash) {
   });
 
   removeOpt.addEventListener("click", () => {
-    showForm(`
-      <p style="font-weight:700;font-size:14px;color:#cdd6f4">Remove Passcode</p>
-      <p style="font-size:12.5px;color:#a6adc8">Enter your current passcode to remove the lock from history.</p>
-      <input type="password" id="pin-remove-current" placeholder="Current passcode" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid #313244;background:#181825;color:#cdd6f4;font-size:13px">
-      <p id="pin-remove-err" style="color:#f38ba8;font-size:12px;display:none">Incorrect passcode.</p>
-      <div style="display:flex;gap:8px">
-        <button id="pin-remove-confirm" style="padding:6px 18px;border-radius:6px;background:#f38ba8;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px">Remove</button>
-        <button id="pin-remove-cancel" style="padding:6px 14px;border-radius:6px;background:#313244;color:#cdd6f4;border:none;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>
-      </div>
-    `, () => {
+    showForm(form => {
+      const title = document.createElement("p");
+      title.style.cssText = "font-weight:700;font-size:14px;color:#cdd6f4";
+      title.textContent = "Remove Passcode";
+      const desc = document.createElement("p");
+      desc.style.cssText = "font-size:12.5px;color:#a6adc8";
+      desc.textContent = "Enter your current passcode to remove the lock from history.";
+      const errEl = document.createElement("p");
+      errEl.id = "pin-remove-err"; errEl.style.cssText = "color:#f38ba8;font-size:12px;display:none";
+      errEl.textContent = "Incorrect passcode.";
+      const btnRow = document.createElement("div");
+      btnRow.style.cssText = "display:flex;gap:8px";
+      const removeBtn = mkBtn("pin-remove-confirm", "Remove", true);
+      removeBtn.style.cssText = "padding:6px 18px;border-radius:6px;background:#f38ba8;color:#1e1e2e;border:none;font-weight:700;cursor:pointer;font-size:13px";
+      btnRow.appendChild(removeBtn);
+      btnRow.appendChild(mkBtn("pin-remove-cancel", "Cancel", false));
+      form.appendChild(title);
+      form.appendChild(desc);
+      form.appendChild(mkInput("pin-remove-current", "Current passcode", "off"));
+      form.appendChild(errEl);
+      form.appendChild(btnRow);
+    }, () => {
       document.getElementById("pin-remove-cancel").addEventListener("click", clearForm);
       document.getElementById("pin-remove-confirm").addEventListener("click", async () => {
         const curr  = document.getElementById("pin-remove-current").value;
