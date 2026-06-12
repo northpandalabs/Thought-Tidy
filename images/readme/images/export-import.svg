@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="230" viewBox="0 0 880 230">
+  <defs>
+    <style>text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }</style>
+    
+  </defs>
+  <rect x="0" y="0" width="880" height="230" rx="12" fill="#0f0f1a"  />
+  <text x="440" y="24" fill="#94a3b8" font-size="12" font-weight="normal" text-anchor="middle" >Export / Import — back up and restore your entire setup</text>
+  <rect x="30" y="36" width="360" height="180" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <path d="M40,36 H380 A10,10 0 0 1 390,46 V66 H30 V46 A10,10 0 0 1 40,36 Z" fill="#16213e" />
+  <text x="210" y="56" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="middle" >Export Settings</text>
+  <circle cx="52" cy="84" r="3" fill="#10b981"/>
+  <text x="64" y="89" fill="#94a3b8" font-size="11" font-weight="normal" text-anchor="start" >AI providers + API keys (encrypted)</text>
+  <circle cx="52" cy="108" r="3" fill="#10b981"/>
+  <text x="64" y="113" fill="#94a3b8" font-size="11" font-weight="normal" text-anchor="start" >Your profile &amp; writing style</text>
+  <circle cx="52" cy="132" r="3" fill="#10b981"/>
+  <text x="64" y="137" fill="#94a3b8" font-size="11" font-weight="normal" text-anchor="start" >Custom prompts &amp; actions</text>
+  <circle cx="52" cy="156" r="3" fill="#10b981"/>
+  <text x="64" y="161" fill="#94a3b8" font-size="11" font-weight="normal" text-anchor="start" >Full history (Pro)</text>
+  <rect x="44" y="184" width="332" height="22" rx="6" fill="#4c1d95" stroke="#7c3aed" stroke-width="1" />
+  <text x="210" y="199" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="middle" >Export  .ttbackup</text>
+  <rect x="163" y="191" width="18" height="12" rx="2" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <line x1="172" y1="184" x2="172" y2="191" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M168,185 L172,180 L176,185" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="424" y="100" width="32" height="38" rx="4" fill="#16213e" stroke="#2d2d4a" stroke-width="1" />
+  <path d="M442,100 L456,114" stroke="#2d2d4a" stroke-width="1"/>
+  <path d="M442,100 V114 H456" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1"/>
+  <text x="440" y="122" fill="#4a5568" font-size="8" font-weight="normal" text-anchor="middle" >.ttbackup</text>
+  <text x="440" y="136" fill="#4a5568" font-size="8" font-weight="normal" text-anchor="middle" >encrypted</text>
+  <rect x="490" y="36" width="360" height="180" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <path d="M500,36 H840 A10,10 0 0 1 850,46 V66 H490 V46 A10,10 0 0 1 500,36 Z" fill="#16213e" />
+  <text x="670" y="56" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="middle" >Import &amp; Restore</text>
+  <rect x="504" y="74" width="332" height="68" rx="8" fill="#16213e" stroke="#2d2d4a" stroke-width="1" />
+  <text x="670" y="100" fill="#94a3b8" font-size="11" font-weight="normal" text-anchor="middle" >Select .ttbackup file</text>
+  <text x="670" y="118" fill="#4a5568" font-size="9" font-weight="normal" text-anchor="middle" >Works on any computer with the same Pro key</text>
+  <rect x="611" y="104" width="18" height="12" rx="2" fill="none" stroke="#4a5568" stroke-width="1.5"/>
+  <line x1="620" y1="96" x2="620" y2="104" stroke="#4a5568" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M616,103 L620,108 L624,103" fill="none" stroke="#4a5568" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="504" y="150" width="332" height="22" rx="6" fill="#4c1d95" stroke="#7c3aed" stroke-width="1" />
+  <text x="670" y="165" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="middle" >Import .ttbackup</text>
+  <circle cx="512" cy="192" r="8" fill="#064e3b" stroke="#10b981" stroke-width="1.2"/>
+  <path d="M508,192 L512,196 L518,188" stroke="#10b981" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="526" y="197" fill="#10b981" font-size="11" font-weight="normal" text-anchor="start" >All settings restored — ready to use</text>
+</svg>

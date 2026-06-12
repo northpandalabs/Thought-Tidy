@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="160" viewBox="0 0 900 160">
+  <defs>
+    <style>text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }</style>
+    <marker id="arr0" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#4a5568"/></marker>
+    <marker id="arr1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#4a5568"/></marker>
+    <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#4a5568"/></marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="160" rx="12" fill="#0f0f1a"  />
+  <rect x="35" y="30" width="170" height="100" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <rect x="43" y="38" width="20" height="20" rx="10" fill="#4a5568"  />
+  <text x="53" y="52" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle" >1</text>
+  <rect x="113" y="65" width="14" height="18" rx="2" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+  <rect x="116" y="61" width="8" height="6" rx="1" fill="#94a3b8"/>
+  <line x1="116" y1="72" x2="124" y2="72" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="116" y1="76" x2="124" y2="76" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="116" y1="80" x2="122" y2="80" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="120" y="96" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="middle" >Copy your text</text>
+  <text x="120" y="112" fill="#94a3b8" font-size="10" font-weight="normal" text-anchor="middle" >Ctrl+C</text>
+  <line x1="211" y1="80" x2="249" y2="80" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arr0)"/>
+  <rect x="255" y="30" width="170" height="100" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <rect x="263" y="38" width="20" height="20" rx="10" fill="#4a5568"  />
+  <text x="273" y="52" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle" >2</text>
+  <rect x="329" y="67" width="22" height="14" rx="3" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+  <rect x="333" y="70" width="4" height="3" rx="1" fill="#94a3b8"/>
+  <rect x="339" y="70" width="4" height="3" rx="1" fill="#94a3b8"/>
+  <rect x="345" y="70" width="4" height="3" rx="1" fill="#94a3b8"/>
+  <rect x="336" y="75" width="10" height="3" rx="1" fill="#94a3b8"/>
+  <text x="340" y="96" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="middle" >Open Thought Tidy</text>
+  <text x="340" y="112" fill="#94a3b8" font-size="10" font-weight="normal" text-anchor="middle" >Ctrl+Shift+Space</text>
+  <line x1="431" y1="80" x2="469" y2="80" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arr1)"/>
+  <rect x="475" y="30" width="170" height="100" rx="10" fill="#4c1d95" stroke="#7c3aed" stroke-width="1.5" />
+  <rect x="483" y="38" width="20" height="20" rx="10" fill="#7c3aed"  />
+  <text x="493" y="52" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle" >3</text>
+  <rect x="550" y="66" width="20" height="12" rx="3" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <path d="M556,81 L560,86 L564,81" stroke="#a78bfa" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="560" y="96" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="middle" >Pick an action</text>
+  <text x="560" y="112" fill="#a78bfa" font-size="10" font-weight="normal" text-anchor="middle" >Brain Dump, Fix…</text>
+  <line x1="651" y1="80" x2="689" y2="80" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <rect x="695" y="30" width="170" height="100" rx="10" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1" />
+  <rect x="703" y="38" width="20" height="20" rx="10" fill="#4a5568"  />
+  <text x="713" y="52" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle" >4</text>
+  <circle cx="780" cy="74" r="11" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+  <path d="M775,74 L779,78 L786,69" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="780" y="96" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="middle" >Copy the result</text>
+  <text x="780" y="112" fill="#94a3b8" font-size="10" font-weight="normal" text-anchor="middle" >Paste anywhere</text>
+</svg>
