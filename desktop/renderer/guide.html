@@ -119,7 +119,24 @@
             <div class="step-num">1</div>
             <div class="step-body">
               <h4>Open Google AI Studio</h4>
-              <p>Go to <a href="https://aistudio.google.com" target="_blank" rel="noopener">aistudio.google.com ↗</a> and sign in with your Google account.</p>
+              <p>Go to <a href="https://aistudio.google.com" target="_blank" rel="noopener">aistudio.google.com ↗</a> and sign in with your Google account. This is Google's official API portal — not the consumer Gemini app.</p>
+              <div class="screen-mock">
+                <div class="mock-bar">
+                  <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                  <span class="mock-url">aistudio.google.com</span>
+                </div>
+                <div class="mock-body">
+                  <div class="mock-sidebar">
+                    <div class="mock-nav-item">Prompt</div>
+                    <div class="mock-nav-item highlight">Get API key ←</div>
+                    <div class="mock-nav-item">Models</div>
+                  </div>
+                  <div class="mock-content">
+                    <div class="mock-hero">Google AI Studio</div>
+                    <div class="mock-sub">Build with Gemini</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -127,7 +144,18 @@
             <div class="step-num">2</div>
             <div class="step-body">
               <h4>Click "Get API key" in the sidebar</h4>
-              <p>In the left navigation, click <strong>Get API key</strong>. Then click <strong>"Create API key"</strong>.</p>
+              <p>In the left navigation, click <strong>Get API key</strong>. Then click the blue <strong>"Create API key"</strong> button.</p>
+              <div class="screen-mock compact">
+                <div class="mock-bar">
+                  <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                  <span class="mock-url">aistudio.google.com/apikey</span>
+                </div>
+                <div class="mock-body col">
+                  <div class="mock-page-title">API keys</div>
+                  <div class="mock-hint-text">Use API keys to authenticate requests.</div>
+                  <div class="mock-btn-blue">+ Create API key</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -135,7 +163,13 @@
             <div class="step-num">3</div>
             <div class="step-body">
               <h4>Enable billing for privacy protection (recommended)</h4>
-              <p>Without billing, your prompts <em>may</em> be used to train Google's models. Enable pay-as-you-go billing in <a href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">Google Cloud Console ↗</a>. You won't be charged until you exceed the free monthly quota.</p>
+              <p>Without billing, your prompts <em>may</em> be used to train Google's models. To prevent this, enable pay-as-you-go billing in <a href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">Google Cloud Console ↗</a>. You won't be charged until you exceed the free monthly quota.</p>
+              <div class="info-box">
+                <span>💡</span>
+                <div>
+                  <strong>Free monthly quota (with billing enabled):</strong> Gemini 1.5 Flash gives you ~1 million free tokens/month. For typical writing tasks that's thousands of uses. You'd have to be a very heavy user to incur any cost.
+                </div>
+              </div>
             </div>
           </div>
 
@@ -143,7 +177,12 @@
             <div class="step-num">4</div>
             <div class="step-body">
               <h4>Copy your API key</h4>
-              <p>Your key will be shown — copy it. It looks like: <code>AIzaSy••••••••••••••••••••••</code></p>
+              <p>Your key will be shown once — copy it immediately. It looks like this:</p>
+              <div class="key-preview">
+                <span class="key-prefix">AIzaSy</span><span class="key-body">••••••••••••••••••••••••••••••••••</span>
+                <span class="key-copy">copy</span>
+              </div>
+              <p class="hint-text">Keep this key private. Anyone who has it can make API calls billed to your account.</p>
             </div>
           </div>
 
@@ -157,7 +196,7 @@
           <div class="provider-logo openai-logo">⬛</div>
           <div>
             <h3>ChatGPT — OpenAI</h3>
-            <p>Industry-leading models including GPT-4o. Pay-per-use. Key looks like: <code>sk-proj-…</code></p>
+            <p>Industry-leading models including GPT-4o. Pay-per-use, no monthly subscription needed for API access. Key looks like: <code>sk-proj-…</code></p>
           </div>
         </div>
 
@@ -171,18 +210,29 @@
             <div class="step-num">1</div>
             <div class="step-body">
               <h4>Open the OpenAI Platform</h4>
-              <p>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys ↗</a> and sign in.</p>
+              <p>Go to <a href="https://platform.openai.com" target="_blank" rel="noopener">platform.openai.com ↗</a> and sign in. This is separate from ChatGPT.com — it's the developer API portal.</p>
+              <div class="info-box">
+                <span>ℹ️</span>
+                <div>ChatGPT.com (free/Plus) and platform.openai.com (API) have <strong>different privacy terms</strong>. The API does not use your data for training. ChatGPT.com may.</div>
+              </div>
             </div>
           </div>
 
           <div class="step">
             <div class="step-num">2</div>
             <div class="step-body">
-              <h4>Create a new secret key</h4>
-              <p>Click <strong>"+ Create new secret key"</strong>, give it a name, and copy it immediately — shown only once.</p>
-              <div class="info-box warn">
-                <span>⚠️</span>
-                <div>Add a <strong>usage limit</strong> in your OpenAI account → Limits. Protects you if the key is ever leaked.</div>
+              <h4>Go to API Keys</h4>
+              <p>Click your avatar in the top-right → <strong>API keys</strong>. Or go directly to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys ↗</a></p>
+              <div class="screen-mock compact">
+                <div class="mock-bar">
+                  <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                  <span class="mock-url">platform.openai.com/api-keys</span>
+                </div>
+                <div class="mock-body col">
+                  <div class="mock-page-title">API keys</div>
+                  <div class="mock-hint-text">Do not share your API key with others, or expose it in the browser or other client-side code.</div>
+                  <div class="mock-btn-blue">+ Create new secret key</div>
+                </div>
               </div>
             </div>
           </div>
@@ -190,8 +240,32 @@
           <div class="step">
             <div class="step-num">3</div>
             <div class="step-body">
+              <h4>Create a new secret key</h4>
+              <p>Click <strong>"+ Create new secret key"</strong>. Give it a name (e.g. "Thought Tidy") and click <strong>Create secret key</strong>.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Copy your key — shown only once</h4>
+              <p>Copy it immediately — OpenAI won't show it again. It looks like this:</p>
+              <div class="key-preview">
+                <span class="key-prefix">sk-proj-</span><span class="key-body">••••••••••••••••••••••••••••••••••</span>
+                <span class="key-copy">copy</span>
+              </div>
+              <div class="info-box warn">
+                <span>⚠️</span>
+                <div>Add a small <strong>usage limit</strong> in your OpenAI account settings → Limits. This protects you in case the key is ever leaked.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
               <h4>Add billing credits</h4>
-              <p>Go to <a href="https://platform.openai.com/settings/organization/billing" target="_blank" rel="noopener">Billing ↗</a> and add $5–$10 to start.</p>
+              <p>The OpenAI API requires a prepaid credit balance. Go to <a href="https://platform.openai.com/settings/organization/billing" target="_blank" rel="noopener">Billing ↗</a> and add $5–$10 — this will last a long time for typical use with GPT-4o Mini.</p>
             </div>
           </div>
 
@@ -205,7 +279,7 @@
           <div class="provider-logo claude-logo">✦</div>
           <div>
             <h3>Claude — Anthropic</h3>
-            <p>Strong reasoning and writing quality. Haiku is fast and cheap. Key looks like: <code>sk-ant-…</code></p>
+            <p>Strong reasoning and writing quality. Haiku is fast and cheap. Sonnet is excellent for complex tasks. Key looks like: <code>sk-ant-…</code></p>
           </div>
         </div>
 
@@ -219,29 +293,208 @@
             <div class="step-num">1</div>
             <div class="step-body">
               <h4>Open the Anthropic Console</h4>
-              <p>Go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com/settings/keys ↗</a> and sign in.</p>
+              <p>Go to <a href="https://platform.claude.com" target="_blank" rel="noopener">platform.claude.com ↗</a> and create an account or sign in.</p>
             </div>
           </div>
 
           <div class="step">
             <div class="step-num">2</div>
             <div class="step-body">
-              <h4>Create a key and copy it</h4>
-              <p>Click <strong>"+ Create Key"</strong>, give it a name, and copy it immediately. It looks like: <code>sk-ant-api03-••••</code></p>
+              <h4>Go to API Keys</h4>
+              <p>In the left sidebar click <strong>Settings → API keys</strong>. Or go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com/settings/keys ↗</a></p>
+              <div class="screen-mock compact">
+                <div class="mock-bar">
+                  <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                  <span class="mock-url">platform.claude.com/settings/keys</span>
+                </div>
+                <div class="mock-body col">
+                  <div class="mock-page-title">API keys</div>
+                  <div class="mock-hint-text">Use API keys to authenticate requests to the Anthropic API.</div>
+                  <div class="mock-btn-claude">+ Create Key</div>
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="step">
             <div class="step-num">3</div>
             <div class="step-body">
+              <h4>Create a key and copy it</h4>
+              <p>Click <strong>"+ Create Key"</strong>, give it a name, and copy it immediately. It looks like this:</p>
+              <div class="key-preview">
+                <span class="key-prefix">sk-ant-api03-</span><span class="key-body">••••••••••••••••••••••••••••••••••</span>
+                <span class="key-copy">copy</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
               <h4>Add billing credits</h4>
-              <p>Add prepaid credits at <a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener">platform.claude.com/settings/billing ↗</a>. Claude Haiku is very affordable.</p>
+              <p>Add prepaid credits at <a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener">platform.claude.com/settings/billing ↗</a>. Claude Haiku is very affordable — $1 of credit covers roughly 2–3 million tokens of input.</p>
             </div>
           </div>
 
         </div>
       </div>
 
+    </section>
+
+    <!-- ── Add to App ─────────────────────────────────────────── -->
+    <section class="section add-section">
+      <h2 class="section-title">Now add your key to Thought Tidy</h2>
+      <p class="section-sub">These steps are the same regardless of which provider you chose.</p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>Open Settings</h4>
+            <p>Open the Thought Tidy app. Click the <strong>Settings</strong> button at the bottom of the main window.</p>
+            <div class="screen-mock compact">
+              <div class="mock-bar">
+                <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                <span class="mock-url">Thought Tidy</span>
+              </div>
+              <div class="mock-body col">
+                <div class="mock-ext-header">✦ Thought Tidy</div>
+                <div class="mock-ext-input">Paste and pick an action…</div>
+                <div class="mock-ext-btn highlight">Settings ← click this</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Click "+ Add Provider"</h4>
+            <p>In Settings, find the <strong>AI Providers</strong> section and click <strong>+ Add Provider</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Select your provider</h4>
+            <p>A wizard appears. Click the provider you just got a key from (Gemini / ChatGPT / Claude).</p>
+            <div class="screen-mock compact">
+              <div class="mock-bar">
+                <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                <span class="mock-url">Settings → AI Providers</span>
+              </div>
+              <div class="mock-body col">
+                <div class="mock-wizard-grid">
+                  <div class="mock-wbtn">Claude</div>
+                  <div class="mock-wbtn">ChatGPT</div>
+                  <div class="mock-wbtn highlight">Gemini ← click</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Paste your API key and test it</h4>
+            <p>Paste the key you copied from the provider, then click <strong>"Test &amp; Load Models"</strong>. If the key is valid, the model list will populate.</p>
+            <div class="screen-mock compact">
+              <div class="mock-bar">
+                <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                <span class="mock-url">Settings → Add Provider → Gemini</span>
+              </div>
+              <div class="mock-body col">
+                <div class="mock-field-label">API Key <span class="mock-link">Get key ↗</span></div>
+                <div class="mock-key-row">
+                  <div class="mock-key-input">AIzaSy••••••••••••••••••</div>
+                  <div class="mock-btn-blue sm">Test &amp; Load Models</div>
+                </div>
+                <div class="mock-status ok">✓ 4 models verified</div>
+                <div class="mock-field-label">Model</div>
+                <div class="mock-select">gemini-2.0-flash ▾</div>
+                <div class="mock-btn-blue">Save Provider</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h4>You're ready!</h4>
+            <p>Close Settings and go back to the main window. Paste or type any text, choose an action, and click <strong>Run</strong>. Your text is sent directly to the AI provider — nothing passes through Thought Tidy's servers (there are none).</p>
+            <div class="success-box">
+              ✅ &nbsp;Your data stays between you and your chosen AI provider. Thought Tidy is just the interface.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── How the API Works ─────────────────────────────────── -->
+    <section class="section">
+      <h2 class="section-title">How it all works (the short version)</h2>
+
+      <div class="flow-diagram">
+        <div class="flow-node">
+          <div class="flow-icon">📝</div>
+          <div class="flow-label">Your text</div>
+          <div class="flow-sub">stays in your app</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-icon">🔑</div>
+          <div class="flow-label">Your API key</div>
+          <div class="flow-sub">encrypted locally</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node highlight-node">
+          <div class="flow-icon">🤖</div>
+          <div class="flow-label">AI Provider API</div>
+          <div class="flow-sub">Gemini / OpenAI / Claude</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-icon">✨</div>
+          <div class="flow-label">Result</div>
+          <div class="flow-sub">returned to your app</div>
+        </div>
+      </div>
+
+      <div class="principles">
+        <div class="principle">
+          <span class="p-icon">🔒</span>
+          <div>
+            <strong>API ≠ Consumer app</strong>
+            <p>When you use the API directly (with your own key), you're bound by the developer/API terms of service — not the consumer product terms. Developer terms uniformly prohibit training on customer API data.</p>
+          </div>
+        </div>
+        <div class="principle">
+          <span class="p-icon">💳</span>
+          <div>
+            <strong>Pay-per-use, not subscription</strong>
+            <p>API billing is based on tokens (roughly 1 token = ¾ of a word). Fixing a 200-word paragraph costs fractions of a cent. You only pay for what you actually use.</p>
+          </div>
+        </div>
+        <div class="principle">
+          <span class="p-icon">🏠</span>
+          <div>
+            <strong>Want zero cloud? Use Ollama</strong>
+            <p>Thought Tidy supports Ollama — run open-source AI models entirely on your own machine. No API key, no internet connection needed, no data ever leaves your computer. Add it via Settings → AI Providers → Ollama.</p>
+          </div>
+        </div>
+        <div class="principle">
+          <span class="p-icon">🌐</span>
+          <div>
+            <strong>Open source, build on it</strong>
+            <p>Thought Tidy is open source. You can fork it, modify it, self-host it, or integrate it into your own tools. No lock-in, no proprietary format. It's a wrapper — you own the API relationship directly.</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ── Footer ────────────────────────────────────────────── -->

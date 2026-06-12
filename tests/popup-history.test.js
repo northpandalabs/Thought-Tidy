@@ -489,3 +489,68 @@ describe("storage key consistency — extension popup reads the same key runProc
     expect(desktopFn).not.toMatch(/storage\.local\.get\s*\(\s*["']historyLog["']/);
   });
 });
+
+// ── shared-popup.js — historyLog write (all run paths) ───────────────────────
+
+describe("shared-popup.js — historyLog written on every run path", () => {
+  let src;
+  beforeAll(() => {
+    src = fs.readFileSync(path.join(ROOT, "lib/shared-popup.js"), "utf8");
+  });
+
+  test("runProcess saves both historyFull and historyLog in one appSet call", () => {
+    const saveBlock = src.slice(src.lastIndexOf("historyFull.push("), src.lastIndexOf("historyFull.push(") + 1000);
+    expect(saveBlock).toContain("historyLog.push(");
+    expect(saveBlock).toContain("historyLog.slice(-200)");
+  });
+
+  test("clarify path saves both historyFull and historyLog in one appSet call", () => {
+    const clarifyBlock = src.slice(src.indexOf("clarifyRounds:"), src.indexOf("clarifyRounds:") + 700);
+    expect(clarifyBlock).toContain("historyLog.push(");
+    expect(clarifyBlock).toContain("historyLog.slice(-200)");
+  });
+
+  test("runProcess historyLog entry records inputLen and outputLen", () => {
+    expect(src).toContain("inputLen: text.length");
+    expect(src).toContain("outputLen: results.reduce(");
+  });
+
+  test("runProcess historyLog entry records inputLen and outputLen for clarify path", () => {
+    expect(src).toContain("inputLen: inputSnap.length");
+    expect(src).toContain("outputLen: r.result.length");
+  });
+
+  test("runProcess fetches historyLog from storage before writing", () => {
+    expect(src).toContain('"historyLog"');
+    expect(src).toContain("stored.historyLog");
+  });
+
+  test("runProcess purges stale historyLog entries before appending", () => {
+    expect(src).toContain("purgeOldLog(stored.historyLog");
+  });
+});
+
+// ── shared-popup.js — multi-output recording ─────────────────────────────────
+
+describe("shared-popup.js — multiple AI results all stored in historyFull.outputs", () => {
+  let src;
+  beforeAll(() => {
+    src = fs.readFileSync(path.join(ROOT, "lib/shared-popup.js"), "utf8");
+  });
+
+  test("outputs field uses results.map — captures every variant", () => {
+    expect(src).toContain("outputs: results.map(r => r.slice(0, 5000))");
+  });
+
+  test("outputLen in historyLog sums all variant lengths", () => {
+    expect(src).toContain("results.reduce((s, r) => s + r.length, 0)");
+  });
+
+  test("clarify path wraps single result in array for outputs", () => {
+    const clarifyPushBlock = src.slice(
+      src.indexOf("clarifyRounds:") - 200,
+      src.indexOf("clarifyRounds:") + 50
+    );
+    expect(clarifyPushBlock).toContain("outputs: [r.result.slice(0, 5000)]");
+  });
+});
