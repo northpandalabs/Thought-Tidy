@@ -133,8 +133,12 @@ async function init() {
     const cfg = await btcAPI.getAppConfig();
     if (cfg.isTestBuild) { const b = document.getElementById("test-only-banner"); if (b) b.style.display = "block"; }
     if (cfg.appVersion) {
+      const [base, hash] = cfg.appVersion.split("+");
+      const label = hash ? `v${base} (dev ${hash})` : `v${base}`;
       const el = document.getElementById("app-version-label");
-      if (el) { const [base, hash] = cfg.appVersion.split("+"); el.textContent = hash ? `v${base} (dev ${hash})` : `v${base}`; }
+      if (el) el.textContent = label;
+      const aboutEl = document.getElementById("about-version-text");
+      if (aboutEl) aboutEl.textContent = `Thought Tidy  ${label}`;
     }
     if (cfg.updateAvailable?.version) {
       const notice = document.getElementById("update-notice");

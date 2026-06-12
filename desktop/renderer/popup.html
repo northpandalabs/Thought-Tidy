@@ -20,7 +20,12 @@
   <div class="panel">
     <div class="input-label-row">
       <label for="input-text">Text to process</label>
-      <button id="paste-btn">Paste clipboard</button>
+      <div class="input-label-actions">
+        <label class="clear-on-open-label" title="Clear the input each time you open this popup">
+          <input type="checkbox" id="clear-on-open-chk"> Clear on open
+        </label>
+        <button id="paste-btn">Paste clipboard</button>
+      </div>
     </div>
     <p class="input-tip">Tip: Ctrl+C text → Ctrl+Shift+Space → Ctrl+V or Paste clipboard</p>
     <textarea id="input-text"

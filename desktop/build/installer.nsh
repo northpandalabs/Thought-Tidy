@@ -1,6 +1,9 @@
 ; Thought Tidy -- custom installer pages
 ; Injected by electron-builder via nsis.include in package.json / electron-builder-test.yml.
 ;
+; Suppress default "Nullsoft Install System vX.X" branding in the installer caption bar.
+BrandingText "NorthPanda Labs"
+;
 ; Page flow -- fresh install:
 ;   licensePage              -> full EULA (legal/eula.txt, via license config)
 ;   MUI_PAGE_DIRECTORY       -> location

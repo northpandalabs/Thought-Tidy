@@ -33,7 +33,8 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
-  "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters"
+  "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters",
+  "clearOnOpen"
 ];
 
 function updateFooter() {
@@ -105,6 +106,29 @@ async function loadHistory() {
     item.append(action, meta);
     list.appendChild(item);
   });
+
+  const viewAllBtn = document.createElement("button");
+  viewAllBtn.className = "history-view-btn";
+  viewAllBtn.textContent = "View in History →";
+  viewAllBtn.addEventListener("click", () => btcAPI.openHistory());
+  list.appendChild(viewAllBtn);
+}
+
+function applyClearOnOpen(s) {
+  const chk = document.getElementById("clear-on-open-chk");
+  if (chk) chk.checked = !!s.clearOnOpen;
+  if (s.clearOnOpen) {
+    const ta = document.getElementById("input-text");
+    if (ta) {
+      ta.value = "";
+      ta.dispatchEvent(new Event("input"));
+      // Also hide any previous result
+      const resultArea = document.getElementById("result-area");
+      if (resultArea) resultArea.style.display = "none";
+      const slotsEl = document.getElementById("result-slots");
+      if (slotsEl) slotsEl.innerHTML = "";
+    }
+  }
 }
 
 async function init() {
@@ -120,6 +144,12 @@ async function init() {
   document.getElementById("input-text").focus();
   initTextareaAutogrow();
 
+  const clearChk = document.getElementById("clear-on-open-chk");
+  if (clearChk) {
+    clearChk.checked = !!s.clearOnOpen;
+    clearChk.addEventListener("change", () => window.appSet({ clearOnOpen: clearChk.checked }));
+  }
+
   btcAPI.onPopupOpened(async () => {
     const fresh = await window.appGet(STORAGE_KEYS);
     setPopupSettings(fresh);
@@ -129,6 +159,7 @@ async function init() {
     rebuildVariantsSelect();
     populateAudienceSelect();
     restoreContextAudience();
+    applyClearOnOpen(fresh);
     // Reset multi-column layout but keep the toggle button visible
     const expandBtn = document.getElementById("result-expand-btn");
     if (expandBtn) {
@@ -151,10 +182,11 @@ async function init() {
   document.getElementById("run-btn").addEventListener("click", runProcess);
 
   document.getElementById("paste-btn").addEventListener("click", async () => {
-    const text = (await btcAPI.readClipboard()).trim();
-    if (!text) return;
+    const raw = (await btcAPI.readClipboard()).trim();
+    if (!raw) return;
     const textarea = document.getElementById("input-text");
-    textarea.value = text;
+    textarea.value = cleanPastedText(raw, false);
+    textarea.dispatchEvent(new Event("input"));
     textarea.focus();
     textarea.select();
   });

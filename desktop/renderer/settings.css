@@ -104,6 +104,7 @@ h1 {
 .links-row a {
   color: var(--accent);
   text-decoration: none;
+  cursor: pointer;
 }
 .links-row a:hover { text-decoration: underline; }
 .links-row .sep { color: var(--surface-hi); }
@@ -124,7 +125,7 @@ h1 {
   font-size: 12px;
   color: var(--surface-hi);
 }
-.page-credit a { color: var(--text-muted); text-decoration: none; }
+.page-credit a { color: var(--text-muted); text-decoration: none; cursor: pointer; }
 .page-credit a:hover { color: var(--accent); }
 
 /* ── Setup overview ──────────────────────────────────────────── */
@@ -808,3 +809,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer;
 }
 .section-save-status.ok  { color: #a6e3a1; }
 .section-save-status.err { color: #f38ba8; }
+
+/* ── Grammar filters accordion (details/summary) ──────────────── */
+#grammar-filters-section > summary::-webkit-details-marker { display: none; }
+#grammar-filters-section > summary::marker                  { display: none; }
+#grammar-filters-section > summary:hover .gf-chevron        { color: var(--text, #cdd6f4); }

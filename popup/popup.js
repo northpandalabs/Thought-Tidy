@@ -107,6 +107,15 @@ async function loadHistory() {
     item.append(action, meta);
     list.appendChild(item);
   });
+
+  const viewAllBtn = document.createElement("button");
+  viewAllBtn.className = "history-view-btn";
+  viewAllBtn.textContent = "View in History →";
+  viewAllBtn.addEventListener("click", () => {
+    browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
+    window.close();
+  });
+  list.appendChild(viewAllBtn);
 }
 
 async function runFromSelection() {

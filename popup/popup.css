@@ -226,6 +226,7 @@ select:focus { border-color: var(--accent); }
   max-height: 55vh;
   overflow-y: auto;
   scroll-behavior: smooth;
+  padding-top: 5px;
 }
 #result-slots.multi-col {
   display: flex;

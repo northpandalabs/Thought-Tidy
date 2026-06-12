@@ -139,6 +139,23 @@ label {
 }
 .input-label-row label { margin-bottom: 0; }
 
+.input-label-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-on-open-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
 #paste-btn {
   background: none;
   border: 1px solid var(--border);
@@ -254,6 +271,7 @@ select:focus { border-color: var(--accent); }
   max-height: 55vh;
   overflow-y: auto;
   scroll-behavior: smooth;
+  padding-top: 5px;
 }
 
 /* Expand toggle button (appears for 2-result runs on desktop) */
