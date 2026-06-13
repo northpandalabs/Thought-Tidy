@@ -80,6 +80,7 @@ async function init() {
   populateAudienceSelect();
   restoreContextAudience();
   wireContextSheetHandlers();
+  wireClarityCheckBtn();
   document.getElementById("input-text").focus();
   initTextareaAutogrow();
 

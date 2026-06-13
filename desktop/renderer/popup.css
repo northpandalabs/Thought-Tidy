@@ -264,7 +264,7 @@ select:focus { border-color: var(--accent); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.result-slots {
+#result-slots {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -507,6 +507,7 @@ select:focus { border-color: var(--accent); }
 .ctx-toggle-row {
   display: flex;
   align-items: center;
+  gap: 10px;
   margin-top: -2px;
 }
 .ctx-toggle-btn {
@@ -521,6 +522,17 @@ select:focus { border-color: var(--accent); }
 }
 .ctx-toggle-btn:hover { color: var(--accent); }
 .ctx-toggle-btn.active { color: var(--accent); }
+.cc-badge {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: var(--accent);
+  color: var(--base);
+  border-radius: 3px;
+  padding: 1px 4px;
+  vertical-align: middle;
+  margin-left: 3px;
+}
 
 /* ── Context Sheet ────────────────────────────────────────────────── */
 #context-sheet {

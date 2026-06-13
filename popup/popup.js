@@ -94,6 +94,7 @@ async function init() {
   initTextareaAutogrow();
   restoreContextAudience();
   wireContextSheetHandlers();
+  wireClarityCheckBtn();
   rebuildActionDropdown();
 
   const ta = document.getElementById("input-text");
