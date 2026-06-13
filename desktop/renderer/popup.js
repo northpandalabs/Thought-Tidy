@@ -32,7 +32,7 @@ const STORAGE_KEYS = [
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
   "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters",
-  "clearOnOpen"
+  "clearOnOpen", "showClarityCheckBtn"
 ];
 
 function updateFooter() {

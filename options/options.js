@@ -9,7 +9,7 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "syncEnabled", "contextPresets", "contextEnabled",
-  "audienceLevel", "devMode", "themeMode", "historyPin", "grammarFilters"
+  "audienceLevel", "devMode", "themeMode", "historyPin", "grammarFilters", "showClarityCheckBtn"
 ];
 
 window.platformOpenURL = url => browser.tabs.create({ url });
@@ -190,6 +190,11 @@ async function init() {
 
   const themeToggle = document.getElementById("themeToggle");
   if (themeToggle) themeToggle.checked = (s.themeMode === "light");
+  const ccBtnToggle = document.getElementById("showClarityCheckBtn");
+  if (ccBtnToggle) {
+    ccBtnToggle.checked = s.showClarityCheckBtn !== false;
+    ccBtnToggle.addEventListener("change", () => browser.storage.local.set({ showClarityCheckBtn: ccBtnToggle.checked }));
+  }
   const { syncEnabled: syncVal } = await browser.storage.local.get("syncEnabled");
   const syncEl = document.getElementById("syncEnabled");
   if (syncEl) syncEl.checked = syncVal !== false;

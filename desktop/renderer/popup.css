@@ -156,6 +156,18 @@ label {
   white-space: nowrap;
 }
 
+.ta-collapse-btn {
+  font-size: 11px;
+  padding: 1px 8px;
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.ta-collapse-btn:hover { border-color: var(--accent); color: var(--text); }
+
 #paste-btn {
   background: none;
   border: 1px solid var(--border);

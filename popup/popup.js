@@ -7,7 +7,7 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "lastContextAudience",
-  "themeMode", "historyPin", "grammarFilters", "inputTextDraft"
+  "themeMode", "historyPin", "grammarFilters", "inputTextDraft", "showClarityCheckBtn"
 ];
 
 window.RUN_BTN_ID   = "process-btn";

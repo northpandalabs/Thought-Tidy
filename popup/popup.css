@@ -101,6 +101,18 @@ textarea {
 }
 textarea:focus { border-color: var(--accent); }
 
+.ta-collapse-btn {
+  font-size: 11px;
+  padding: 1px 8px;
+  background: none;
+  color: var(--text-muted);
+  border: 1px solid var(--surface);
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.ta-collapse-btn:hover { border-color: var(--accent); color: var(--text); }
+
 .action-row {
   display: flex;
   gap: 7px;

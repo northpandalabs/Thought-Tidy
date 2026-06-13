@@ -7,7 +7,7 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "audienceLevel", "devMode",
-  "zoomLevel", "themeMode", "clearOnOpen", "historyPin", "grammarFilters"
+  "zoomLevel", "themeMode", "clearOnOpen", "historyPin", "grammarFilters", "showClarityCheckBtn"
 ];
 
 window.platformOpenURL    = url => btcAPI.openURL(url);
@@ -174,6 +174,12 @@ async function init() {
   if (clearOnOpenChk) {
     clearOnOpenChk.checked = !!s.clearOnOpen;
     clearOnOpenChk.addEventListener("change", () => browser.storage.local.set({ clearOnOpen: clearOnOpenChk.checked }));
+  }
+
+  const ccBtnChk = document.getElementById("show-clarity-check-btn-chk");
+  if (ccBtnChk) {
+    ccBtnChk.checked = s.showClarityCheckBtn !== false;
+    ccBtnChk.addEventListener("change", () => browser.storage.local.set({ showClarityCheckBtn: ccBtnChk.checked }));
   }
 
   document.getElementById("display-panel-btn")?.addEventListener("click", () => {
