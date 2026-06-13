@@ -7,7 +7,7 @@ const STORAGE_KEYS = [
   "claudeKey", "claudeModel", "claudeModels",
   "geminiKey", "geminiModel", "geminiModels",
   "variants", "customPrompts", "actionSettings",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "syncEnabled", "contextPresets", "contextEnabled",
   "audienceLevel", "devMode", "themeMode", "historyPin", "grammarFilters"
 ];
@@ -199,6 +199,7 @@ async function init() {
   initExportImportSection(s);
   loadHistoryViewer();
   initHistoryPinSection(s);
+  initVocabSection(s);
   initGrammarFiltersSection(s);
 
   document.getElementById("view-full-history-btn")?.addEventListener("click", () => {

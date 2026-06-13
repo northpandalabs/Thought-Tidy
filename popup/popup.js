@@ -53,70 +53,6 @@ function updateProviderStatus(s) {
   }
 }
 
-let _historyToggleWired = false;
-
-async function loadHistory() {
-  const pinLocked = await isHistoryPinLocked();
-  const { historyFull = [] } = await browser.storage.local.get("historyFull");
-  const entries = purgeOldLog(historyFull);
-  const section = document.getElementById("history-section");
-  if (!section) return;
-  if (!entries.length && !pinLocked) { section.style.display = "none"; return; }
-  section.style.display = "block";
-  const toggle = document.getElementById("history-toggle");
-  const list   = document.getElementById("history-list");
-  if (pinLocked) {
-    if (toggle) toggle.innerHTML = "🔒 History locked";
-    if (!_historyToggleWired && toggle && list) {
-      _historyToggleWired = true;
-      toggle.addEventListener("click", () => {
-        const open = list.style.display !== "none";
-        list.style.display = open ? "none" : "block";
-        if (!open && !list.children.length) {
-          const btn = document.createElement("button");
-          btn.textContent = "View history";
-          btn.className = "history-view-btn";
-          btn.addEventListener("click", () => {
-            browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
-            window.close();
-          });
-          list.appendChild(btn);
-        }
-      });
-    }
-    return;
-  }
-  if (toggle) document.getElementById("history-count").textContent = entries.length;
-  if (!_historyToggleWired && toggle && list) {
-    _historyToggleWired = true;
-    toggle.addEventListener("click", () => {
-      list.style.display = list.style.display === "none" ? "block" : "none";
-    });
-  }
-  list.innerHTML = "";
-  entries.slice(-10).reverse().forEach(e => {
-    const item = document.createElement("div");
-    item.className = "history-item";
-    const t    = new Date(e.timestamp);
-    const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
-    const action = document.createElement("span");
-    action.className   = "history-action";
-    action.textContent = e.action.replace(/-/g, " ");
-    const meta = document.createElement("span");
-    meta.textContent = `${time} · ${e.source}`;
-    item.append(action, meta);
-    list.appendChild(item);
-  });
-
-  const viewAllBtn = document.createElement("button");
-  viewAllBtn.className = "history-view-btn";
-  viewAllBtn.textContent = "View in History →";
-  viewAllBtn.addEventListener("click", () => {
-    browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
-    window.close();
-  });
-  list.appendChild(viewAllBtn);
-}
 
 async function runFromSelection() {
   const btn    = document.getElementById("run-selection-btn");
@@ -200,13 +136,7 @@ async function init() {
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
   const purged = purgeOldLog(rawLog);
   if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
-  loadHistory();
 }
 
 init();
 
-browser.storage.onChanged.addListener((changes, area) => {
-  if (area !== "local" || !("historyPin" in changes)) return;
-  _historyToggleWired = false;
-  loadHistory();
-});

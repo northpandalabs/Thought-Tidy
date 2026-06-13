@@ -561,3 +561,76 @@ describe("security — new JS files", () => {
     expect(hits).toHaveLength(0);
   });
 });
+
+// ── cleanPastedText / paste handler ───────────────────────────────────────────
+
+// Mirror cleanPastedText logic from lib/shared-popup.js (plain-text path only)
+function cleanPastedTextPlain(raw) {
+  let text = raw;
+  text = text.replace(/[​‌‍﻿]/g, "");
+  text = text.replace(/ /g, " ");
+  text = text.split("\n").map(l => l.trimEnd()).join("\n");
+  text = text.replace(/\n{3,}/g, "\n\n");
+  return text.trim();
+}
+
+describe("cleanPastedText — plain-text path (Teams/Outlook paste fix)", () => {
+  test("strips zero-width spaces injected by Teams", () => {
+    const input = "Hello​World";
+    expect(cleanPastedTextPlain(input)).toBe("HelloWorld");
+  });
+
+  test("strips zero-width non-joiner characters", () => {
+    expect(cleanPastedTextPlain("foo‌bar")).toBe("foobar");
+  });
+
+  test("strips BOM character", () => {
+    expect(cleanPastedTextPlain("﻿Hello")).toBe("Hello");
+  });
+
+  test("normalises non-breaking spaces to regular spaces", () => {
+    expect(cleanPastedTextPlain("Hello World")).toBe("Hello World");
+  });
+
+  test("collapses 3+ consecutive blank lines down to 2", () => {
+    const input = "Para one\n\n\n\n\nPara two";
+    expect(cleanPastedTextPlain(input)).toBe("Para one\n\nPara two");
+  });
+
+  test("preserves intentional double blank line", () => {
+    const input = "Para one\n\nPara two";
+    expect(cleanPastedTextPlain(input)).toBe("Para one\n\nPara two");
+  });
+
+  test("trims trailing whitespace on each line", () => {
+    const input = "line one   \nline two  ";
+    expect(cleanPastedTextPlain(input)).toBe("line one\nline two");
+  });
+
+  test("trims leading/trailing whitespace from overall text", () => {
+    expect(cleanPastedTextPlain("\n\nHello\n\n")).toBe("Hello");
+  });
+});
+
+describe("shared-popup.js paste handler — plain-text fallback", () => {
+  let src;
+  beforeAll(() => {
+    src = fs.readFileSync(path.join(ROOT, "lib/shared-popup.js"), "utf8");
+  });
+
+  test("paste handler reads plain text from clipboardData when no HTML present", () => {
+    expect(src).toContain('getData("text/plain")');
+  });
+
+  test("paste handler calls cleanPastedText with the plain-text content", () => {
+    const fn = src.slice(src.indexOf("ta.addEventListener(\"paste\""), src.indexOf("function cleanPastedText"));
+    expect(fn).toContain("html || plain");
+    expect(fn).toContain("!!html");
+  });
+
+  test("paste handler calls e.preventDefault() for plain-text pastes too", () => {
+    const fn = src.slice(src.indexOf("ta.addEventListener(\"paste\""), src.indexOf("function cleanPastedText"));
+    expect(fn).toContain("e.preventDefault()");
+    expect(fn).not.toContain("if (!html) return");
+  });
+});

@@ -5,9 +5,9 @@ const STORAGE_KEYS = [
   "configuredProviders", "geminiModels",
   "provider", "openaiKey", "openaiModel", "claudeKey", "claudeModel", "geminiKey", "geminiModel",
   "variants", "customPrompts", "actionSettings",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "audienceLevel", "devMode",
-  "zoomLevel", "themeMode", "historyPin", "grammarFilters"
+  "zoomLevel", "themeMode", "clearOnOpen", "historyPin", "grammarFilters"
 ];
 
 window.platformOpenURL    = url => btcAPI.openURL(url);
@@ -123,6 +123,7 @@ async function saveActionOrder() {
 let isDirty = false;
 
 async function init() {
+  let _pendingAppVersion = null;
   wireLinks();
   const titlebarIcon = document.getElementById("titlebar-icon");
   if (titlebarIcon) titlebarIcon.addEventListener("error", () => { titlebarIcon.style.display = "none"; });
@@ -137,8 +138,7 @@ async function init() {
       const label = hash ? `v${base} (dev ${hash})` : `v${base}`;
       const el = document.getElementById("app-version-label");
       if (el) el.textContent = label;
-      const aboutEl = document.getElementById("about-version-text");
-      if (aboutEl) aboutEl.textContent = `Thought Tidy  ${label}`;
+      _pendingAppVersion = label; // applied after initSharedSettings creates the element
     }
     if (cfg.updateAvailable?.version) {
       const notice = document.getElementById("update-notice");
@@ -169,6 +169,12 @@ async function init() {
     if (typeof btcAPI !== "undefined" && btcAPI.setZoom) btcAPI.setZoom(zoom);
     showSectionStatus("zoom-save-status", "Saved!");
   });
+
+  const clearOnOpenChk = document.getElementById("clear-on-open-chk");
+  if (clearOnOpenChk) {
+    clearOnOpenChk.checked = !!s.clearOnOpen;
+    clearOnOpenChk.addEventListener("change", () => browser.storage.local.set({ clearOnOpen: clearOnOpenChk.checked }));
+  }
 
   document.getElementById("display-panel-btn")?.addEventListener("click", () => {
     const p = document.getElementById("display-panel"); if (p) p.style.display = p.style.display==="none"?"block":"none";
@@ -215,8 +221,13 @@ async function init() {
 
   initProSection();
   initExportImportSection(s);
+  if (_pendingAppVersion) {
+    const aboutEl = document.getElementById("about-version-text");
+    if (aboutEl) aboutEl.textContent = _pendingAppVersion;
+  }
   loadHistoryViewer();
   initHistoryPinSection(s);
+  initVocabSection(s);
   initGrammarFiltersSection(s);
   document.getElementById("view-full-history-btn")?.addEventListener("click", () => btcAPI.openHistory());
   document.getElementById("save-btn").addEventListener("click", save);

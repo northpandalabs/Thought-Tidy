@@ -357,8 +357,9 @@ describe("MENU_PROMPTS completeness", () => {
   });
 
   test("all prompts end with a colon (instruction format)", () => {
+    const STRUCTURED_PROMPTS = new Set(["brain-to-prompt", "clarity-check"]);
     Object.entries(MENU_PROMPTS).forEach(([key, p]) => {
-      if (key === "brain-to-prompt") return; // uses CLARIFY block format; ends with period by design
+      if (STRUCTURED_PROMPTS.has(key)) return; // structured-output format; no trailing colon by design
       expect(p.trimEnd()).toMatch(/:$/);
     });
   });

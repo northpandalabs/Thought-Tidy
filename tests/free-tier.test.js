@@ -5,7 +5,7 @@ const { isProUnlocked } = require("../lib/license");
 const { resolveActionSettings, LOCKED_ACTIONS, DEFAULT_ACTION_SETTINGS } = require("../lib/prompts");
 
 // Pro actions that are greyed out (disabled) for free users in the action dropdown
-const PRO_ACTION_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand"]);
+const PRO_ACTION_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand", "clarity-check"]);
 
 // ── isProUnlocked (gate function used by applyProGates) ───────────────────────
 
@@ -106,6 +106,10 @@ describe("PRO_ACTION_IDS — actions disabled for free tier in dropdown", () => 
     ["improve", "professional", "brain-dump"].forEach(id => {
       expect(PRO_ACTION_IDS.has(id)).toBe(false);
     });
+  });
+
+  test("clarity-check is a Pro action (advanced analysis feature)", () => {
+    expect(PRO_ACTION_IDS.has("clarity-check")).toBe(true);
   });
 });
 

@@ -267,7 +267,7 @@ select:focus { border-color: var(--accent); }
 .result-slots {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
   max-height: 55vh;
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -483,6 +483,12 @@ select:focus { border-color: var(--accent); }
   font-family: monospace;
 }
 
+.footer-actions {
+  display: flex;
+  gap: 6px;
+}
+
+#history-btn,
 #settings-btn {
   background: none;
   border: 1px solid var(--border);
@@ -493,49 +499,9 @@ select:focus { border-color: var(--accent); }
   font-weight: 600;
   cursor: pointer;
 }
+#history-btn:hover,
 #settings-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── History panel ───────────────────────────────────────────────── */
-.history-panel {
-  padding: 8px 14px;
-  border-top: 1px solid var(--border);
-  background: var(--bg2);
-  flex-shrink: 0;
-}
-.history-toggle {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  width: 100%;
-  text-align: left;
-}
-.history-toggle:hover { color: var(--sub); }
-.history-list { margin-top: 6px; }
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10.5px;
-  color: var(--muted);
-  padding: 2px 0;
-  border-top: 1px solid var(--border);
-}
-.history-item:first-child { border-top: none; }
-.history-action { color: var(--sub); font-weight: 500; }
-.history-view-btn {
-  margin: 6px 0;
-  padding: 5px 14px;
-  background: var(--accent, #89b4fa);
-  color: #1e1e2e;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
 
 /* ── Context toggle row ───────────────────────────────────────────── */
 .ctx-toggle-row {

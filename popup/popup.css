@@ -259,7 +259,7 @@ select:focus { border-color: var(--accent); }
 }
 .result-slot + .result-slot {
   border-top: 1px solid var(--surface);
-  padding-top: 8px;
+  padding-top: 18px;
 }
 .result-slot-label {
   font-size: 10.5px;
@@ -501,41 +501,6 @@ select:focus { border-color: var(--accent); }
 }
 .setup-guide-link:hover { opacity: 0.8; }
 
-/* ── History ─────────────────────────────────────────────────────── */
-.history-toggle {
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-  padding: 0;
-}
-.history-toggle:hover { color: var(--text-dim); }
-.history-list { margin-top: 8px; }
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-muted);
-  padding: 2px 0;
-  border-top: 1px solid var(--surface);
-}
-.history-item:first-child { border-top: none; }
-.history-action { color: var(--text-dim); font-weight: 500; }
-.history-view-btn {
-  margin: 6px 0;
-  padding: 5px 14px;
-  background: var(--accent, #89b4fa);
-  color: #1e1e2e;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
 
 /* ── Process Selected Text button ────────────────────────────────── */
 .run-selection-row {

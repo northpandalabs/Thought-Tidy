@@ -22,8 +22,6 @@ window.buildSlotActions = (box) => {
   return [copyBtn, copyCloseBtn];
 };
 
-window.onRunComplete = () => loadHistory();
-
 const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
 
 const STORAGE_KEYS = [
@@ -54,65 +52,6 @@ function updateFooter() {
   }
 }
 
-let _historyToggleWired = false;
-
-async function loadHistory() {
-  const pinLocked = await isHistoryPinLocked();
-  const { historyFull = [] } = await browser.storage.local.get("historyFull");
-  const today   = todayDate();
-  const entries = historyFull.filter(e => e.date === today);
-  const section = document.getElementById("history-section");
-  if (!section) return;
-  if (!entries.length && !pinLocked) { section.style.display = "none"; return; }
-  section.style.display = "block";
-  const toggle = document.getElementById("history-toggle");
-  const list   = document.getElementById("history-list");
-  if (pinLocked) {
-    if (toggle) toggle.innerHTML = "🔒 History locked";
-    if (!_historyToggleWired && toggle && list) {
-      _historyToggleWired = true;
-      toggle.addEventListener("click", () => {
-        const open = list.style.display !== "none";
-        list.style.display = open ? "none" : "block";
-        if (!open && !list.children.length) {
-          const btn = document.createElement("button");
-          btn.textContent = "View history";
-          btn.className = "history-view-btn";
-          btn.addEventListener("click", () => btcAPI.openHistory());
-          list.appendChild(btn);
-        }
-      });
-    }
-    return;
-  }
-  if (toggle) document.getElementById("history-count").textContent = entries.length;
-  if (!_historyToggleWired && toggle && list) {
-    _historyToggleWired = true;
-    toggle.addEventListener("click", () => {
-      list.style.display = list.style.display === "none" ? "block" : "none";
-    });
-  }
-  list.innerHTML = "";
-  entries.slice(-10).reverse().forEach(e => {
-    const item = document.createElement("div");
-    item.className = "history-item";
-    const t    = new Date(e.timestamp);
-    const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
-    const action = document.createElement("span");
-    action.className   = "history-action";
-    action.textContent = e.action.replace(/-/g, " ");
-    const meta = document.createElement("span");
-    meta.textContent = `${time} · ${e.source}`;
-    item.append(action, meta);
-    list.appendChild(item);
-  });
-
-  const viewAllBtn = document.createElement("button");
-  viewAllBtn.className = "history-view-btn";
-  viewAllBtn.textContent = "View in History →";
-  viewAllBtn.addEventListener("click", () => btcAPI.openHistory());
-  list.appendChild(viewAllBtn);
-}
 
 function applyClearOnOpen(s) {
   const chk = document.getElementById("clear-on-open-chk");
@@ -144,12 +83,6 @@ async function init() {
   document.getElementById("input-text").focus();
   initTextareaAutogrow();
 
-  const clearChk = document.getElementById("clear-on-open-chk");
-  if (clearChk) {
-    clearChk.checked = !!s.clearOnOpen;
-    clearChk.addEventListener("change", () => window.appSet({ clearOnOpen: clearChk.checked }));
-  }
-
   btcAPI.onPopupOpened(async () => {
     const fresh = await window.appGet(STORAGE_KEYS);
     setPopupSettings(fresh);
@@ -168,8 +101,6 @@ async function init() {
     }
     document.getElementById("result-slots")?.classList.remove("multi-col");
     if (typeof btcAPI.resizePopup === "function") btcAPI.resizePopup(1);
-    _historyToggleWired = false;
-    loadHistory();
     document.getElementById("input-text").focus();
   });
 
@@ -178,6 +109,7 @@ async function init() {
   });
 
   document.getElementById("close-btn").addEventListener("click", () => btcAPI.closePopup());
+  document.getElementById("history-btn").addEventListener("click", () => btcAPI.openHistory());
   document.getElementById("settings-btn").addEventListener("click", () => btcAPI.openSettings());
   document.getElementById("run-btn").addEventListener("click", runProcess);
 

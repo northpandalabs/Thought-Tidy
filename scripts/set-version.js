@@ -6,26 +6,37 @@ const [oldVer, newVer] = process.argv.slice(2);
 
 if (!newVer || !/^\d+\.\d+\.\d+$/.test(newVer)) {
   console.error('Usage: node scripts/set-version.js <old-version> <new-version>');
-  console.error('Example: node scripts/set-version.js 1.5.2 1.5.3');
+  console.error('Example: node scripts/set-version.js 1.5.3 1.5.4');
   process.exit(1);
 }
 if (!oldVer || !/^\d+\.\d+\.\d+$/.test(oldVer)) {
-  console.error('Old version must be a valid semver string (e.g. 1.5.2)');
+  console.error('Old version must be a valid semver string (e.g. 1.5.3)');
   process.exit(1);
 }
 
 const ROOT = path.resolve(__dirname, '..');
 
 // Files with structured version fields (JSON key "version")
+// downloads.json: only the "version" key needs updating — desktop URLs are
+// computed from filename_template at runtime, so no hardcoded version in URLs.
 const JSON_FILES = [
   'package.json',
   'desktop/package.json',
   'legal/downloads.json',
 ];
 
-// Files where version appears as a plain string anywhere in the content
+// Files where version appears as a plain string and needs a full string replace.
+// landing.html and onboarding.html are intentionally NOT listed here — they
+// read version dynamically from downloads.json at runtime via wireDownloadLinks().
 const SCAN_FILES = [
   'manifest.json',
+  'README.md',                     // build badge + desktop download links
+  'README-Dev.md',                 // build badge + coverage heading + example snippet
+  'llms.md',                       // current version line
+  'plans/website/WEBSITE-PLAN.md', // desktop URL references
+  'plans/APP-DESCRIPTION.md',      // changelog heading
+  'package-lock.json',
+  'desktop/package-lock.json',
 ];
 
 // Directories / globs to skip when doing the broad scan

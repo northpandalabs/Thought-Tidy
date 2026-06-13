@@ -21,9 +21,6 @@
     <div class="input-label-row">
       <label for="input-text">Text to process</label>
       <div class="input-label-actions">
-        <label class="clear-on-open-label" title="Clear the input each time you open this popup">
-          <input type="checkbox" id="clear-on-open-chk"> Clear on open
-        </label>
         <button id="paste-btn">Paste clipboard</button>
       </div>
     </div>
@@ -80,16 +77,13 @@
     </div>
   </div>
 
-  <!-- Today's Activity -->
-  <div class="history-panel" id="history-section" style="display:none">
-    <button class="history-toggle" id="history-toggle">Today: <span id="history-count">0</span> fixes</button>
-    <div id="history-list" class="history-list" style="display:none"></div>
-  </div>
-
   <!-- Footer -->
   <div class="footer">
     <span id="provider-badge" class="provider-badge"></span>
-    <button id="settings-btn">⚙ Settings</button>
+    <div class="footer-actions">
+      <button id="history-btn">History</button>
+      <button id="settings-btn">⚙ Settings</button>
+    </div>
   </div>
 
   <!-- Load lib scripts with paths relative to this file's location -->

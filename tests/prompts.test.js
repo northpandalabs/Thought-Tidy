@@ -25,14 +25,17 @@ describe("MENU_PROMPTS", () => {
   });
 
   test("every prompt ends with a colon (instruction separator convention)", () => {
+    const STRUCTURED_PROMPTS = new Set(["brain-to-prompt", "clarity-check"]);
     Object.entries(MENU_PROMPTS).forEach(([key, prompt]) => {
-      if (key === "brain-to-prompt") return; // uses CLARIFY block format; ends with period by design
+      if (STRUCTURED_PROMPTS.has(key)) return; // structured-output format; no trailing colon by design
       expect(prompt.trimEnd()).toMatch(/:$/);
     });
   });
 
   test("every prompt contains 'Return ONLY' (prevents AI from adding commentary)", () => {
+    const STRUCTURED_PROMPTS = new Set(["brain-to-prompt", "clarity-check"]);
     Object.entries(MENU_PROMPTS).forEach(([key, prompt]) => {
+      if (STRUCTURED_PROMPTS.has(key)) return; // structured-output format; uses explicit response schema
       expect(prompt).toContain("Return ONLY");
     });
   });
@@ -169,8 +172,8 @@ describe("buildClarifyPrompt", () => {
 // ── DEFAULT_ACTION_SETTINGS ───────────────────────────────────────────────────
 
 describe("DEFAULT_ACTION_SETTINGS", () => {
-  test("contains exactly 11 actions", () => {
-    expect(DEFAULT_ACTION_SETTINGS).toHaveLength(11);
+  test("contains exactly 12 actions", () => {
+    expect(DEFAULT_ACTION_SETTINGS).toHaveLength(12);
   });
 
   test("every action has id (string), label (string), and enabled (boolean)", () => {
@@ -228,7 +231,7 @@ describe("LOCKED_ACTIONS membership", () => {
 // ── resolveActionSettings (deep coverage) ────────────────────────────────────
 
 describe("resolveActionSettings — deep coverage", () => {
-  test("result contains all 11 default IDs when called with an empty array", () => {
+  test("result contains all 12 default IDs when called with an empty array", () => {
     const result = resolveActionSettings([]);
     const ids = result.map(a => a.id);
     DEFAULT_ACTION_SETTINGS.forEach(def => expect(ids).toContain(def.id));
@@ -274,5 +277,75 @@ describe("resolveActionSettings — deep coverage", () => {
   test("null stored argument returns full defaults", () => {
     const result = resolveActionSettings(null);
     expect(result).toHaveLength(DEFAULT_ACTION_SETTINGS.length);
+  });
+});
+
+// ── clarity-check action ──────────────────────────────────────────────────────
+
+describe("clarity-check action", () => {
+  test("clarity-check exists in DEFAULT_ACTION_SETTINGS", () => {
+    expect(DEFAULT_ACTION_SETTINGS.some(a => a.id === "clarity-check")).toBe(true);
+  });
+
+  test("clarity-check exists in MENU_PROMPTS", () => {
+    expect(MENU_PROMPTS["clarity-check"]).toBeTruthy();
+  });
+
+  test("clarity-check prompt references clarity scoring", () => {
+    expect(MENU_PROMPTS["clarity-check"]).toMatch(/1.?10|scale/i);
+  });
+
+  test("clarity-check prompt asks What are you trying to say when unclear", () => {
+    expect(MENU_PROMPTS["clarity-check"]).toContain("What are you trying to say");
+  });
+
+  test("clarity-check is in LOCKED_ACTIONS (built-in, cannot be renamed)", () => {
+    expect(LOCKED_ACTIONS.has("clarity-check")).toBe(true);
+  });
+});
+
+// ── buildPromptWithProfile — vocab injection ──────────────────────────────────
+
+describe("buildPromptWithProfile — vocab injection", () => {
+  const BASE = "Rewrite this. Return ONLY the rewritten text:";
+
+  test("injects preferred words when profileVocab.prefer is set", () => {
+    const s = { profileEnabled: true, profileName: "Bailey", profileVocab: { prefer: ["gonna", "hey"] } };
+    const result = buildPromptWithProfile(BASE, s);
+    expect(result).toContain("gonna");
+    expect(result).toContain("hey");
+  });
+
+  test("injects avoided words when profileVocab.avoid is set", () => {
+    const s = { profileEnabled: true, profileName: "Bailey", profileVocab: { avoid: ["leverage", "synergy"] } };
+    const result = buildPromptWithProfile(BASE, s);
+    expect(result).toContain("leverage");
+    expect(result).toContain("synergy");
+  });
+
+  test("no vocab injected when profileVocab lists are empty", () => {
+    const s = { profileEnabled: true, profileName: "Bailey", profileVocab: { prefer: [], avoid: [] } };
+    const result = buildPromptWithProfile(BASE, s);
+    expect(result).not.toContain("Preferred words");
+    expect(result).not.toContain("Avoided words");
+  });
+
+  test("no vocab injected when profileVocab is absent", () => {
+    const s = { profileEnabled: true, profileName: "Bailey" };
+    const result = buildPromptWithProfile(BASE, s);
+    expect(result).not.toContain("vocab");
+  });
+
+  test("vocab not injected when profileEnabled is false", () => {
+    const s = { profileEnabled: false, profileVocab: { prefer: ["gonna"] } };
+    expect(buildPromptWithProfile(BASE, s)).toBe(BASE);
+  });
+
+  test("vocab appears in the profile block before the base prompt", () => {
+    const s = { profileEnabled: true, profileName: "Bailey", profileVocab: { prefer: ["gonna"], avoid: ["leverage"] } };
+    const result = buildPromptWithProfile(BASE, s);
+    const vocabIdx = result.indexOf("gonna");
+    const baseIdx  = result.indexOf(BASE);
+    expect(vocabIdx).toBeLessThan(baseIdx);
   });
 });
