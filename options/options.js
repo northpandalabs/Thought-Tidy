@@ -200,6 +200,9 @@ async function init() {
   if (syncEl) syncEl.checked = syncVal !== false;
 
   initCommonSettingsWiring(s);
+  document.getElementById("contextEnabled")?.addEventListener("change", () => {
+    browser.storage.local.set({ contextEnabled: document.getElementById("contextEnabled")?.checked !== false });
+  });
   initProSection();
   initExportImportSection(s);
   loadHistoryViewer();

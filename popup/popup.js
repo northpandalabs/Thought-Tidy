@@ -5,7 +5,7 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "lastContextAudience",
   "themeMode", "historyPin", "grammarFilters", "inputTextDraft", "showClarityCheckBtn"
 ];
@@ -31,27 +31,6 @@ window.buildSlotActions = (box) => {
   });
   return [copyBtn, useBtn];
 };
-
-const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
-
-function updateProviderStatus(s) {
-  const dot  = document.getElementById("key-indicator");
-  const text = document.getElementById("key-text");
-  if (!dot || !text) return;
-  const providers = s.configuredProviders;
-  const hasNew    = Array.isArray(providers) && providers.length > 0;
-  const hasLegacy = s.openaiKey || s.claudeKey || s.geminiKey;
-  if (hasNew) {
-    dot.className    = "dot dot-ok";
-    text.textContent = `Priority: ${providers.map(p => PROVIDER_LABELS[p.id] || p.id).join(" → ")}`;
-  } else if (hasLegacy) {
-    dot.className    = "dot dot-ok";
-    text.textContent = "API key set";
-  } else {
-    dot.className    = "dot dot-bad";
-    text.textContent = "No providers configured. Open Settings";
-  }
-}
 
 
 async function runFromSelection() {
@@ -88,21 +67,27 @@ async function init() {
   setPopupSettings(s);
   document.documentElement.setAttribute("data-theme", s.themeMode || "dark");
 
+  rebuildActionDropdown();
   rebuildVariantsSelect();
-  updateProviderStatus(s);
   populateAudienceSelect();
-  initTextareaAutogrow();
   restoreContextAudience();
   wireContextSheetHandlers();
   wireClarityCheckBtn();
-  rebuildActionDropdown();
-
   const ta = document.getElementById("input-text");
+  ta?.focus();
+  initTextareaAutogrow();
+
   if (ta && s.inputTextDraft) { ta.value = s.inputTextDraft; ta.dispatchEvent(new Event("input")); }
   let _draftTimer;
   ta?.addEventListener("input", () => {
     clearTimeout(_draftTimer);
     _draftTimer = setTimeout(() => browser.storage.local.set({ inputTextDraft: ta.value }), 400);
+  });
+  ta?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      runProcess();
+    }
   });
 
   const providers    = s.configuredProviders;
@@ -140,4 +125,17 @@ async function init() {
 }
 
 init();
+
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  const relevant = ["showClarityCheckBtn", "contextEnabled"];
+  if (!relevant.some(k => k in changes)) return;
+  const s = getPopupSettings();
+  const patch = {};
+  if ("showClarityCheckBtn" in changes) patch.showClarityCheckBtn = changes.showClarityCheckBtn.newValue;
+  if ("contextEnabled"      in changes) patch.contextEnabled      = changes.contextEnabled.newValue;
+  setPopupSettings({ ...s, ...patch });
+  rebuildVariantsSelect();
+  restoreContextAudience();
+});
 

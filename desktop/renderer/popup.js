@@ -29,7 +29,7 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
   "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters",
   "clearOnOpen", "showClarityCheckBtn"
@@ -143,3 +143,15 @@ async function init() {
 }
 
 init().then(loadHistory);
+
+window.addEventListener("focus", async () => {
+  const stored = await window.appGet(["showClarityCheckBtn", "contextEnabled"]);
+  const s = getPopupSettings();
+  const changed = stored.showClarityCheckBtn !== s.showClarityCheckBtn
+               || stored.contextEnabled      !== s.contextEnabled;
+  if (changed) {
+    setPopupSettings({ ...s, showClarityCheckBtn: stored.showClarityCheckBtn, contextEnabled: stored.contextEnabled });
+    rebuildVariantsSelect();
+    restoreContextAudience();
+  }
+});

@@ -163,6 +163,7 @@ select:focus { border-color: var(--accent); }
 }
 #process-btn:hover { opacity: 0.88; }
 #process-btn:active { transform: scale(0.96); }
+#process-btn:disabled { opacity: 0.45; cursor: default; }
 
 /* ── Expand / layout toggle button ──────────────────────────────── */
 #result-expand-btn {
@@ -413,24 +414,6 @@ select:focus { border-color: var(--accent); }
   font-family: monospace;
   word-break: break-all;
 }
-
-/* ── Key status ──────────────────────────────────────────────────── */
-.key-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  color: var(--text-dim);
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.dot-ok  { background: #a6e3a1; }
-.dot-bad { background: #f38ba8; }
 
 /* ── Bottom button row ───────────────────────────────────────────── */
 .bottom-row {
