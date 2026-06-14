@@ -47,10 +47,6 @@ function mockFetchOnce(data) {
 describe("verifyWithGumroad", () => {
   afterEach(() => {
     global.fetch = undefined;
-    if (typeof window !== "undefined") {
-      window.appGet = undefined;
-      window.appSet = undefined;
-    }
   });
 
   // ── Success — new device activation ─────────────────────────────────────────
@@ -89,14 +85,13 @@ describe("verifyWithGumroad", () => {
   // ── Already activated on this device ────────────────────────────────────────
 
   test("skips activation call when device already activated with same key", async () => {
-    if (typeof window === "undefined") return; // guard for non-browser envs
-    window.appGet = jest.fn().mockResolvedValue({ deviceActivated: "ABC-123" });
-    window.appSet = jest.fn();
+    const appGet = jest.fn().mockResolvedValue({ deviceActivated: "ABC-123" });
+    const appSet = jest.fn();
     mockFetchOnce({ success: true, uses: 2, purchase: makePurchase("user@example.com") });
-    const result = await verifyWithGumroad("user@example.com", "ABC-123");
+    const result = await verifyWithGumroad("user@example.com", "ABC-123", { appGet, appSet });
     expect(result).toEqual({ valid: true });
     expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(window.appSet).not.toHaveBeenCalled();
+    expect(appSet).not.toHaveBeenCalled();
   });
 
   // ── Device limit ─────────────────────────────────────────────────────────────
@@ -163,6 +158,18 @@ describe("verifyWithGumroad", () => {
     const result = await verifyWithGumroad("user@example.com", "ABC-123");
     expect(result).toEqual({ valid: false, error: "Could not activate this device. Please try again." });
   });
+
+  test("stamps deviceActivated and timestamps on successful new-device activation", async () => {
+    const appSet = jest.fn().mockResolvedValue();
+    const appGet = jest.fn().mockResolvedValue({ deviceActivated: null });
+    const purchase = makePurchase("user@example.com");
+    mockFetchTwice(
+      { success: true, uses: 0, purchase },
+      { success: true, uses: 1, purchase }
+    );
+    await verifyWithGumroad("user@example.com", "ABC-123", { appGet, appSet });
+    expect(appSet).toHaveBeenCalledWith(expect.objectContaining({ deviceActivated: "ABC-123" }));
+  });
 });
 
 // ── checkLicensePeriodically ───────────────────────────────────────────────────
@@ -171,83 +178,98 @@ describe("checkLicensePeriodically", () => {
   const DAY_MS  = 24 * 60 * 60 * 1000;
   const HOUR_MS =      60 * 60 * 1000;
 
-  function setupWindow(lastCheck = 0, lastAttempt = 0) {
-    window.appGet = jest.fn().mockResolvedValue({ lastLicenseCheck: lastCheck, lastLicenseAttempt: lastAttempt });
-    window.appSet = jest.fn().mockResolvedValue();
+  function makeStorage(lastCheck = 0, lastAttempt = 0) {
+    const appGet = jest.fn().mockResolvedValue({ lastLicenseCheck: lastCheck, lastLicenseAttempt: lastAttempt });
+    const appSet = jest.fn().mockResolvedValue();
+    return { appGet, appSet };
   }
 
   afterEach(() => {
     global.fetch = undefined;
-    if (typeof window !== "undefined") {
-      window.appGet = undefined;
-      window.appSet = undefined;
-    }
   });
 
   test("skips check when last confirmed check was within 24 hours", async () => {
-    if (typeof window === "undefined") return;
-    setupWindow(Date.now() - HOUR_MS); // checked 1 hour ago
-    const result = await checkLicensePeriodically("a@b.com", "KEY");
+    const storage = makeStorage(Date.now() - HOUR_MS); // checked 1 hour ago
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
     expect(result).toBeNull();
     expect(global.fetch).toBeUndefined();
   });
 
   test("skips check when last attempt was a network failure within 1 hour", async () => {
-    if (typeof window === "undefined") return;
     // lastCheck is old (>24h), but lastAttempt was recent (<1h)
-    setupWindow(0, Date.now() - 30 * 60 * 1000); // attempted 30 min ago
-    const result = await checkLicensePeriodically("a@b.com", "KEY");
+    const storage = makeStorage(0, Date.now() - 30 * 60 * 1000); // attempted 30 min ago
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
     expect(result).toBeNull();
     expect(global.fetch).toBeUndefined();
   });
 
-  test("runs check and returns null when license is still valid", async () => {
-    if (typeof window === "undefined") return;
-    setupWindow(Date.now() - DAY_MS - 1000); // last check was >24h ago
-    global.fetch = jest.fn().mockResolvedValue({
-      json: async () => ({ success: true, purchase: { refunded: false, chargebacked: false } })
-    });
-    const result = await checkLicensePeriodically("a@b.com", "KEY");
-    expect(result).toEqual({ valid: true });
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(window.appSet).toHaveBeenCalled();
-  });
-
-  test("returns revoked:true when license is refunded", async () => {
-    if (typeof window === "undefined") return;
-    setupWindow(Date.now() - DAY_MS - 1000);
-    global.fetch = jest.fn().mockResolvedValue({
-      json: async () => ({ success: true, purchase: { refunded: true, chargebacked: false } })
-    });
-    const result = await checkLicensePeriodically("a@b.com", "KEY");
-    expect(result).toEqual({ revoked: true });
-  });
-
-  test("returns revoked:true when Gumroad says success:false", async () => {
-    if (typeof window === "undefined") return;
-    setupWindow(Date.now() - DAY_MS - 1000);
-    global.fetch = jest.fn().mockResolvedValue({ json: async () => ({ success: false }) });
-    const result = await checkLicensePeriodically("a@b.com", "KEY");
-    expect(result).toEqual({ revoked: true });
-  });
-
-  test("returns null on network error (benefit of the doubt)", async () => {
-    if (typeof window === "undefined") return;
-    setupWindow(Date.now() - DAY_MS - 1000);
-    global.fetch = jest.fn().mockRejectedValue(new Error("offline"));
+  test("returns null when neither appGet nor appSet is available", async () => {
     const result = await checkLicensePeriodically("a@b.com", "KEY");
     expect(result).toBeNull();
   });
 
-  test("retries after 1 hour following a network failure", async () => {
-    if (typeof window === "undefined") return;
-    // lastCheck old, lastAttempt was >1h ago (so retry is due)
-    setupWindow(0, Date.now() - HOUR_MS - 1000);
+  test("runs check and returns valid:true when license is still valid", async () => {
+    const storage = makeStorage(Date.now() - DAY_MS - 1000); // last check was >24h ago
     global.fetch = jest.fn().mockResolvedValue({
       json: async () => ({ success: true, purchase: { refunded: false, chargebacked: false } })
     });
-    const result = await checkLicensePeriodically("a@b.com", "KEY");
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
     expect(result).toEqual({ valid: true });
     expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(storage.appSet).toHaveBeenCalled();
+  });
+
+  test("returns revoked:true when license is refunded", async () => {
+    const storage = makeStorage(Date.now() - DAY_MS - 1000);
+    global.fetch = jest.fn().mockResolvedValue({
+      json: async () => ({ success: true, purchase: { refunded: true, chargebacked: false } })
+    });
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
+    expect(result).toEqual({ revoked: true });
+  });
+
+  test("returns revoked:true when Gumroad says success:false", async () => {
+    const storage = makeStorage(Date.now() - DAY_MS - 1000);
+    global.fetch = jest.fn().mockResolvedValue({ json: async () => ({ success: false }) });
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
+    expect(result).toEqual({ revoked: true });
+  });
+
+  test("returns null on network error (benefit of the doubt)", async () => {
+    const storage = makeStorage(Date.now() - DAY_MS - 1000);
+    global.fetch = jest.fn().mockRejectedValue(new Error("offline"));
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
+    expect(result).toBeNull();
+  });
+
+  test("retries after 1 hour following a network failure", async () => {
+    // lastCheck old, lastAttempt was >1h ago (so retry is due)
+    const storage = makeStorage(0, Date.now() - HOUR_MS - 1000);
+    global.fetch = jest.fn().mockResolvedValue({
+      json: async () => ({ success: true, purchase: { refunded: false, chargebacked: false } })
+    });
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
+    expect(result).toEqual({ valid: true });
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("returns revoked:true when license is chargebacked", async () => {
+    const storage = makeStorage(Date.now() - DAY_MS - 1000);
+    global.fetch = jest.fn().mockResolvedValue({
+      json: async () => ({ success: true, purchase: { refunded: false, chargebacked: true } })
+    });
+    const result = await checkLicensePeriodically("a@b.com", "KEY", storage);
+    expect(result).toEqual({ revoked: true });
+  });
+
+  test("stamps lastLicenseAttempt before fetch (crash safety)", async () => {
+    const storage = makeStorage(Date.now() - DAY_MS - 1000);
+    global.fetch = jest.fn().mockResolvedValue({
+      json: async () => ({ success: true, purchase: { refunded: false, chargebacked: false } })
+    });
+    await checkLicensePeriodically("a@b.com", "KEY", storage);
+    // appSet should have been called at least twice: once before fetch, once after
+    expect(storage.appSet).toHaveBeenCalledTimes(2);
+    expect(storage.appSet).toHaveBeenNthCalledWith(1, expect.objectContaining({ lastLicenseAttempt: expect.any(Number) }));
   });
 });

@@ -39,7 +39,8 @@
       "lib/**/*.js",
       "!lib/updater.js",
       "!lib/shared-popup.js",
-      "!lib/shared-settings.js"
+      "!lib/shared-settings.js",
+      "!lib/history-ui.js"
     ],
     "coverageReporters": [
       "text",
