@@ -122,6 +122,17 @@ async function init() {
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
   const purged = purgeOldLog(rawLog);
   if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
+
+  // Background daily license check — fires at most once per 24 h, retries hourly on network failure.
+  if (s.licenseEmail && s.licenseKey) {
+    checkLicensePeriodically(s.licenseEmail, s.licenseKey).then(r => {
+      if (r?.revoked) {
+        browser.storage.local.remove(["licenseEmail", "licenseKey", "deviceActivated"]);
+        setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "" });
+        rebuildVariantsSelect();
+      }
+    }).catch(() => {});
+  }
 }
 
 init();

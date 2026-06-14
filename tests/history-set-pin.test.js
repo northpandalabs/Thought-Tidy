@@ -84,167 +84,105 @@ describe("hashPin round-trip — stored hash is verifiable", () => {
   });
 });
 
-// ── Source assertions — history/history.js (extension) ───────────────────────
+// ── Source assertions — lib/history-ui.js (shared module) ────────────────────
+// Pin UI functions now live in the shared module; both platform wrappers delegate to HistoryUI.*
 
-describe("history/history.js — showSetPinBtn wired into load()", () => {
-  let src;
+describe("lib/history-ui.js — shared pin UI", () => {
+  let uiSrc;
   beforeAll(() => {
-    src = fs.readFileSync(path.join(ROOT, "history/history.js"), "utf8");
+    uiSrc = fs.readFileSync(path.join(ROOT, "lib/history-ui.js"), "utf8");
   });
 
   test("showSetPinBtn function is defined", () => {
-    expect(src).toContain("function showSetPinBtn()");
-  });
-
-  test("load() calls showSetPinBtn() when no pin is set", () => {
-    const loadFn = src.slice(
-      src.indexOf("async function load()"),
-      src.indexOf("function showSetPinBtn")
-    );
-    expect(loadFn).toContain("showSetPinBtn()");
-  });
-
-  test("load() calls loadHistory before showSetPinBtn", () => {
-    const loadFn = src.slice(
-      src.indexOf("async function load()"),
-      src.indexOf("function showSetPinBtn")
-    );
-    expect(loadFn.indexOf("loadHistory(")).toBeLessThan(loadFn.indexOf("showSetPinBtn()"));
-  });
-
-  test("load() returns early via showPinGate when historyPin exists", () => {
-    const loadFn = src.slice(
-      src.indexOf("async function load()"),
-      src.indexOf("function showSetPinBtn")
-    );
-    expect(loadFn).toContain("showPinGate");
-    expect(loadFn).toContain("return");
+    expect(uiSrc).toContain("function showSetPinBtn(");
   });
 
   test("showSetPinBtn() inserts button into .header-controls", () => {
-    const fn = src.slice(
-      src.indexOf("function showSetPinBtn()"),
-      src.indexOf("function showPinGate")
-    );
-    expect(fn).toContain(".header-controls");
-    expect(fn).toContain("insertBefore");
+    expect(uiSrc).toContain(".header-controls");
+    expect(uiSrc).toContain("insertBefore");
   });
 
   test("showSetPinBtn() guards against duplicate button insertion", () => {
-    const fn = src.slice(
-      src.indexOf("function showSetPinBtn()"),
-      src.indexOf("function showPinGate")
-    );
-    expect(fn).toContain('"set-pin-btn"');
-    expect(fn).toContain("document.getElementById");
+    expect(uiSrc).toContain('"set-pin-btn"');
+    expect(uiSrc).toContain("document.getElementById");
   });
 
   test("save handler calls hashPin before storing", () => {
-    const fn = src.slice(
-      src.indexOf("function showSetPinBtn()"),
-      src.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("hashPin(");
+    expect(uiSrc).toContain("hashPin(");
   });
 
   test("save handler stores result under historyPin key", () => {
-    const fn = src.slice(
-      src.indexOf("function showSetPinBtn()"),
-      src.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("historyPin:");
+    expect(uiSrc).toContain("historyPin:");
   });
 
   test("save handler calls showPinManagement after storing pin", () => {
-    const fn = src.slice(
-      src.indexOf("function showSetPinBtn()"),
-      src.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("showPinManagement(");
+    expect(uiSrc).toContain("showPinManagement(");
   });
 
   test("save handler removes the Set Passcode button on success", () => {
-    const fn = src.slice(
-      src.indexOf("function showSetPinBtn()"),
-      src.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("btn.remove()");
+    expect(uiSrc).toContain("btn.remove()");
   });
 
   test("button label includes 'Set Passcode'", () => {
-    const fn = src.slice(
-      src.indexOf("function showSetPinBtn()"),
-      src.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("Set Passcode");
+    expect(uiSrc).toContain("Set Passcode");
+  });
+
+  test("showPinGate is defined (unlock flow)", () => {
+    expect(uiSrc).toContain("function showPinGate(");
+  });
+
+  test("showPinManagement is defined (change/remove flow)", () => {
+    expect(uiSrc).toContain("function showPinManagement(");
+  });
+
+  test("module exports via window.HistoryUI", () => {
+    expect(uiSrc).toContain("window.HistoryUI");
   });
 });
 
-// ── Source assertions — desktop/renderer/history.js ──────────────────────────
+// ── Platform wrapper assertions ───────────────────────────────────────────────
 
-describe("desktop/renderer/history.js — showSetPinBtn parity with extension", () => {
+describe("platform wrappers delegate pin UI to HistoryUI", () => {
   let extSrc, deskSrc;
   beforeAll(() => {
     extSrc  = fs.readFileSync(path.join(ROOT, "history/history.js"),           "utf8");
     deskSrc = fs.readFileSync(path.join(ROOT, "desktop/renderer/history.js"), "utf8");
   });
 
-  test("desktop defines showSetPinBtn()", () => {
-    expect(deskSrc).toContain("function showSetPinBtn()");
+  test("extension load() calls HistoryUI.showSetPinBtn", () => {
+    expect(extSrc).toContain("HistoryUI.showSetPinBtn(");
   });
 
-  test("desktop load() calls showSetPinBtn()", () => {
-    const loadFn = deskSrc.slice(
-      deskSrc.indexOf("async function load()"),
-      deskSrc.indexOf("function showSetPinBtn")
-    );
-    expect(loadFn).toContain("showSetPinBtn()");
+  test("extension load() calls HistoryUI.showPinGate when pin is set", () => {
+    expect(extSrc).toContain("HistoryUI.showPinGate(");
   });
 
-  test("desktop showSetPinBtn() inserts into .header-controls", () => {
-    const fn = deskSrc.slice(
-      deskSrc.indexOf("function showSetPinBtn()"),
-      deskSrc.indexOf("function showPinGate")
-    );
-    expect(fn).toContain(".header-controls");
-  });
-
-  test("desktop showSetPinBtn() calls hashPin", () => {
-    const fn = deskSrc.slice(
-      deskSrc.indexOf("function showSetPinBtn()"),
-      deskSrc.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("hashPin(");
-  });
-
-  test("desktop showSetPinBtn() stores historyPin", () => {
-    const fn = deskSrc.slice(
-      deskSrc.indexOf("function showSetPinBtn()"),
-      deskSrc.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("historyPin:");
-  });
-
-  test("desktop showSetPinBtn() calls showPinManagement", () => {
-    const fn = deskSrc.slice(
-      deskSrc.indexOf("function showSetPinBtn()"),
-      deskSrc.indexOf("function showPinGate")
-    );
-    expect(fn).toContain("showPinManagement(");
-  });
-
-  test("both files read historyPin from storage in load()", () => {
+  test("extension load() reads historyPin from storage", () => {
     expect(extSrc).toContain('"historyPin"');
+  });
+
+  test("desktop load() calls HistoryUI.showSetPinBtn", () => {
+    expect(deskSrc).toContain("HistoryUI.showSetPinBtn(");
+  });
+
+  test("desktop load() calls HistoryUI.showPinGate when pin is set", () => {
+    expect(deskSrc).toContain("HistoryUI.showPinGate(");
+  });
+
+  test("desktop load() reads historyPin from storage", () => {
     expect(deskSrc).toContain('"historyPin"');
   });
 
-  test("both files define showPinManagement (change/remove flow)", () => {
-    expect(extSrc).toContain("function showPinManagement(");
-    expect(deskSrc).toContain("function showPinManagement(");
+  test("both wrappers call HistoryUI.render", () => {
+    expect(extSrc).toContain("HistoryUI.render(");
+    expect(deskSrc).toContain("HistoryUI.render(");
   });
 
-  test("both files define showPinGate (unlock flow)", () => {
-    expect(extSrc).toContain("function showPinGate(");
-    expect(deskSrc).toContain("function showPinGate(");
+  test("extension uses navigator.clipboard for copy", () => {
+    expect(extSrc).toContain("navigator.clipboard");
+  });
+
+  test("desktop uses btcAPI.writeClipboard for copy", () => {
+    expect(deskSrc).toContain("btcAPI.writeClipboard");
   });
 });

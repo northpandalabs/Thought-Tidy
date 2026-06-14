@@ -103,6 +103,8 @@ async function init() {
     document.getElementById("result-slots")?.classList.remove("multi-col");
     if (typeof btcAPI.resizePopup === "function") btcAPI.resizePopup(1);
     document.getElementById("input-text").focus();
+    // Background daily license check on each popup show.
+    _runDailyLicenseCheck(fresh);
   });
 
   document.getElementById("variants-select")?.addEventListener("change", (e) => {
@@ -142,7 +144,18 @@ async function init() {
   }, { passive: false });
 }
 
-init().then(loadHistory);
+function _runDailyLicenseCheck(s) {
+  if (!s.licenseEmail || !s.licenseKey) return;
+  checkLicensePeriodically(s.licenseEmail, s.licenseKey).then(r => {
+    if (r?.revoked) {
+      window.appSet({ licenseEmail: "", licenseKey: "", deviceActivated: "" });
+      setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "" });
+      rebuildVariantsSelect();
+    }
+  }).catch(() => {});
+}
+
+init().then(() => { loadHistory(); _runDailyLicenseCheck(getPopupSettings()); });
 
 window.addEventListener("focus", async () => {
   const stored = await window.appGet(["showClarityCheckBtn", "contextEnabled"]);
