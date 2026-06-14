@@ -5,9 +5,9 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "lastContextAudience",
-  "themeMode", "historyPin", "grammarFilters", "inputTextDraft"
+  "themeMode", "historyPin", "grammarFilters", "inputTextDraft", "showClarityCheckBtn"
 ];
 
 window.RUN_BTN_ID   = "process-btn";
@@ -32,82 +32,6 @@ window.buildSlotActions = (box) => {
   return [copyBtn, useBtn];
 };
 
-const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
-
-function updateProviderStatus(s) {
-  const dot  = document.getElementById("key-indicator");
-  const text = document.getElementById("key-text");
-  if (!dot || !text) return;
-  const providers = s.configuredProviders;
-  const hasNew    = Array.isArray(providers) && providers.length > 0;
-  const hasLegacy = s.openaiKey || s.claudeKey || s.geminiKey;
-  if (hasNew) {
-    dot.className    = "dot dot-ok";
-    text.textContent = `Priority: ${providers.map(p => PROVIDER_LABELS[p.id] || p.id).join(" → ")}`;
-  } else if (hasLegacy) {
-    dot.className    = "dot dot-ok";
-    text.textContent = "API key set";
-  } else {
-    dot.className    = "dot dot-bad";
-    text.textContent = "No providers configured. Open Settings";
-  }
-}
-
-let _historyToggleWired = false;
-
-async function loadHistory() {
-  const pinLocked = await isHistoryPinLocked();
-  const { historyFull = [] } = await browser.storage.local.get("historyFull");
-  const entries = purgeOldLog(historyFull);
-  const section = document.getElementById("history-section");
-  if (!section) return;
-  if (!entries.length && !pinLocked) { section.style.display = "none"; return; }
-  section.style.display = "block";
-  const toggle = document.getElementById("history-toggle");
-  const list   = document.getElementById("history-list");
-  if (pinLocked) {
-    if (toggle) toggle.innerHTML = "🔒 History locked";
-    if (!_historyToggleWired && toggle && list) {
-      _historyToggleWired = true;
-      toggle.addEventListener("click", () => {
-        const open = list.style.display !== "none";
-        list.style.display = open ? "none" : "block";
-        if (!open && !list.children.length) {
-          const btn = document.createElement("button");
-          btn.textContent = "View history";
-          btn.className = "history-view-btn";
-          btn.addEventListener("click", () => {
-            browser.tabs.create({ url: browser.runtime.getURL("history/history.html") });
-            window.close();
-          });
-          list.appendChild(btn);
-        }
-      });
-    }
-    return;
-  }
-  if (toggle) document.getElementById("history-count").textContent = entries.length;
-  if (!_historyToggleWired && toggle && list) {
-    _historyToggleWired = true;
-    toggle.addEventListener("click", () => {
-      list.style.display = list.style.display === "none" ? "block" : "none";
-    });
-  }
-  list.innerHTML = "";
-  entries.slice(-10).reverse().forEach(e => {
-    const item = document.createElement("div");
-    item.className = "history-item";
-    const t    = new Date(e.timestamp);
-    const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
-    const action = document.createElement("span");
-    action.className   = "history-action";
-    action.textContent = e.action.replace(/-/g, " ");
-    const meta = document.createElement("span");
-    meta.textContent = `${time} · ${e.source}`;
-    item.append(action, meta);
-    list.appendChild(item);
-  });
-}
 
 async function runFromSelection() {
   const btn    = document.getElementById("run-selection-btn");
@@ -143,20 +67,27 @@ async function init() {
   setPopupSettings(s);
   document.documentElement.setAttribute("data-theme", s.themeMode || "dark");
 
+  rebuildActionDropdown();
   rebuildVariantsSelect();
-  updateProviderStatus(s);
   populateAudienceSelect();
-  initTextareaAutogrow();
   restoreContextAudience();
   wireContextSheetHandlers();
-  rebuildActionDropdown();
-
+  wireClarityCheckBtn();
   const ta = document.getElementById("input-text");
+  ta?.focus();
+  initTextareaAutogrow();
+
   if (ta && s.inputTextDraft) { ta.value = s.inputTextDraft; ta.dispatchEvent(new Event("input")); }
   let _draftTimer;
   ta?.addEventListener("input", () => {
     clearTimeout(_draftTimer);
     _draftTimer = setTimeout(() => browser.storage.local.set({ inputTextDraft: ta.value }), 400);
+  });
+  ta?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      runProcess();
+    }
   });
 
   const providers    = s.configuredProviders;
@@ -191,13 +122,31 @@ async function init() {
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
   const purged = purgeOldLog(rawLog);
   if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
-  loadHistory();
+
+  // Background daily license check — fires at most once per 24 h, retries hourly on network failure.
+  if (s.licenseEmail && s.licenseKey) {
+    checkLicensePeriodically(s.licenseEmail, s.licenseKey).then(r => {
+      if (r?.revoked) {
+        browser.storage.local.remove(["licenseEmail", "licenseKey", "deviceActivated"]);
+        setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "" });
+        rebuildVariantsSelect();
+      }
+    }).catch(() => {});
+  }
 }
 
 init();
 
 browser.storage.onChanged.addListener((changes, area) => {
-  if (area !== "local" || !("historyPin" in changes)) return;
-  _historyToggleWired = false;
-  loadHistory();
+  if (area !== "local") return;
+  const relevant = ["showClarityCheckBtn", "contextEnabled"];
+  if (!relevant.some(k => k in changes)) return;
+  const s = getPopupSettings();
+  const patch = {};
+  if ("showClarityCheckBtn" in changes) patch.showClarityCheckBtn = changes.showClarityCheckBtn.newValue;
+  if ("contextEnabled"      in changes) patch.contextEnabled      = changes.contextEnabled.newValue;
+  setPopupSettings({ ...s, ...patch });
+  rebuildVariantsSelect();
+  restoreContextAudience();
 });
+

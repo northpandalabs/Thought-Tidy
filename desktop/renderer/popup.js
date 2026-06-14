@@ -22,8 +22,6 @@ window.buildSlotActions = (box) => {
   return [copyBtn, copyCloseBtn];
 };
 
-window.onRunComplete = () => loadHistory();
-
 const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
 
 const STORAGE_KEYS = [
@@ -31,9 +29,10 @@ const STORAGE_KEYS = [
   "provider", "openaiKey", "claudeKey", "geminiKey",
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
-  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled",
+  "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
-  "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters"
+  "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters",
+  "clearOnOpen", "showClarityCheckBtn"
 ];
 
 function updateFooter() {
@@ -53,58 +52,22 @@ function updateFooter() {
   }
 }
 
-let _historyToggleWired = false;
 
-async function loadHistory() {
-  const pinLocked = await isHistoryPinLocked();
-  const { historyFull = [] } = await browser.storage.local.get("historyFull");
-  const today   = todayDate();
-  const entries = historyFull.filter(e => e.date === today);
-  const section = document.getElementById("history-section");
-  if (!section) return;
-  if (!entries.length && !pinLocked) { section.style.display = "none"; return; }
-  section.style.display = "block";
-  const toggle = document.getElementById("history-toggle");
-  const list   = document.getElementById("history-list");
-  if (pinLocked) {
-    if (toggle) toggle.innerHTML = "🔒 History locked";
-    if (!_historyToggleWired && toggle && list) {
-      _historyToggleWired = true;
-      toggle.addEventListener("click", () => {
-        const open = list.style.display !== "none";
-        list.style.display = open ? "none" : "block";
-        if (!open && !list.children.length) {
-          const btn = document.createElement("button");
-          btn.textContent = "View history";
-          btn.className = "history-view-btn";
-          btn.addEventListener("click", () => btcAPI.openHistory());
-          list.appendChild(btn);
-        }
-      });
+function applyClearOnOpen(s) {
+  const chk = document.getElementById("clear-on-open-chk");
+  if (chk) chk.checked = !!s.clearOnOpen;
+  if (s.clearOnOpen) {
+    const ta = document.getElementById("input-text");
+    if (ta) {
+      ta.value = "";
+      ta.dispatchEvent(new Event("input"));
+      // Also hide any previous result
+      const resultArea = document.getElementById("result-area");
+      if (resultArea) resultArea.style.display = "none";
+      const slotsEl = document.getElementById("result-slots");
+      if (slotsEl) slotsEl.innerHTML = "";
     }
-    return;
   }
-  if (toggle) document.getElementById("history-count").textContent = entries.length;
-  if (!_historyToggleWired && toggle && list) {
-    _historyToggleWired = true;
-    toggle.addEventListener("click", () => {
-      list.style.display = list.style.display === "none" ? "block" : "none";
-    });
-  }
-  list.innerHTML = "";
-  entries.slice(-10).reverse().forEach(e => {
-    const item = document.createElement("div");
-    item.className = "history-item";
-    const t    = new Date(e.timestamp);
-    const time = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
-    const action = document.createElement("span");
-    action.className   = "history-action";
-    action.textContent = e.action.replace(/-/g, " ");
-    const meta = document.createElement("span");
-    meta.textContent = `${time} · ${e.source}`;
-    item.append(action, meta);
-    list.appendChild(item);
-  });
 }
 
 async function init() {
@@ -117,6 +80,7 @@ async function init() {
   populateAudienceSelect();
   restoreContextAudience();
   wireContextSheetHandlers();
+  wireClarityCheckBtn();
   document.getElementById("input-text").focus();
   initTextareaAutogrow();
 
@@ -129,6 +93,7 @@ async function init() {
     rebuildVariantsSelect();
     populateAudienceSelect();
     restoreContextAudience();
+    applyClearOnOpen(fresh);
     // Reset multi-column layout but keep the toggle button visible
     const expandBtn = document.getElementById("result-expand-btn");
     if (expandBtn) {
@@ -137,9 +102,9 @@ async function init() {
     }
     document.getElementById("result-slots")?.classList.remove("multi-col");
     if (typeof btcAPI.resizePopup === "function") btcAPI.resizePopup(1);
-    _historyToggleWired = false;
-    loadHistory();
     document.getElementById("input-text").focus();
+    // Background daily license check on each popup show.
+    _runDailyLicenseCheck(fresh);
   });
 
   document.getElementById("variants-select")?.addEventListener("change", (e) => {
@@ -147,14 +112,16 @@ async function init() {
   });
 
   document.getElementById("close-btn").addEventListener("click", () => btcAPI.closePopup());
+  document.getElementById("history-btn").addEventListener("click", () => btcAPI.openHistory());
   document.getElementById("settings-btn").addEventListener("click", () => btcAPI.openSettings());
   document.getElementById("run-btn").addEventListener("click", runProcess);
 
   document.getElementById("paste-btn").addEventListener("click", async () => {
-    const text = (await btcAPI.readClipboard()).trim();
-    if (!text) return;
+    const raw = (await btcAPI.readClipboard()).trim();
+    if (!raw) return;
     const textarea = document.getElementById("input-text");
-    textarea.value = text;
+    textarea.value = cleanPastedText(raw, false);
+    textarea.dispatchEvent(new Event("input"));
     textarea.focus();
     textarea.select();
   });
@@ -177,4 +144,27 @@ async function init() {
   }, { passive: false });
 }
 
-init().then(loadHistory);
+function _runDailyLicenseCheck(s) {
+  if (!s.licenseEmail || !s.licenseKey) return;
+  checkLicensePeriodically(s.licenseEmail, s.licenseKey).then(r => {
+    if (r?.revoked) {
+      window.appSet({ licenseEmail: "", licenseKey: "", deviceActivated: "" });
+      setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "" });
+      rebuildVariantsSelect();
+    }
+  }).catch(() => {});
+}
+
+init().then(() => { loadHistory(); _runDailyLicenseCheck(getPopupSettings()); });
+
+window.addEventListener("focus", async () => {
+  const stored = await window.appGet(["showClarityCheckBtn", "contextEnabled"]);
+  const s = getPopupSettings();
+  const changed = stored.showClarityCheckBtn !== s.showClarityCheckBtn
+               || stored.contextEnabled      !== s.contextEnabled;
+  if (changed) {
+    setPopupSettings({ ...s, showClarityCheckBtn: stored.showClarityCheckBtn, contextEnabled: stored.contextEnabled });
+    rebuildVariantsSelect();
+    restoreContextAudience();
+  }
+});

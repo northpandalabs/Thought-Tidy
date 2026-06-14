@@ -5,7 +5,7 @@
   <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
   <img alt="Ext Line Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.33%25_lines-brightgreen?style=flat-square" />
   <img alt="Desktop Line Coverage" src="https://img.shields.io/badge/Desktop_Coverage-100%25_lines-brightgreen?style=flat-square" />
-  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.2-lightgrey?style=flat-square" />
+  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.3-lightgrey?style=flat-square" />
 </p>
 
 Developer setup, build pipeline, test coverage, store publishing, and architecture notes.
@@ -147,7 +147,7 @@ GOOGLE_API_KEY=AIza...
 CLAUDE_API_KEY=sk-ant-...
 ```
 
-### Coverage (v1.5.2)
+### Coverage (v1.5.3)
 
 | Suite | Statements | Branches | Functions | Lines | Tests |
 | --- | --- | --- | --- | --- | --- |
@@ -215,7 +215,7 @@ Before uploading, bump `version` in both `package.json` and `manifest.json` to m
 1. Bump version in `manifest.json` and `desktop/package.json` (must match)
 2. Run `npm test` and `cd desktop && npm test` — both must pass
 3. Run `npm run build:chrome` and `npm run build:firefox` — both must succeed
-4. Update `legal/downloads.json` — bump `version`, `released`, and the three desktop filenames (`windows`, `macos`, `linux`) to match the new version number
+4. Update `legal/downloads.json` — bump `version` and `released` only. Desktop URLs are computed from `filename_template` at runtime; no filenames to update manually.
 5. Commit with a descriptive message
 6. Create an annotated tag:
    ```bash
@@ -240,20 +240,20 @@ https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/le
 **Structure:**
 ```json
 {
-  "version": "1.5.2",
+  "version": "1.5.3",
   "released": "2026-06-11",
   "pro_url": "https://northpandalabs.gumroad.com/l/thought-tidy",
   "platforms": {
-    "chrome":   { "label": "...", "url": "...", "filename": "..." },
-    "firefox":  { "label": "...", "store_url": "...", "store_label": "Add to Firefox", "preferred": "store", "url": "...", "filename": "...", "download_label": "Download Build" },
-    "windows":  { "label": "...", "url": "...", "filename": "..." },
-    "macos":    { "label": "...", "url": "...", "filename": "..." },
-    "linux":    { "label": "...", "url": "...", "filename": "..." }
+    "chrome":   { "label": "...", "filename": "thought-tidy-chrome.zip" },
+    "firefox":  { "label": "...", "store_url": "...", "preferred": "store", "filename": "thought-tidy-firefox.zip", "download_label": "Download Build" },
+    "windows":  { "label": "...", "filename_template": "Thought.Tidy.Setup.{version}.exe" },
+    "macos":    { "label": "...", "filename_template": "Thought.Tidy-{version}-arm64.dmg" },
+    "linux":    { "label": "...", "filename_template": "Thought.Tidy-{version}.AppImage" }
   }
 }
 ```
 
-**What to update on each release:** `version`, `released`, and the `url` + `filename` for `windows`, `macos`, and `linux` (desktop filenames contain the version number). Chrome and Firefox download URLs use `/releases/latest/download/` and are version-agnostic — leave them alone. The Firefox `store_url` is permanent and never changes.
+**What to update on each release:** `version` and `released` only. Desktop platforms use `filename_template` (e.g. `"Thought.Tidy.Setup.{version}.exe"`) — the `{version}` token is resolved at runtime by the website's `wireDownloadLinks()` function, so no URLs or filenames in the JSON ever contain a hardcoded version number. Chrome/Firefox filenames are version-agnostic and never change. The Firefox `store_url` is permanent.
 
 **How to wire it up in HTML:**
 

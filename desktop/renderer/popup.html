@@ -20,7 +20,9 @@
   <div class="panel">
     <div class="input-label-row">
       <label for="input-text">Text to process</label>
-      <button id="paste-btn">Paste clipboard</button>
+      <div class="input-label-actions">
+        <button id="paste-btn">Paste clipboard</button>
+      </div>
     </div>
     <p class="input-tip">Tip: Ctrl+C text → Ctrl+Shift+Space → Ctrl+V or Paste clipboard</p>
     <textarea id="input-text"
@@ -39,6 +41,7 @@
     </div>
     <div class="ctx-toggle-row">
       <button id="toggle-context-btn" class="ctx-toggle-btn">+ Add context</button>
+      <button id="clarity-check-btn" class="ctx-toggle-btn" style="display:none">✦ Clarity Check <span class="cc-badge">PRO</span></button>
     </div>
 
     <!-- Result -->
@@ -75,16 +78,13 @@
     </div>
   </div>
 
-  <!-- Today's Activity -->
-  <div class="history-panel" id="history-section" style="display:none">
-    <button class="history-toggle" id="history-toggle">Today: <span id="history-count">0</span> fixes</button>
-    <div id="history-list" class="history-list" style="display:none"></div>
-  </div>
-
   <!-- Footer -->
   <div class="footer">
     <span id="provider-badge" class="provider-badge"></span>
-    <button id="settings-btn">⚙ Settings</button>
+    <div class="footer-actions">
+      <button id="history-btn">History</button>
+      <button id="settings-btn">⚙ Settings</button>
+    </div>
   </div>
 
   <!-- Load lib scripts with paths relative to this file's location -->

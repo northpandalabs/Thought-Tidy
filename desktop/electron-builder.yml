@@ -44,6 +44,8 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: false
   createStartMenuShortcut: true
+  license: "../legal/eula.txt"
+  include: build/installer.nsh
 
 # Linux
 linux:

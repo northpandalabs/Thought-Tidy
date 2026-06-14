@@ -139,6 +139,35 @@ label {
 }
 .input-label-row label { margin-bottom: 0; }
 
+.input-label-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-on-open-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ta-collapse-btn {
+  font-size: 11px;
+  padding: 1px 8px;
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.ta-collapse-btn:hover { border-color: var(--accent); color: var(--text); }
+
 #paste-btn {
   background: none;
   border: 1px solid var(--border);
@@ -247,13 +276,14 @@ select:focus { border-color: var(--accent); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.result-slots {
+#result-slots {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
   max-height: 55vh;
   overflow-y: auto;
   scroll-behavior: smooth;
+  padding-top: 5px;
 }
 
 /* Expand toggle button (appears for 2-result runs on desktop) */
@@ -465,6 +495,12 @@ select:focus { border-color: var(--accent); }
   font-family: monospace;
 }
 
+.footer-actions {
+  display: flex;
+  gap: 6px;
+}
+
+#history-btn,
 #settings-btn {
   background: none;
   border: 1px solid var(--border);
@@ -475,54 +511,15 @@ select:focus { border-color: var(--accent); }
   font-weight: 600;
   cursor: pointer;
 }
+#history-btn:hover,
 #settings-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── History panel ───────────────────────────────────────────────── */
-.history-panel {
-  padding: 8px 14px;
-  border-top: 1px solid var(--border);
-  background: var(--bg2);
-  flex-shrink: 0;
-}
-.history-toggle {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  width: 100%;
-  text-align: left;
-}
-.history-toggle:hover { color: var(--sub); }
-.history-list { margin-top: 6px; }
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10.5px;
-  color: var(--muted);
-  padding: 2px 0;
-  border-top: 1px solid var(--border);
-}
-.history-item:first-child { border-top: none; }
-.history-action { color: var(--sub); font-weight: 500; }
-.history-view-btn {
-  margin: 6px 0;
-  padding: 5px 14px;
-  background: var(--accent, #89b4fa);
-  color: #1e1e2e;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
 
 /* ── Context toggle row ───────────────────────────────────────────── */
 .ctx-toggle-row {
   display: flex;
   align-items: center;
+  gap: 10px;
   margin-top: -2px;
 }
 .ctx-toggle-btn {
@@ -537,6 +534,17 @@ select:focus { border-color: var(--accent); }
 }
 .ctx-toggle-btn:hover { color: var(--accent); }
 .ctx-toggle-btn.active { color: var(--accent); }
+.cc-badge {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: var(--accent);
+  color: var(--base);
+  border-radius: 3px;
+  padding: 1px 4px;
+  vertical-align: middle;
+  margin-left: 3px;
+}
 
 /* ── Context Sheet ────────────────────────────────────────────────── */
 #context-sheet {

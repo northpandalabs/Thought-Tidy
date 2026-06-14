@@ -218,89 +218,25 @@ describe("buildHistoryMeta — 'HH:MM · source' display string", () => {
   });
 });
 
-// ── popup/popup.js (extension) — storage source assertions ───────────────────
+// ── popup/popup.js (extension) — history button wiring ───────────────────────
 
-describe("popup/popup.js — loadHistory reads from historyFull", () => {
+describe("popup/popup.js — open-history-btn opens history page directly", () => {
   let src;
   beforeAll(() => {
     src = fs.readFileSync(path.join(ROOT, "popup/popup.js"), "utf8");
   });
 
-  test("loadHistory fetches 'historyFull' key from storage", () => {
-    expect(src).toContain('"historyFull"');
+  test("open-history-btn is wired in init()", () => {
+    expect(src).toContain("open-history-btn");
   });
 
-  test("loadHistory uses destructuring on historyFull", () => {
-    expect(src).toContain("{ historyFull = [] }");
-  });
-
-  test("loadHistory does NOT fetch 'historyLog' for display", () => {
-    const loadHistoryFn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function runFromSelection")
-    );
-    expect(loadHistoryFn).not.toContain('"historyLog"');
-  });
-
-  test("loadHistory applies purgeOldLog to filter today's entries", () => {
-    const fn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function runFromSelection")
-    );
-    expect(fn).toContain("purgeOldLog");
-  });
-
-  test("loadHistory hides section when empty and not pin-locked", () => {
-    const fn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function runFromSelection")
-    );
-    expect(fn).toContain('section.style.display = "none"');
-  });
-
-  test("loadHistory shows section when entries exist", () => {
-    const fn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function runFromSelection")
-    );
-    expect(fn).toContain('section.style.display = "block"');
-  });
-
-  test("loadHistory caps display at 10 entries", () => {
-    expect(src).toContain("slice(-10)");
-  });
-
-  test("loadHistory reverses entries for newest-first display", () => {
-    expect(src).toContain(".reverse()");
-  });
-
-  test("loadHistory replaces hyphens in action names", () => {
-    expect(src).toContain('replace(/-/g, " ")');
-  });
-});
-
-describe("popup/popup.js — pin-locked history path (extension)", () => {
-  let src;
-  beforeAll(() => {
-    src = fs.readFileSync(path.join(ROOT, "popup/popup.js"), "utf8");
-  });
-
-  test("shows lock icon when pin-locked", () => {
-    expect(src).toContain("🔒 History locked");
-  });
-
-  test("pin-locked path opens history.html in a new browser tab", () => {
+  test("clicking open-history-btn opens history.html in a new tab", () => {
     expect(src).toContain("history/history.html");
     expect(src).toContain("browser.tabs.create");
   });
 
-  test("pin-locked path closes the popup after opening tab", () => {
+  test("clicking open-history-btn closes the popup", () => {
     expect(src).toContain("window.close()");
-  });
-
-  test("history count element is updated with entry count", () => {
-    expect(src).toContain("history-count");
-    expect(src).toContain(".textContent = entries.length");
   });
 });
 
@@ -323,80 +259,24 @@ describe("popup/popup.js — init() historyLog maintenance", () => {
   });
 });
 
-// ── desktop/renderer/popup.js — storage source assertions ────────────────────
+// ── desktop/renderer/popup.js — history button wiring ────────────────────────
 
-describe("desktop/renderer/popup.js — loadHistory reads from historyFull", () => {
+describe("desktop/renderer/popup.js — history-btn opens history page directly", () => {
   let src;
   beforeAll(() => {
     src = fs.readFileSync(path.join(ROOT, "desktop/renderer/popup.js"), "utf8");
   });
 
-  test("loadHistory fetches 'historyFull' key from storage", () => {
-    expect(src).toContain('"historyFull"');
+  test("history-btn is wired in init()", () => {
+    expect(src).toContain("history-btn");
   });
 
-  test("loadHistory uses destructuring on historyFull", () => {
-    expect(src).toContain("{ historyFull = [] }");
-  });
-
-  test("loadHistory filters by todayDate()", () => {
-    const fn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function init")
-    );
-    expect(fn).toContain("todayDate()");
-    expect(fn).toContain("e.date === today");
-  });
-
-  test("loadHistory does NOT use purgeOldLog (uses todayDate inline instead)", () => {
-    const fn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function init")
-    );
-    expect(fn).not.toContain("purgeOldLog");
-  });
-
-  test("loadHistory caps display at 10 entries", () => {
-    expect(src).toContain("slice(-10)");
-  });
-
-  test("loadHistory reverses entries for newest-first display", () => {
-    expect(src).toContain(".reverse()");
-  });
-
-  test("loadHistory replaces hyphens in action names", () => {
-    expect(src).toContain('replace(/-/g, " ")');
-  });
-
-  test("loadHistory hides section when empty and not pin-locked", () => {
-    const fn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function init")
-    );
-    expect(fn).toContain('section.style.display = "none"');
-  });
-});
-
-describe("desktop/renderer/popup.js — pin-locked history path (desktop)", () => {
-  let src;
-  beforeAll(() => {
-    src = fs.readFileSync(path.join(ROOT, "desktop/renderer/popup.js"), "utf8");
-  });
-
-  test("shows lock icon when pin-locked", () => {
-    expect(src).toContain("🔒 History locked");
-  });
-
-  test("pin-locked path calls btcAPI.openHistory() (not browser.tabs)", () => {
+  test("clicking history-btn calls btcAPI.openHistory()", () => {
     expect(src).toContain("btcAPI.openHistory()");
   });
 
-  test("desktop pin-locked does NOT call browser.tabs.create", () => {
-    const fn = src.slice(
-      src.indexOf("async function loadHistory"),
-      src.indexOf("async function init")
-    );
-    expect(fn).not.toContain("browser.tabs.create");
+  test("desktop popup does NOT use browser.tabs.create for history", () => {
+    expect(src).not.toContain("browser.tabs.create");
   });
 });
 
@@ -462,31 +342,23 @@ describe("historyFull entry shape — consistent across write sites", () => {
   });
 });
 
-// ── Storage key consistency — loadHistory reads what runProcess writes ─────────
+// ── Storage key consistency — history page reads what runProcess writes ────────
 
-describe("storage key consistency — extension popup reads the same key runProcess writes", () => {
-  test("extension popup.js reads 'historyFull' — the key shared-popup runProcess writes", () => {
-    const popupSrc  = fs.readFileSync(path.join(ROOT, "popup/popup.js"),       "utf8");
-    const sharedSrc = fs.readFileSync(path.join(ROOT, "lib/shared-popup.js"),  "utf8");
-    expect(popupSrc).toContain('"historyFull"');
-    expect(sharedSrc).toContain('"historyFull"');
+describe("storage key consistency — historyFull written by runProcess, read by history page", () => {
+  test("shared-popup.js runProcess writes 'historyFull'", () => {
+    const src = fs.readFileSync(path.join(ROOT, "lib/shared-popup.js"), "utf8");
+    expect(src).toContain('"historyFull"');
   });
 
-  test("desktop popup.js reads 'historyFull' — the key desktop runProcess writes", () => {
-    const desktopPopupSrc = fs.readFileSync(path.join(ROOT, "desktop/renderer/popup.js"), "utf8");
-    const sharedSrc       = fs.readFileSync(path.join(ROOT, "lib/shared-popup.js"),       "utf8");
-    expect(desktopPopupSrc).toContain('"historyFull"');
-    expect(sharedSrc).toContain('"historyFull"');
+  test("history page reads 'historyFull' directly", () => {
+    const src = fs.readFileSync(path.join(ROOT, "history/history.js"), "utf8");
+    expect(src).toContain("historyFull");
   });
 
-  test("neither popup reads ONLY from historyLog for display", () => {
-    const extSrc     = fs.readFileSync(path.join(ROOT, "popup/popup.js"),              "utf8");
-    const desktopSrc = fs.readFileSync(path.join(ROOT, "desktop/renderer/popup.js"),   "utf8");
-    // Extract just the loadHistory function from each (before init())
-    const extFn      = extSrc.slice(extSrc.indexOf("async function loadHistory"),     extSrc.indexOf("async function runFromSelection"));
-    const desktopFn  = desktopSrc.slice(desktopSrc.indexOf("async function loadHistory"), desktopSrc.indexOf("async function init"));
-    expect(extFn).not.toMatch(/storage\.local\.get\s*\(\s*["']historyLog["']/);
-    expect(desktopFn).not.toMatch(/storage\.local\.get\s*\(\s*["']historyLog["']/);
+  test("extension popup still cleans up legacy historyLog on startup", () => {
+    const src = fs.readFileSync(path.join(ROOT, "popup/popup.js"), "utf8");
+    expect(src).toContain("historyLog");
+    expect(src).toContain("purgeOldLog");
   });
 });
 
