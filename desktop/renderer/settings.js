@@ -25,8 +25,8 @@ function wireLinks() {
     "link-issues":         "https://github.com/northpandalabs/Thought-Tidy/issues",
     "link-author":         "https://github.com/northpandalabs",
     "link-footer-github":  "https://github.com/northpandalabs/Thought-Tidy",
-    "link-footer-privacy": "https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/privacy.txt",
-    "link-footer-eula":    "https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/eula.txt"
+    "link-footer-privacy": "https://thoughttidy.app/legal/privacy",
+    "link-footer-eula":    "https://thoughttidy.app/legal/eula"
   };
   for (const [id, url] of Object.entries(map))
     document.getElementById(id)?.addEventListener("click", () => btcAPI.openURL(url));

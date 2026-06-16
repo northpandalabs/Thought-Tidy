@@ -199,7 +199,7 @@ competent jurisdiction.
 13. ENTIRE AGREEMENT
 
 This Agreement, together with the Privacy Policy at
-https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/privacy.txt
+https://thoughttidy.app/legal/privacy
 and the Software's LICENSE file, constitutes the entire agreement between
 the parties.
 

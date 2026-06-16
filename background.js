@@ -5,19 +5,6 @@ const DYN_SEP = "dyn-sep";
 const DYN_MAX = 8;
 const dynId   = (i) => `dyn-${i}`;
 
-// ── Update alarm ───────────────────────────────────────────────────────────────
-
-function scheduleUpdateAlarm() {
-  const noon = new Date();
-  noon.setHours(12, 0, 0, 0);
-  if (noon.getTime() <= Date.now()) noon.setDate(noon.getDate() + 1);
-  browser.alarms.create('btc-update-check', { when: noon.getTime(), periodInMinutes: 1440 });
-}
-
-browser.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === 'btc-update-check') checkAndStoreUpdate();
-});
-
 async function rebuildCustomMenu() {
   const toRemove = [DYN_SEP, ...Array.from({ length: DYN_MAX }, (_, i) => dynId(i))];
   await Promise.all(toRemove.map(id => browser.contextMenus.remove(id).catch(() => {})));
@@ -64,12 +51,10 @@ browser.runtime.onInstalled.addListener(async () => {
   browser.contextMenus.create({ id: "shorten",       parentId: "ai-root", title: "    Shorten",                  contexts: ["selection"] });
   browser.contextMenus.create({ id: "expand",        parentId: "ai-root", title: "    Expand",                   contexts: ["selection"] });
   await rebuildCustomMenu();
-  scheduleUpdateAlarm();
 });
 
 browser.runtime.onStartup.addListener(async () => {
   rebuildCustomMenu();
-  scheduleUpdateAlarm();
   await migrateExtensionKeys();
   await syncWithDesktop();
 });

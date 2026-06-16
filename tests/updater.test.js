@@ -10,6 +10,7 @@ const updaterSrc = fs.readFileSync(path.join(__dirname, "../lib/updater.js"), "u
 
 function makeCtx(currentVersion = "1.2.3") {
   const storage = {
+    get:    jest.fn().mockResolvedValue({}),
     set:    jest.fn().mockResolvedValue(undefined),
     remove: jest.fn().mockResolvedValue(undefined),
   };
@@ -112,7 +113,7 @@ describe("checkAndStoreUpdate", () => {
       json: async () => ({ tag_name: "v1.5.0", html_url: "https://example.com" }),
     });
     await ctx.checkAndStoreUpdate();
-    const stored = ctx.browser.storage.local.set.mock.calls[0][0];
+    const stored = ctx.browser.storage.local.set.mock.calls[1][0];
     expect(stored.updateAvailable.version).toBe("1.5.0");
   });
 
@@ -143,7 +144,7 @@ describe("checkAndStoreUpdate", () => {
       json: async () => ({ tag_name: "v2.0.0" }),
     });
     await ctx.checkAndStoreUpdate();
-    const stored = ctx.browser.storage.local.set.mock.calls[0][0];
+    const stored = ctx.browser.storage.local.set.mock.calls[1][0];
     expect(typeof stored.updateAvailable.url).toBe("string");
     expect(stored.updateAvailable.url.length).toBeGreaterThan(0);
   });
