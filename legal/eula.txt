@@ -1,7 +1,7 @@
 END-USER LICENSE AGREEMENT -- THOUGHT TIDY
 
 Effective date: 2026-05-25
-Last updated: 2026-06-11
+Last updated: 2026-06-15
 Contact: northpandalabs@gmail.com
 
 By installing or using Thought Tidy ("Software"), you agree to be bound by
@@ -56,9 +56,20 @@ features. The Pro tier includes everything in the free tier plus:
   - Ollama support: use a locally running Ollama instance as your AI
     provider -- no API key, no cost, no text leaving your device
 
-A single Pro license may be activated on multiple devices belonging to the
-same individual user. Pro licenses are personal and may not be shared,
-resold, or transferred.
+A single Pro license may be activated on up to 5 devices belonging to the
+same individual user. Each new device activation — including restoring a
+.ttbackup file on a device that has not previously activated the license —
+counts toward this limit.
+
+Personal / residential users who reach the limit may contact
+northpandalabs@gmail.com to request a reset at our discretion (for example,
+after replacing a device). Resets are not guaranteed.
+
+Business or organisational use requires a separate license per user. If your
+organisation needs additional activations, please purchase additional licenses
+rather than requesting a reset.
+
+Pro licenses are personal and may not be shared, resold, or transferred.
 
 ------------------------------------------------------------------------
 
@@ -134,6 +145,15 @@ You are solely responsible for:
   provider API keys (encrypted) and your profile data.
 - Restoring backups on new or replacement devices.
 
+License activation on import: if your .ttbackup contains a Pro license and
+you import it on a device that has not previously activated that license, the
+import will verify your license with Gumroad and count as a new device
+activation against your 5-device limit. If the limit has been reached, the
+license will not be applied and your other imported data (settings, history)
+will still be restored. Personal users may contact northpandalabs@gmail.com
+to request a reset at our discretion. Business or organisational users must
+purchase additional licenses.
+
 We accept no liability for data loss resulting from lost, corrupted, or
 inaccessible .ttbackup files.
 
@@ -199,7 +219,7 @@ competent jurisdiction.
 13. ENTIRE AGREEMENT
 
 This Agreement, together with the Privacy Policy at
-https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/privacy.txt
+https://thoughttidy.app/legal/privacy
 and the Software's LICENSE file, constitutes the entire agreement between
 the parties.
 

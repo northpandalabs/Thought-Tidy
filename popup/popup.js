@@ -123,7 +123,7 @@ async function init() {
   const purged = purgeOldLog(rawLog);
   if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
 
-  // Background daily license check — fires at most once per 24 h, retries hourly on network failure.
+  // Daily checks — each fires at most once per 24 h.
   if (s.licenseEmail && s.licenseKey) {
     checkLicensePeriodically(s.licenseEmail, s.licenseKey).then(r => {
       if (r?.revoked) {
@@ -133,6 +133,7 @@ async function init() {
       }
     }).catch(() => {});
   }
+  checkAndStoreUpdate().catch(() => {});
 }
 
 init();
