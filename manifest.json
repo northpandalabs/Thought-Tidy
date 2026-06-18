@@ -33,7 +33,7 @@
     "https://generativelanguage.googleapis.com/*"
   ],
   "optional_host_permissions": [
-    "https://raw.githubusercontent.com/*",
+
     "http://127.0.0.1:47391/*",
     "http://*/*"
   ],

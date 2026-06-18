@@ -23,7 +23,8 @@ contextBridge.exposeInMainWorld("btcAPI", {
   openURL:        (url)      => ipcRenderer.invoke("open-url", url),
 
   // App meta: { isTestBuild, updateAvailable }
-  getAppConfig:   ()         => ipcRenderer.invoke("get-app-config"),
+  getAppConfig:    ()         => ipcRenderer.invoke("get-app-config"),
+  checkForUpdate:  ()         => ipcRenderer.invoke("check-for-update"),
 
   // Startup / login item
   getLoginItemEnabled: ()      => ipcRenderer.invoke("get-login-item"),

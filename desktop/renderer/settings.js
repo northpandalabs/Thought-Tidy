@@ -130,6 +130,15 @@ async function init() {
   const _yr = new Date().getFullYear();
   document.getElementById("copyright-year").textContent = _yr > 2026 ? `2026–${_yr}` : "2026";
 
+  function showUpdateNotice(upd) {
+    const notice = document.getElementById("update-notice");
+    const link   = document.getElementById("update-link");
+    if (!notice || !link) return;
+    link.textContent = `Version ${upd.version} available — Download from GitHub ↗`;
+    link.onclick = () => btcAPI.openURL(upd.url);
+    notice.style.display = "block";
+  }
+
   if (typeof btcAPI !== "undefined" && btcAPI.getAppConfig) {
     const cfg = await btcAPI.getAppConfig();
     if (cfg.isTestBuild) { const b = document.getElementById("test-only-banner"); if (b) b.style.display = "block"; }
@@ -141,15 +150,34 @@ async function init() {
       _pendingAppVersion = label; // applied after initSharedSettings creates the element
     }
     if (cfg.updateAvailable?.version) {
-      const notice = document.getElementById("update-notice");
-      const link   = document.getElementById("update-link");
-      if (notice && link) {
-        link.textContent = `Version ${cfg.updateAvailable.version} available. Download from GitHub ↗`;
-        link.addEventListener("click", () => btcAPI.openURL(cfg.updateAvailable.url));
-        notice.style.display = "block";
-      }
+      showUpdateNotice(cfg.updateAvailable);
     }
     try { const at = await btcAPI.getLoginItemEnabled(); const el = document.getElementById("launchAtLogin"); if (el) el.checked = !!at; } catch {}
+
+    const checkBtn    = document.getElementById("check-update-btn");
+    const checkStatus = document.getElementById("check-update-status");
+    if (checkBtn) {
+      checkBtn.addEventListener("click", async () => {
+        checkBtn.disabled = true;
+        checkBtn.textContent = "Checking…";
+        checkStatus.textContent = "";
+        try {
+          const upd = await btcAPI.checkForUpdate();
+          if (upd?.version) {
+            showUpdateNotice(upd);
+            checkStatus.textContent = `v${upd.version} available!`;
+          } else {
+            checkStatus.textContent = "You're up to date ✓";
+            setTimeout(() => { checkStatus.textContent = ""; }, 3000);
+          }
+        } catch {
+          checkStatus.textContent = "Check failed — try again later.";
+        } finally {
+          checkBtn.disabled = false;
+          checkBtn.textContent = "Check for Updates";
+        }
+      });
+    }
   }
 
   await migrateStorage();

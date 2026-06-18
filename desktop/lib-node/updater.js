@@ -1,24 +1,24 @@
-// Passive GitHub Releases version check — never auto-downloads or auto-installs.
+// Passive version check against downloads.json — never auto-downloads or auto-installs.
 // Checks once at the next noon (local time), then every 24 hours.
 // Writes { version, url } to electron-store key 'updateAvailable' when a newer
-// stable release is found; deletes the key when already up to date.
+// release is found; deletes the key when already up to date.
 
 const https = require('https');
 const { app } = require('electron');
 
-const RELEASES_URL  = 'https://api.github.com/repos/BHeck/BrainFix-AI/releases/latest';
-const RELEASES_PAGE = 'https://github.com/BHeck/BrainFix-AI/releases/latest';
+const DOWNLOADS_URL  = 'https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/legal/downloads.json';
+const RELEASES_PAGE  = 'https://github.com/northpandalabs/Thought-Tidy/releases/latest';
 
-function fetchLatestRelease() {
+function fetchDownloadsJson() {
   return new Promise((resolve, reject) => {
-    const req = https.get(RELEASES_URL, {
-      headers: { 'User-Agent': 'thought-tidy-updater', 'Accept': 'application/vnd.github+json' }
+    const req = https.get(DOWNLOADS_URL, {
+      headers: { 'User-Agent': 'thought-tidy-updater' }
     }, res => {
       let body = '';
       res.on('data', c => { body += c; });
       res.on('end', () => {
         try { resolve(JSON.parse(body)); }
-        catch { reject(new Error('Invalid GitHub API response')); }
+        catch { reject(new Error('Invalid downloads.json response')); }
       });
     });
     req.on('error', reject);
@@ -27,8 +27,7 @@ function fetchLatestRelease() {
 }
 
 function semverGt(a, b) {
-  // Strip build metadata (+hash) and prerelease (-tag) before numeric comparison
-  const parse = v => v.replace(/^v/, '').split('+')[0].split('-')[0].split('.').map(Number);
+  const parse = v => v.split('.').map(Number);
   const [aM, am, ap = 0] = parse(a);
   const [bM, bm, bp = 0] = parse(b);
   return aM !== bM ? aM > bM : am !== bm ? am > bm : ap > bp;
@@ -42,27 +41,38 @@ function msUntilNextNoon() {
   return noon - now;
 }
 
-function scheduleUpdateCheck(store) {
-  async function check() {
-    try {
-      const { tag_name, html_url } = await fetchLatestRelease();
-      if (!tag_name) return;
-      const current = app.getVersion();
-      if (semverGt(tag_name, current)) {
-        store.set('updateAvailable', {
-          version: tag_name.replace(/^v/, ''),
-          url: html_url || RELEASES_PAGE
-        });
-      } else {
-        store.delete('updateAvailable');
-      }
-    } catch (_) { /* silent — update check must never crash the app */ }
-  }
+async function checkNow(store) {
+  const data = await fetchDownloadsJson();
 
+  const latest = typeof data.version === 'string' && /^\d+\.\d+\.\d+$/.test(data.version)
+    ? data.version : null;
+  if (!latest) return null;
+
+  const github_url = typeof data.github_url === 'string' &&
+    /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/.test(data.github_url)
+    ? data.github_url : null;
+
+  const current   = app.getVersion();
+  const updateUrl = github_url ? github_url + '/releases/latest' : RELEASES_PAGE;
+
+  if (semverGt(latest, current)) {
+    const upd = { version: latest, url: updateUrl };
+    store.set('updateAvailable', upd);
+    return upd;
+  } else {
+    store.delete('updateAvailable');
+    return null;
+  }
+}
+
+function scheduleUpdateCheck(store) {
+  function check() {
+    checkNow(store).catch(() => {});
+  }
   setTimeout(() => {
     check();
     setInterval(check, 24 * 60 * 60 * 1000);
   }, msUntilNextNoon());
 }
 
-module.exports = { scheduleUpdateCheck };
+module.exports = { scheduleUpdateCheck, checkNow };

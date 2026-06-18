@@ -133,7 +133,6 @@ async function init() {
       }
     }).catch(() => {});
   }
-  checkAndStoreUpdate().catch(() => {});
 }
 
 init();

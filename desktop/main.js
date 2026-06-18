@@ -520,6 +520,13 @@ app.whenReady().then(() => {
     updateAvailable: encStore.get("updateAvailable") || null
   }));
 
+  ipcMain.handle("check-for-update", async () => {
+    try {
+      const { checkNow } = require("./lib-node/updater");
+      return await checkNow(store);
+    } catch { return null; }
+  });
+
   ipcMain.handle("resize-popup", (_, count) => {
     if (!popupWin || popupWin.isDestroyed()) return;
     const cols = Math.max(1, Math.min(4, count || 1));
