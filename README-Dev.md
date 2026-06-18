@@ -1,10 +1,10 @@
 # Thought Tidy — Developer Reference
 
 <p align="left">
-  <img alt="Extension Tests" src="https://img.shields.io/badge/Extension_Tests-607_passing_%7C_2_skip-brightgreen?style=flat-square" />
+  <img alt="Extension Tests" src="https://img.shields.io/badge/Extension_Tests-948_passing_%7C_2_skip-brightgreen?style=flat-square" />
   <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
-  <img alt="Ext Line Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.33%25_lines-brightgreen?style=flat-square" />
-  <img alt="Desktop Line Coverage" src="https://img.shields.io/badge/Desktop_Coverage-100%25_lines-brightgreen?style=flat-square" />
+  <img alt="Ext Line Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.79%25_lines-brightgreen?style=flat-square" />
+  <img alt="Desktop Line Coverage" src="https://img.shields.io/badge/Desktop_Coverage-97.93%25_lines-brightgreen?style=flat-square" />
   <img alt="Build" src="https://img.shields.io/badge/build-v1.5.5-lightgrey?style=flat-square" />
 </p>
 

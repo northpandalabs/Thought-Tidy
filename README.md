@@ -1,7 +1,9 @@
 <p align="center">
   <img alt="Build" src="https://img.shields.io/badge/build-v1.5.5-lightgrey?style=flat-square" />
-  <img alt="Extension Tests" src="https://img.shields.io/badge/Extension_Tests-607_passing-brightgreen?style=flat-square" />
+  <img alt="Extension Tests" src="https://img.shields.io/badge/Extension_Tests-948_passing-brightgreen?style=flat-square" />
   <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
+  <img alt="Ext Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.79%25_lines-brightgreen?style=flat-square" />
+  <img alt="Desktop Coverage" src="https://img.shields.io/badge/Desktop_Coverage-97.93%25_lines-brightgreen?style=flat-square" />
 </p>
 
 # Thought Tidy
