@@ -5,7 +5,7 @@
   <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
   <img alt="Ext Line Coverage" src="https://img.shields.io/badge/Ext_Coverage-98.33%25_lines-brightgreen?style=flat-square" />
   <img alt="Desktop Line Coverage" src="https://img.shields.io/badge/Desktop_Coverage-100%25_lines-brightgreen?style=flat-square" />
-  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.4-lightgrey?style=flat-square" />
+  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.5-lightgrey?style=flat-square" />
 </p>
 
 Developer setup, build pipeline, test coverage, store publishing, and architecture notes.
@@ -147,7 +147,7 @@ GOOGLE_API_KEY=AIza...
 CLAUDE_API_KEY=sk-ant-...
 ```
 
-### Coverage (v1.5.4)
+### Coverage (v1.5.5)
 
 | Suite | Statements | Branches | Functions | Lines | Tests |
 | --- | --- | --- | --- | --- | --- |
@@ -240,7 +240,7 @@ https://raw.githubusercontent.com/northpandalabs/Thought-Tidy/refs/heads/main/le
 **Structure:**
 ```json
 {
-  "version": "1.5.4",
+  "version": "1.5.5",
   "released": "2026-06-11",
   "pro_url": "https://northpandalabs.gumroad.com/l/thought-tidy",
   "platforms": {

@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.4-lightgrey?style=flat-square" />
+  <img alt="Build" src="https://img.shields.io/badge/build-v1.5.5-lightgrey?style=flat-square" />
   <img alt="Extension Tests" src="https://img.shields.io/badge/Extension_Tests-607_passing-brightgreen?style=flat-square" />
   <img alt="Desktop Tests" src="https://img.shields.io/badge/Desktop_Tests-98_passing-brightgreen?style=flat-square" />
 </p>
@@ -20,9 +20,9 @@ Highlight text, right-click, pick an action, done. No subscriptions. No accounts
 <p align="center">
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-chrome.zip"><img alt="Chrome Extension" src="https://custom-icon-badges.demolab.com/badge/-Chrome_Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" /></a>
   <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/thought-tidy-firefox.zip"><img alt="Firefox Extension" src="https://custom-icon-badges.demolab.com/badge/-Firefox_Extension-FF7139?style=for-the-badge&logo=firefox&logoColor=white" /></a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy.Setup.1.5.4.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-57A639?style=for-the-badge&logo=windows&logoColor=white" /></a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy-1.5.4-arm64.dmg"><img alt="macOS" src="https://custom-icon-badges.demolab.com/badge/-macOS_Desktop-000000?style=for-the-badge&logo=apple&logoColor=white" /></a>
-  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy-1.5.4.AppImage"><img alt="Linux" src="https://custom-icon-badges.demolab.com/badge/-Linux_Desktop-FCC624?style=for-the-badge&logo=linux&logoColor=black" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy.Setup.1.5.5.exe"><img alt="Windows" src="https://custom-icon-badges.demolab.com/badge/-Windows_Desktop-57A639?style=for-the-badge&logo=windows&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy-1.5.5-arm64.dmg"><img alt="macOS" src="https://custom-icon-badges.demolab.com/badge/-macOS_Desktop-000000?style=for-the-badge&logo=apple&logoColor=white" /></a>
+  <a href="https://github.com/northpandalabs/Thought-Tidy/releases/latest/download/Thought.Tidy-1.5.5.AppImage"><img alt="Linux" src="https://custom-icon-badges.demolab.com/badge/-Linux_Desktop-FCC624?style=for-the-badge&logo=linux&logoColor=black" /></a>
 </p>
 
 ---
