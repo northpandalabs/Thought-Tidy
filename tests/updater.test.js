@@ -87,9 +87,16 @@ describe("checkAndStoreUpdate", () => {
     expect(ctx.browser.storage.local.remove).not.toHaveBeenCalled();
   });
 
-  test("does nothing when response JSON has no tag_name", async () => {
+  test("does nothing when response JSON has no version field", async () => {
     const ctx = makeCtx("1.0.0");
-    ctx.fetch.mockResolvedValue({ ok: true, json: async () => ({ html_url: "https://example.com" }) });
+    ctx.fetch.mockResolvedValue({ ok: true, json: async () => ({ github_url: "https://github.com/northpandalabs/Thought-Tidy" }) });
+    await ctx.checkAndStoreUpdate();
+    expect(ctx.browser.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  test("does nothing when version field is not x.x.x format", async () => {
+    const ctx = makeCtx("1.0.0");
+    ctx.fetch.mockResolvedValue({ ok: true, json: async () => ({ version: "v2.0.0" }) });
     await ctx.checkAndStoreUpdate();
     expect(ctx.browser.storage.local.set).not.toHaveBeenCalled();
   });
@@ -98,19 +105,19 @@ describe("checkAndStoreUpdate", () => {
     const ctx = makeCtx("1.0.0");
     ctx.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ tag_name: "v2.0.0", html_url: "https://example.com/v2" }),
+      json: async () => ({ version: "2.0.0", github_url: "https://github.com/northpandalabs/Thought-Tidy" }),
     });
     await ctx.checkAndStoreUpdate();
     expect(ctx.browser.storage.local.set).toHaveBeenCalledWith({
-      updateAvailable: { version: "2.0.0", url: "https://example.com/v2" },
+      updateAvailable: { version: "2.0.0", url: "https://github.com/northpandalabs/Thought-Tidy/releases/latest" },
     });
   });
 
-  test("strips v-prefix from tag_name before storing version", async () => {
+  test("stores plain version number from downloads.json", async () => {
     const ctx = makeCtx("1.0.0");
     ctx.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ tag_name: "v1.5.0", html_url: "https://example.com" }),
+      json: async () => ({ version: "1.5.0", github_url: "https://github.com/northpandalabs/Thought-Tidy" }),
     });
     await ctx.checkAndStoreUpdate();
     const stored = ctx.browser.storage.local.set.mock.calls[1][0];
@@ -121,7 +128,7 @@ describe("checkAndStoreUpdate", () => {
     const ctx = makeCtx("2.0.0");
     ctx.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ tag_name: "v1.9.9", html_url: "https://example.com" }),
+      json: async () => ({ version: "1.9.9", github_url: "https://github.com/northpandalabs/Thought-Tidy" }),
     });
     await ctx.checkAndStoreUpdate();
     expect(ctx.browser.storage.local.remove).toHaveBeenCalledWith("updateAvailable");
@@ -131,22 +138,33 @@ describe("checkAndStoreUpdate", () => {
     const ctx = makeCtx("1.2.3");
     ctx.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ tag_name: "v1.2.3" }),
+      json: async () => ({ version: "1.2.3", github_url: "https://github.com/northpandalabs/Thought-Tidy" }),
     });
     await ctx.checkAndStoreUpdate();
     expect(ctx.browser.storage.local.remove).toHaveBeenCalledWith("updateAvailable");
   });
 
-  test("falls back to BTC_RELEASES_PAGE url when html_url is absent", async () => {
+  test("falls back to BTC_RELEASES_PAGE url when github_url is absent", async () => {
     const ctx = makeCtx("1.0.0");
     ctx.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ tag_name: "v2.0.0" }),
+      json: async () => ({ version: "2.0.0" }),
     });
     await ctx.checkAndStoreUpdate();
     const stored = ctx.browser.storage.local.set.mock.calls[1][0];
     expect(typeof stored.updateAvailable.url).toBe("string");
     expect(stored.updateAvailable.url.length).toBeGreaterThan(0);
+  });
+
+  test("rejects github_url that is not a valid github.com repo URL", async () => {
+    const ctx = makeCtx("1.0.0");
+    ctx.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ version: "2.0.0", github_url: "https://evil.com/steal" }),
+    });
+    await ctx.checkAndStoreUpdate();
+    const stored = ctx.browser.storage.local.set.mock.calls[1][0];
+    expect(stored.updateAvailable.url).not.toContain("evil.com");
   });
 
   test("swallows fetch network errors silently and never throws", async () => {
@@ -165,11 +183,5 @@ describe("checkAndStoreUpdate", () => {
     await expect(ctx.checkAndStoreUpdate()).resolves.toBeUndefined();
   });
 
-  test("sends Accept: application/vnd.github+json header", async () => {
-    const ctx = makeCtx("1.0.0");
-    ctx.fetch.mockResolvedValue({ ok: false, json: async () => ({}) });
-    await ctx.checkAndStoreUpdate();
-    const [, opts] = ctx.fetch.mock.calls[0];
-    expect(opts.headers["Accept"]).toBe("application/vnd.github+json");
-  });
+
 });
