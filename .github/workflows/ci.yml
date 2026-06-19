@@ -38,6 +38,11 @@ jobs:
           path: coverage/
           retention-days: 14
 
+      - name: Write license env file
+        run: |
+          mkdir -p ETC
+          echo "LICENSE_CIPHER_KEY=${{ secrets.LICENSE_CIPHER_KEY }}" > ETC/brainfix-ai.env
+
       - name: Build Firefox
         run: npm run build:firefox
 

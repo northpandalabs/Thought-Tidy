@@ -16,7 +16,7 @@ It is built and maintained by **NorthPanda Labs** (Panda Automation LLC).
 - Firefox Add-ons store: https://addons.mozilla.org/en-US/firefox/addon/thought-tidy/
 - Contact: northpandalabs@gmail.com
 
-**Current version:** 1.5.5
+**Current version:** 1.5.6
 
 ---
 
