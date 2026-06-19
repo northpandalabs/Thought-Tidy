@@ -30,7 +30,7 @@
     </div>
     <div id="run-selection-status" class="run-selection-status" style="display:none"></div>
     <label for="input-text">Paste or type text</label>
-    <textarea id="input-text" placeholder="Paste and pick an action…"></textarea>
+    <textarea id="input-text" placeholder="Paste and pick an action…" maxlength="50000"></textarea>
 
     <div class="action-row">
       <select id="action-select"></select>
@@ -53,7 +53,7 @@
       <div id="clarify-area" style="display:none" class="clarify-wrap">
         <p class="clarify-header">A couple of quick questions to nail this:</p>
         <div id="clarify-questions"></div>
-        <textarea id="clarify-answers" class="clarify-input" placeholder="Type your answers here…" rows="3"></textarea>
+        <textarea id="clarify-answers" class="clarify-input" placeholder="Type your answers here…" rows="3" maxlength="2000"></textarea>
         <button id="clarify-submit-btn">Continue →</button>
       </div>
       <div id="result-slots"></div>
@@ -95,6 +95,7 @@
   <script src="../lib/license.js"></script>
 
   <script src="app-storage.js"></script>
+  <script src="../lib/sanitize.js"></script>
   <script src="../lib/shared-popup.js"></script>
   <script src="popup.js"></script>
 </body>

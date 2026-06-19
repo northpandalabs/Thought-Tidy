@@ -15,7 +15,7 @@
         <span id="dev-mode-badge" style="display:none">🛠 Developer Mode</span>
       </div>
       <div class="header-controls">
-        <input type="text" id="search-input" placeholder="Search actions, text, providers…" autocomplete="off">
+        <input type="text" id="search-input" placeholder="Search actions, text, providers…" autocomplete="off" maxlength="256">
         <button id="clear-all-btn" class="danger-btn">Clear All</button>
       </div>
     </div>
@@ -41,6 +41,7 @@
   <script src="storage-shim.js"></script>
   <script src="../../lib/pricing.js"></script>
   <script src="../../lib/history-pin.js"></script>
+  <script src="../../lib/sanitize.js"></script>
   <script src="../../lib/history-ui.js"></script>
   <script src="history.js"></script>
 </body>

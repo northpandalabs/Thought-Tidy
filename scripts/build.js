@@ -33,6 +33,43 @@ function writeBuildFlags(targetDir) {
   );
 }
 
+// Injects LICENSE_CIPHER_KEY into the built lib/license.js.
+// The source file has the placeholder "%%LICENSE_CIPHER_KEY%%" — never the real value.
+// Set the env var (or GitHub Actions secret) before building.
+function injectLicenseKey(targetDir) {
+  let key = process.env.LICENSE_CIPHER_KEY;
+
+  // Fallback: read from C:\ETC\brainfix-ai.env on local dev machines
+  if (!key) {
+    const etcFile = path.join(__dirname, "..", "ETC", "brainfix-ai.env");
+    if (fs.existsSync(etcFile)) {
+      for (const line of fs.readFileSync(etcFile, "utf8").split("\n")) {
+        const eq = line.indexOf("=");
+        if (eq > 0 && line.slice(0, eq).trim() === "LICENSE_CIPHER_KEY") {
+          key = line.slice(eq + 1).trim();
+          break;
+        }
+      }
+    }
+  }
+
+  if (!key) {
+    console.error("ERROR: LICENSE_CIPHER_KEY is not set.");
+    console.error("       Options:");
+    console.error("       1. Pass inline:       LICENSE_CIPHER_KEY=... npm run build:chrome");
+    console.error("       2. Add to .env file in project root");
+    console.error("       3. Add to ETC\\brainfix-ai.env in project root");
+    process.exit(1);
+  }
+  const licPath = path.join(targetDir, "lib", "license.js");
+  const src     = fs.readFileSync(licPath, "utf8");
+  if (!src.includes('"%%LICENSE_CIPHER_KEY%%"')) {
+    console.error("ERROR: placeholder not found in lib/license.js — was it already patched?");
+    process.exit(1);
+  }
+  fs.writeFileSync(licPath, src.replace('"%%LICENSE_CIPHER_KEY%%"', JSON.stringify(key)));
+}
+
 // ── helpers ────────────────────────────────────────────────────────────────────
 
 function clean(dir) {
@@ -107,10 +144,12 @@ const ALL_TARGETS = {
       .replace(/^importScripts\([^)]*\);\n?/m, "");
     fs.writeFileSync(bgPath, bg);
     writeBuildFlags(path.join(DIST, "firefox"));
+    injectLicenseKey(path.join(DIST, "firefox"));
   },
   chrome: () => {
     buildTarget("chrome", {}, ["browser_specific_settings"]);
     writeBuildFlags(path.join(DIST, "chrome"));
+    injectLicenseKey(path.join(DIST, "chrome"));
   },
 };
 

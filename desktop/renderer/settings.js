@@ -85,8 +85,8 @@ async function save() {
   }
   await browser.storage.local.set({
     customPrompts: getSharedCustomPrompts(), actionSettings: actions,
-    profileName: getVal("profileName"), profileRole: getVal("profileRole"),
-    profileStyle: getVal("profileStyle"), profileContext: getVal("profileContext"),
+    profileName: sanitizeText(getVal("profileName")), profileRole: sanitizeText(getVal("profileRole")),
+    profileStyle: sanitizeText(getVal("profileStyle")), profileContext: sanitizeContent(getVal("profileContext")),
     profileEnabled: document.getElementById("profileEnabled")?.checked || false
   });
   isDirty = false;
@@ -97,8 +97,8 @@ async function save() {
 
 async function saveProfile() {
   await browser.storage.local.set({
-    profileName: getVal("profileName"), profileRole: getVal("profileRole"),
-    profileStyle: getVal("profileStyle"), profileContext: getVal("profileContext"),
+    profileName: sanitizeText(getVal("profileName")), profileRole: sanitizeText(getVal("profileRole")),
+    profileStyle: sanitizeText(getVal("profileStyle")), profileContext: sanitizeContent(getVal("profileContext")),
     profileEnabled: document.getElementById("profileEnabled")?.checked || false,
   });
   showSectionStatus("profile-save-status", "Saved!");
@@ -154,30 +154,6 @@ async function init() {
     }
     try { const at = await btcAPI.getLoginItemEnabled(); const el = document.getElementById("launchAtLogin"); if (el) el.checked = !!at; } catch {}
 
-    const checkBtn    = document.getElementById("check-update-btn");
-    const checkStatus = document.getElementById("check-update-status");
-    if (checkBtn) {
-      checkBtn.addEventListener("click", async () => {
-        checkBtn.disabled = true;
-        checkBtn.textContent = "Checking…";
-        checkStatus.textContent = "";
-        try {
-          const upd = await btcAPI.checkForUpdate();
-          if (upd?.version) {
-            showUpdateNotice(upd);
-            checkStatus.textContent = `v${upd.version} available!`;
-          } else {
-            checkStatus.textContent = "You're up to date ✓";
-            setTimeout(() => { checkStatus.textContent = ""; }, 3000);
-          }
-        } catch {
-          checkStatus.textContent = "Check failed — try again later.";
-        } finally {
-          checkBtn.disabled = false;
-          checkBtn.textContent = "Check for Updates";
-        }
-      });
-    }
   }
 
   await migrateStorage();
