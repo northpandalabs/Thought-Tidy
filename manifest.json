@@ -4,7 +4,7 @@
   "version": "1.5.6",
   "description": "AI writing assistant for fast thinkers. Fix spelling, rewrite, or transform text in seconds. Works with OpenAI, Claude, or Gemini.",
   "icons": {
-    "128": "icons/icon.png"
+    "512": "icons/icon.png"
   },
   "action": {
     "default_popup": "popup/popup.html",

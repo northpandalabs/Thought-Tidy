@@ -45,6 +45,27 @@ describe("manifest.json — Chrome extension icon validity", () => {
   });
 });
 
+describe("manifest.json — icon size matches manifest declaration", () => {
+  function pngDimensions(filePath) {
+    const buf = fs.readFileSync(filePath);
+    return {
+      width:  buf.readUInt32BE(16),
+      height: buf.readUInt32BE(20),
+    };
+  }
+
+  if (manifest.icons) {
+    for (const [declaredSize, iconPath] of Object.entries(manifest.icons)) {
+      test(`icons["${declaredSize}"] file is actually ${declaredSize}×${declaredSize} pixels`, () => {
+        const abs = path.join(ROOT, iconPath);
+        const { width, height } = pngDimensions(abs);
+        expect(width).toBe(Number(declaredSize));
+        expect(height).toBe(Number(declaredSize));
+      });
+    }
+  }
+});
+
 describe("manifest.json — Chrome Web Store upload requirements", () => {
   test("description is present", () => {
     expect(typeof manifest.description).toBe("string");
