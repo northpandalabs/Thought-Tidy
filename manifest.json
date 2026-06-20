@@ -33,9 +33,9 @@
     "https://generativelanguage.googleapis.com/*"
   ],
   "optional_host_permissions": [
-
     "http://127.0.0.1:47391/*",
-    "http://*/*"
+    "http://127.0.0.1:11434/*",
+    "http://localhost:11434/*"
   ],
   "options_ui": {
     "page": "options/options.html",

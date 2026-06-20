@@ -128,14 +128,21 @@ describe("sync-server", () => {
 
   // ── GET /settings ─────────────────────────────────────────────────────────────
 
+  const EXT_ORIGIN = "chrome-extension://test-extension-id";
+
   test("GET /settings returns only defined SYNC_KEY values", async () => {
-    const res  = await request({ path: "/settings", token: sessionToken });
+    const res  = await request({ path: "/settings", token: sessionToken, origin: EXT_ORIGIN });
     expect(res.status).toBe(200);
     const { settings } = JSON.parse(res.body);
     expect(settings.openaiKey).toBe("sk-plaintext");
     expect(settings.geminiModel).toBe("gemini-2.0-flash");
     // claudeKey is undefined in store — should be omitted
     expect("claudeKey" in settings).toBe(false);
+  });
+
+  test("GET /settings without extension origin returns 403", async () => {
+    const res = await request({ path: "/settings", token: sessionToken });
+    expect(res.status).toBe(403);
   });
 
   // ── POST /settings ────────────────────────────────────────────────────────────
@@ -145,6 +152,7 @@ describe("sync-server", () => {
       method: "POST",
       path:   "/settings",
       token:  sessionToken,
+      origin: EXT_ORIGIN,
       body:   { settings: { openaiKey: "sk-new", unknownKey: "ignored" } }
     });
     expect(res.status).toBe(200);
@@ -160,6 +168,7 @@ describe("sync-server", () => {
       method: "POST",
       path:   "/settings",
       token:  sessionToken,
+      origin: EXT_ORIGIN,
       body:   "not-valid-json{{"
     });
     expect(res.status).toBe(400);
@@ -170,6 +179,7 @@ describe("sync-server", () => {
       method: "POST",
       path:   "/settings",
       token:  sessionToken,
+      origin: EXT_ORIGIN,
       body:   { notSettings: {} }
     });
     expect(res.status).toBe(400);
@@ -181,6 +191,7 @@ describe("sync-server", () => {
       method: "POST",
       path:   "/settings",
       token:  sessionToken,
+      origin: EXT_ORIGIN,
       body:   { settings: { variants: "should-be-a-number" } }
     });
     expect(res.status).toBe(200);
@@ -193,6 +204,7 @@ describe("sync-server", () => {
       method: "POST",
       path:   "/settings",
       token:  sessionToken,
+      origin: EXT_ORIGIN,
       body:   { settings: { configuredProviders: "not-an-array" } }
     });
     expect(res.status).toBe(200);
@@ -205,6 +217,7 @@ describe("sync-server", () => {
       method: "POST",
       path:   "/settings",
       token:  sessionToken,
+      origin: EXT_ORIGIN,
       body:   { settings: { profileEnabled: "yes" } }
     });
     expect(res.status).toBe(200);

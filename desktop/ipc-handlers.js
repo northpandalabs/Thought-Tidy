@@ -19,9 +19,13 @@ function makeStoreGetHandler(store) {
   };
 }
 
+const _BLOCKED_STORE_KEYS = new Set(["autoUpdaterEnabled", "updateAvailable"]);
+
 function makeStoreSetHandler(store) {
   return function storeSet(_, data) {
-    for (const [k, v] of Object.entries(data)) store.set(k, v);
+    for (const [k, v] of Object.entries(data)) {
+      if (!_BLOCKED_STORE_KEYS.has(k)) store.set(k, v);
+    }
   };
 }
 

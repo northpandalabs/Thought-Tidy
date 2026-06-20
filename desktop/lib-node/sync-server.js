@@ -69,6 +69,16 @@ function startSyncServer(encStore, port = PORT) {
       return;
     }
 
+    // Settings routes are restricted to extension origins only
+    if (req.url === "/settings") {
+      const reqOrigin = req.headers["origin"] || "";
+      if (!/^(chrome-extension|moz-extension):\/\//.test(reqOrigin)) {
+        res.writeHead(403);
+        res.end("Forbidden");
+        return;
+      }
+    }
+
     // GET /settings — returns all sync-relevant settings (decrypted by encStore.get)
     if (req.url === "/settings" && req.method === "GET") {
       const settings = {};

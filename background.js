@@ -99,18 +99,16 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       const today = todayDate();
 
-      const { historyLog: hl = [] } = await browser.storage.local.get("historyLog");
-      const fresh = purgeOldLog(hl);
+      const stored0 = await browser.storage.local.get(["historyLog", "historyFull"]);
+      const fresh = purgeOldLog(stored0.historyLog || []);
       fresh.push({
         timestamp: Date.now(), date: today, source: "extension",
         action: actionVal, provider: usedProvider, model: usedModel,
         inputLen: selectedText.length, outputLen: result.length
       });
-      await browser.storage.local.set({ historyLog: fresh.slice(-200), lastAction: actionVal });
-
-      const { historyFull = [] } = await browser.storage.local.get("historyFull");
       const cost = estimateCost(usedModel, selectedText, [result]);
-      historyFull.push({
+      const historyFull0 = stored0.historyFull || [];
+      historyFull0.push({
         id: uid(), timestamp: Date.now(), date: today, source: "extension",
         action: actionVal, provider: usedProvider, model: usedModel,
         systemPrompt: systemPrompt.slice(0, 2000),
@@ -118,7 +116,10 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         outputs: [result.slice(0, 5000)],
         ...cost
       });
-      await browser.storage.local.set({ historyFull: historyFull.slice(-500) });
+      await browser.storage.local.set({
+        historyLog: fresh.slice(-200), lastAction: actionVal,
+        historyFull: historyFull0.slice(-500)
+      });
     } catch (err) {
       browser.tabs.sendMessage(tabId, { action: "show-error", error: err.message });
     }
@@ -146,7 +147,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
 
   const variants = menuId === "fix-spelling" || !isProUnlocked(settings)
     ? 1
-    : Math.max(1, Math.min(4, parseInt(settings.variants) || 1));
+    : Math.max(1, Math.min(4, parseInt(settings.variants, 10) || 1));
 
   let systemPrompt;
   if (menuId.startsWith("dyn-")) {
@@ -175,23 +176,19 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     browser.tabs.sendMessage(tab.id, { action: "show-results", originalText: selectedText, results });
 
     const lastAction = menuId.startsWith("dyn-") ? menuId.replace("dyn-", "custom-") : menuId;
-    await browser.storage.local.set({ lastAction });
-
     const today = todayDate();
 
-    const { historyLog = [] } = await browser.storage.local.get("historyLog");
-    const fresh = purgeOldLog(historyLog);
+    const stored1 = await browser.storage.local.get(["historyLog", "historyFull"]);
+    const fresh = purgeOldLog(stored1.historyLog || []);
     fresh.push({
       timestamp: Date.now(), date: today, source: "extension",
       action: lastAction, provider: usedProvider, model: usedModel,
       inputLen: selectedText.length,
       outputLen: results.reduce((s, r) => s + r.length, 0)
     });
-    await browser.storage.local.set({ historyLog: fresh.slice(-200) });
-
-    const { historyFull = [] } = await browser.storage.local.get("historyFull");
     const cost = estimateCost(usedModel, selectedText, results);
-    historyFull.push({
+    const historyFull1 = stored1.historyFull || [];
+    historyFull1.push({
       id: uid(), timestamp: Date.now(), date: today, source: "extension",
       action: lastAction, provider: usedProvider, model: usedModel,
       systemPrompt: systemPrompt.slice(0, 2000),
@@ -199,7 +196,11 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
       outputs: results.map(r => r.slice(0, 5000)),
       ...cost
     });
-    await browser.storage.local.set({ historyFull: historyFull.slice(-500) });
+    await browser.storage.local.set({
+      lastAction,
+      historyLog: fresh.slice(-200),
+      historyFull: historyFull1.slice(-500)
+    });
   } catch (err) {
     browser.tabs.sendMessage(tab.id, { action: "show-error", error: err.message });
   }
