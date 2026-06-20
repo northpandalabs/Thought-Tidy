@@ -20,7 +20,7 @@ const store = new Store({ name: "thought-tidy-settings" });
 // values so migration and getters are safe to call repeatedly.
 
 const ENC_PREFIX = "enc1:";
-const _SENSITIVE = new Set(["openaiKey", "claudeKey", "geminiKey", "licenseEmail", "licenseKey"]);
+const _SENSITIVE = new Set(["openaiKey", "claudeKey", "geminiKey", "licenseEmail", "licenseKey", "_sbKey"]);
 const _SYNC_KEYS = new Set([
   "configuredProviders", "geminiModels",
   "openaiKey", "claudeKey", "geminiKey",

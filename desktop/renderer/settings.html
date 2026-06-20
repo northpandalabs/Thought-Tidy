@@ -182,7 +182,10 @@
       </div>
       <div id="pro-active-view" style="display:none">
         <div class="pro-active-row">
-          <span class="pro-active-email" style="color:var(--text-muted); font-size:12px">✓ License active — <span id="pro-active-email"></span></span>
+          <div>
+            <span class="pro-active-email" style="color:var(--text-muted); font-size:12px">✓ License active — <span id="pro-active-email"></span></span>
+            <span id="pro-device-id-row" style="display:none; color:var(--text-muted); font-size:11px; margin-top:3px">Device ID: <code id="pro-device-id" style="font-family:monospace; user-select:all; font-size:11px"></code></span>
+          </div>
           <button id="deactivate-pro-btn" class="revert-btn" style="margin-left:auto">Deactivate</button>
         </div>
       </div>
