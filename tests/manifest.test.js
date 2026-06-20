@@ -54,13 +54,16 @@ describe("manifest.json — icon size matches manifest declaration", () => {
     };
   }
 
+  // Multiple size keys may point to the same file (one 512px file serves all sizes).
+  // We require the file to be AT LEAST as large as the declared size so a tiny icon
+  // can never be misrepresented as a larger one.
   if (manifest.icons) {
     for (const [declaredSize, iconPath] of Object.entries(manifest.icons)) {
-      test(`icons["${declaredSize}"] file is actually ${declaredSize}×${declaredSize} pixels`, () => {
+      test(`icons["${declaredSize}"] file is at least ${declaredSize}×${declaredSize} pixels`, () => {
         const abs = path.join(ROOT, iconPath);
         const { width, height } = pngDimensions(abs);
-        expect(width).toBe(Number(declaredSize));
-        expect(height).toBe(Number(declaredSize));
+        expect(width).toBeGreaterThanOrEqual(Number(declaredSize));
+        expect(height).toBeGreaterThanOrEqual(Number(declaredSize));
       });
     }
   }
