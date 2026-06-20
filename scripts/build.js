@@ -85,6 +85,7 @@ function copyRecursive(src, dest) {
       copyRecursive(path.join(src, entry), path.join(dest, entry));
     }
   } else {
+    if (src.endsWith(".svg")) return; // SVGs not allowed in extension packages
     fs.copyFileSync(src, dest);
   }
 }
