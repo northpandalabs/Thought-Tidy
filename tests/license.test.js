@@ -1,4 +1,13 @@
-const { verifyWithGumroad, checkLicensePeriodically, isProUnlocked } = require("../lib/license");
+const fs   = require("fs");
+const path = require("path");
+const { verifyWithGumroad, checkLicensePeriodically, isProUnlocked, isDemoMode,
+        verifyDemoMode, verifyCorpMode, cacheLicenseData } = require("../lib/license");
+
+const HAS_KEY      = !!process.env.LICENSE_CIPHER_KEY;
+const realDownloads = JSON.parse(fs.readFileSync(path.join(__dirname, "../legal/downloads.json"), "utf8"));
+
+// describeWithKey: runs only when LICENSE_CIPHER_KEY is available (ETC folder / CI secret)
+const describeWithKey = HAS_KEY ? describe : describe.skip;
 
 // ── isProUnlocked ──────────────────────────────────────────────────────────────
 
@@ -271,5 +280,197 @@ describe("checkLicensePeriodically", () => {
     // appSet should have been called at least twice: once before fetch, once after
     expect(storage.appSet).toHaveBeenCalledTimes(2);
     expect(storage.appSet).toHaveBeenNthCalledWith(1, expect.objectContaining({ lastLicenseAttempt: expect.any(Number) }));
+  });
+});
+
+// ── isDemoMode ─────────────────────────────────────────────────────────────────
+
+describe("isDemoMode", () => {
+  test("returns true when demoMode is set and no other license", () => {
+    expect(isDemoMode({ demoMode: true })).toBe(true);
+  });
+  test("returns false when corpMode is also set", () => {
+    expect(isDemoMode({ demoMode: true, corpMode: true })).toBe(false);
+  });
+  test("returns false when Gumroad keys are present", () => {
+    expect(isDemoMode({ demoMode: true, licenseEmail: "a@b.com", licenseKey: "KEY" })).toBe(false);
+  });
+  test("returns false when demoMode is false", () => {
+    expect(isDemoMode({ demoMode: false })).toBe(false);
+  });
+  test("returns false for empty object", () => {
+    expect(isDemoMode({})).toBe(false);
+  });
+});
+
+// ── isProUnlocked — demo + corp extensions ────────────────────────────────────
+
+describe("isProUnlocked — demo and corp modes", () => {
+  test("returns true when demoMode is set", () => {
+    expect(isProUnlocked({ demoMode: true })).toBe(true);
+  });
+  test("returns true when corpMode is set", () => {
+    expect(isProUnlocked({ corpMode: true })).toBe(true);
+  });
+  test("returns false when demoMode and corpMode are both false", () => {
+    expect(isProUnlocked({ demoMode: false, corpMode: false })).toBe(false);
+  });
+});
+
+// ── verifyDemoMode — paths that never need the cipher key ─────────────────────
+
+describe("verifyDemoMode — network failure paths", () => {
+  beforeEach(() => cacheLicenseData(null));
+  afterEach(() => { global.fetch = undefined; cacheLicenseData(null); });
+
+  test("returns error when downloads fetch fails and no cache", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("offline"));
+    const result = await verifyDemoMode("0000-0000-0000-1792");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/Could not reach/);
+  });
+});
+
+// ── verifyDemoMode — full flow (only runs when LICENSE_CIPHER_KEY is available) ─
+
+function makeWindow(deviceId = "test-device-uuid") {
+  return {
+    appGet: jest.fn().mockResolvedValue({ _deviceId: deviceId }),
+    appSet: jest.fn().mockResolvedValue(),
+  };
+}
+
+function mockSbOk(payload) {
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => payload });
+}
+
+function mockSbFail() {
+  global.fetch = jest.fn().mockRejectedValue(new Error("offline"));
+}
+
+describeWithKey("verifyDemoMode — full flow (requires LICENSE_CIPHER_KEY)", () => {
+  beforeEach(() => {
+    cacheLicenseData(realDownloads);
+    global.window = makeWindow();
+  });
+  afterEach(() => {
+    global.fetch = undefined;
+    global.window = undefined;
+    cacheLicenseData(null);
+  });
+
+  test("rejects wrong demo code", async () => {
+    const result = await verifyDemoMode("0000-0000-0000-9999");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/Invalid/);
+    expect(global.fetch).toBeUndefined(); // no network call for wrong code
+  });
+
+  test("accepts correct demo code — Supabase returns ok", async () => {
+    mockSbOk({ status: "ok", id: "demo-uuid", company_name: "Demo", max_seats: 10 });
+    const result = await verifyDemoMode("0000-0000-0000-1792");
+    expect(result.valid).toBe(true);
+    expect(result.mode).toBe("demo");
+    expect(result.corpLicenseId).toBe("demo-uuid");
+    expect(result.sbUrl).toBeTruthy();
+    expect(result.sbKey).toBeTruthy();
+  });
+
+  test("returns revoked error when Supabase says revoked", async () => {
+    mockSbOk({ status: "revoked" });
+    const result = await verifyDemoMode("0000-0000-0000-1792");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/Access has ended/);
+  });
+
+  test("returns full-slots error when Supabase says full or rate_limited", async () => {
+    mockSbOk({ status: "full", company_name: "Demo" });
+    const result = await verifyDemoMode("0000-0000-0000-1792");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/slots are full/);
+  });
+
+  test("returns offline:true on network error after code validated", async () => {
+    mockSbFail();
+    const result = await verifyDemoMode("0000-0000-0000-1792");
+    expect(result.valid).toBe(true);
+    expect(result.offline).toBe(true);
+  });
+});
+
+// ── verifyCorpMode — full flow (only runs when LICENSE_CIPHER_KEY is available) ─
+
+describeWithKey("verifyCorpMode — full flow (requires LICENSE_CIPHER_KEY)", () => {
+  beforeEach(() => {
+    cacheLicenseData(realDownloads);
+    global.window = makeWindow();
+  });
+  afterEach(() => {
+    global.fetch = undefined;
+    global.window = undefined;
+    cacheLicenseData(null);
+  });
+
+  test("returns corpNotFound when code does not match any corp slot", async () => {
+    const result = await verifyCorpMode("user@company.com", "0000-0000-0000-9999");
+    expect(result.valid).toBe(false);
+    expect(result.corpNotFound).toBe(true);
+  });
+
+  test("returns error for missing email domain", async () => {
+    const result = await verifyCorpMode("nodomain", "0000-0000-0000-6393");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/company email/);
+  });
+
+  test("accepts matching corp code — Supabase returns ok", async () => {
+    mockSbOk({ status: "ok", id: "corp-uuid", company_name: "bheckService", max_seats: 5 });
+    const result = await verifyCorpMode("bheckservice@gmail.com", "0000-0000-0000-6393");
+    expect(result.valid).toBe(true);
+    expect(result.mode).toBe("corp");
+    expect(result.corpLicenseId).toBe("corp-uuid");
+  });
+
+  test("returns error (not corpNotFound) on network failure after code matched", async () => {
+    mockSbFail();
+    const result = await verifyCorpMode("bheckservice@gmail.com", "0000-0000-0000-6393");
+    expect(result.valid).toBe(false);
+    expect(result.corpNotFound).toBeUndefined();
+    expect(result.error).toMatch(/Could not reach/);
+  });
+
+  test("returns seats-full error when Supabase says full", async () => {
+    mockSbOk({ status: "full", company_name: "bheckService" });
+    const result = await verifyCorpMode("bheckservice@gmail.com", "0000-0000-0000-6393");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/No seats available/);
+    expect(result.error).toMatch(/bheckService/);
+  });
+
+  test("returns rate-limited error when Supabase says rate_limited", async () => {
+    mockSbOk({ status: "rate_limited", company_name: "bheckService" });
+    const result = await verifyCorpMode("bheckservice@gmail.com", "0000-0000-0000-6393");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/Too many activation attempts/);
+  });
+
+  test("returns revoked error when Supabase says revoked", async () => {
+    mockSbOk({ status: "revoked" });
+    const result = await verifyCorpMode("bheckservice@gmail.com", "0000-0000-0000-6393");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/revoked/);
+  });
+
+  test("returns not-found error when Supabase says not_found (domain mismatch)", async () => {
+    mockSbOk({ status: "not_found" });
+    const result = await verifyCorpMode("wrong@otherdomain.com", "0000-0000-0000-6393");
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/No license found/);
+  });
+
+  test("email domain comparison is case-insensitive", async () => {
+    mockSbOk({ status: "ok", id: "corp-uuid", company_name: "bheckService", max_seats: 5 });
+    const result = await verifyCorpMode("BHeckService@Gmail.COM", "0000-0000-0000-6393");
+    expect(result.valid).toBe(true);
   });
 });

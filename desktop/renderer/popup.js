@@ -129,6 +129,8 @@ async function init() {
   document.getElementById("input-text").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      const btn = document.getElementById("run-btn");
+      if (!btn || btn.disabled) return;
       runProcess();
     }
   });

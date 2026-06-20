@@ -148,12 +148,11 @@ describe("_getKey — import from existing storage", () => {
 
 // ── _dec — corrupted value passthrough ───────────────────────────────────────
 
-describe("_dec — corrupted ciphertext passthrough", () => {
-  test("cryptoGet returns the raw value when decryption fails", async () => {
+describe("_dec — corrupted ciphertext returns null", () => {
+  test("cryptoGet returns null when decryption fails (prompts re-entry)", async () => {
     const { cryptoGet } = loadFreshModule({ claudeKey: "ck1:not-valid-base64!!!" });
     const result = await cryptoGet(["claudeKey"]);
-    // Should return the raw string rather than throwing
-    expect(result.claudeKey).toBe("ck1:not-valid-base64!!!");
+    expect(result.claudeKey).toBeNull();
   });
 });
 

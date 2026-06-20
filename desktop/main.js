@@ -10,7 +10,7 @@ const path  = require("path");
 const Store = require("electron-store");
 const { registerAll, makeBackupHandlers } = require("./ipc-handlers");
 const fs = require("fs");
-const { todayDate, purgeOldLog } = require("../lib/text");
+const { todayDate, purgeOldLog, uid } = require("../lib/text");
 
 const store = new Store({ name: "thought-tidy-settings" });
 
@@ -20,7 +20,7 @@ const store = new Store({ name: "thought-tidy-settings" });
 // values so migration and getters are safe to call repeatedly.
 
 const ENC_PREFIX = "enc1:";
-const _SENSITIVE = new Set(["openaiKey", "claudeKey", "geminiKey", "licenseEmail", "licenseKey"]);
+const _SENSITIVE = new Set(["openaiKey", "claudeKey", "geminiKey", "licenseEmail", "licenseKey", "_sbKey"]);
 const _SYNC_KEYS = new Set([
   "configuredProviders", "geminiModels",
   "openaiKey", "claudeKey", "geminiKey",
@@ -365,9 +365,10 @@ async function quickAction(action) {
     const historyFull = store.get("historyFull") || [];
     const cost = estimateCost(usedModel, text, [result]);
     historyFull.push({
-      id: Math.random().toString(36).slice(2, 9),
+      id: uid(),
       timestamp: Date.now(), date: today, source: "desktop",
       action, provider: usedProvider, model: usedModel,
+      systemPrompt: systemPrompt.slice(0, 2000),
       inputText: text.slice(0, 5000),
       outputs: [result.slice(0, 5000)],
       ...cost
@@ -412,9 +413,10 @@ async function quickCustomAction(idx) {
     const historyFull = store.get("historyFull") || [];
     const cost = estimateCost(usedModel, text, [result]);
     historyFull.push({
-      id: Math.random().toString(36).slice(2, 9),
+      id: uid(),
       timestamp: Date.now(), date: today, source: "desktop",
       action: `custom-${idx}`, provider: usedProvider, model: usedModel,
+      systemPrompt: systemPrompt.slice(0, 2000),
       inputText: text.slice(0, 5000), outputs: [result.slice(0, 5000)], ...cost
     });
     store.set("historyFull", historyFull.slice(-500));
@@ -542,8 +544,8 @@ app.whenReady().then(() => {
 
   ipcMain.handle("set-zoom", (_, zoom) => {
     encStore.set("zoomLevel", zoom);
-    const factor = (!zoom || zoom === "auto") ? 1.0 : parseFloat(zoom);
-    if (isNaN(factor)) return;
+    const raw    = (!zoom || zoom === "auto") ? 1.0 : parseFloat(zoom);
+    const factor = isNaN(raw) ? 1.0 : Math.min(2.0, Math.max(0.5, raw));
     for (const win of [popupWin, settingsWin]) {
       if (win && !win.isDestroyed()) win.webContents.setZoomFactor(factor);
     }

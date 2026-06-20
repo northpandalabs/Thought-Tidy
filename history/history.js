@@ -23,7 +23,7 @@ async function load() {
 }
 
 document.getElementById("search-input").addEventListener("input", e => {
-  const q = e.target.value.trim().toLowerCase();
+  const q = sanitizeText(e.target.value).toLowerCase();
   if (!q) { HistoryUI.render(allEntries, copyFn); return; }
   HistoryUI.render(allEntries.filter(entry =>
     (entry.action       || "").toLowerCase().includes(q) ||

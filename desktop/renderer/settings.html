@@ -182,7 +182,10 @@
       </div>
       <div id="pro-active-view" style="display:none">
         <div class="pro-active-row">
-          <span class="pro-active-email" style="color:var(--text-muted); font-size:12px">✓ License active — <span id="pro-active-email"></span></span>
+          <div>
+            <span class="pro-active-email" style="color:var(--text-muted); font-size:12px">✓ License active — <span id="pro-active-email"></span></span>
+            <span id="pro-device-id-row" style="display:none; color:var(--text-muted); font-size:11px; margin-top:3px">Device ID: <code id="pro-device-id" style="font-family:monospace; user-select:all; font-size:11px"></code></span>
+          </div>
           <button id="deactivate-pro-btn" class="revert-btn" style="margin-left:auto">Deactivate</button>
         </div>
       </div>
@@ -267,7 +270,7 @@
               <span id="wizard-key-link" class="api-link" style="cursor:pointer">Get key ↗</span>
             </label>
             <div class="key-row">
-              <input type="password" id="wizard-api-key" placeholder="" autocomplete="off">
+              <input type="password" id="wizard-api-key" placeholder="" autocomplete="off" maxlength="512">
               <button id="wizard-show-btn" class="show-btn">Show</button>
               <button id="wizard-test-btn" class="fetch-btn">Test &amp; Load Models</button>
             </div>
@@ -300,7 +303,7 @@
             <div class="field">
               <label for="wizard-ollama-url">Ollama Base URL</label>
               <input type="text" id="wizard-ollama-url" value="http://localhost:11434"
-                     placeholder="http://localhost:11434" autocomplete="off">
+                     placeholder="http://localhost:11434" autocomplete="off" maxlength="512">
               <p class="hint" style="margin-top:6px">
                 Default: http://localhost:11434 · Enter a remote IP/port for a network-accessible Ollama instance.
               </p>
@@ -345,12 +348,12 @@
         <h3 id="add-prompt-title">Add New Action</h3>
         <div class="field">
           <label for="new-prompt-name">Name (shown in popup menu)</label>
-          <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
+          <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post" maxlength="64">
         </div>
         <div class="field">
           <label for="new-prompt-text">Instruction sent to the AI</label>
           <textarea id="new-prompt-text" rows="4"
-            placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:"></textarea>
+            placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:" maxlength="8000"></textarea>
         </div>
         <div class="field" style="margin-top:10px">
           <label class="checkbox-label" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
@@ -438,11 +441,11 @@
         <div id="add-context-preset-form">
           <div class="field">
             <label for="new-cpreset-name">Audience name</label>
-            <input type="text" id="new-cpreset-name" placeholder="e.g. Firefighter, iOS Developer, Legal Client">
+            <input type="text" id="new-cpreset-name" placeholder="e.g. Firefighter, iOS Developer, Legal Client" maxlength="64">
           </div>
           <div class="field">
             <label for="new-cpreset-text">Their vocabulary &amp; domain</label>
-            <textarea id="new-cpreset-text" rows="2" placeholder="e.g. A firefighter — use terms like incident command, suppression, turnout gear. Avoid medical jargon."></textarea>
+            <textarea id="new-cpreset-text" rows="2" placeholder="e.g. A firefighter — use terms like incident command, suppression, turnout gear. Avoid medical jargon." maxlength="2000"></textarea>
           </div>
           <div class="field" style="margin-bottom:12px">
             <label style="display:block; margin-bottom:6px">Knowledge level for this audience</label>
@@ -480,23 +483,23 @@
       <div class="profile-grid">
         <div class="field">
           <label for="profileName">Your Name</label>
-          <input type="text" id="profileName" placeholder="Your name">
+          <input type="text" id="profileName" placeholder="Your name" maxlength="128">
         </div>
         <div class="field">
           <label for="profileRole">Your Role / Job</label>
-          <input type="text" id="profileRole" placeholder="Developer, small business owner, student…">
+          <input type="text" id="profileRole" placeholder="Developer, small business owner, student…" maxlength="128">
         </div>
       </div>
       <div class="field">
         <label for="profileStyle">Your Writing Style</label>
-        <input type="text" id="profileStyle" placeholder="Casual and direct. Short sentences. Say 'gonna'. Use em-dashes.">
+        <input type="text" id="profileStyle" placeholder="Casual and direct. Short sentences. Say 'gonna'. Use em-dashes." maxlength="256">
       </div>
       <div class="field">
         <label for="profileContext">
           Personal Context
           <span class="label-hint">Your bio, what you do, who you write to, common topics.</span>
         </label>
-        <textarea id="profileContext" rows="5" placeholder="I run a small roofing company in Texas. I write quotes, follow-up emails, and job updates to residential customers…"></textarea>
+        <textarea id="profileContext" rows="5" placeholder="I run a small roofing company in Texas. I write quotes, follow-up emails, and job updates to residential customers…" maxlength="4000"></textarea>
         <div class="context-actions">
           <span class="hint">Paste anything: a bio, writing samples, common phrases.</span>
           <button id="load-context-url-btn" class="link-btn" title="Load context from a URL you maintain">Load from URL…</button>
@@ -510,7 +513,7 @@
             <span class="label-hint">A public URL returning plain text (GitHub Gist raw, etc.)</span>
           </label>
           <div class="key-row">
-            <input type="text" id="contextUrl" placeholder="https://gist.githubusercontent.com/you/abc123/raw/context.txt">
+            <input type="text" id="contextUrl" placeholder="https://gist.githubusercontent.com/you/abc123/raw/context.txt" maxlength="512">
             <button id="fetch-context-btn" class="fetch-btn" style="white-space:nowrap">Fetch &amp; Save</button>
           </div>
           <div class="fetch-status" id="context-url-status"></div>
@@ -565,10 +568,6 @@
     <div id="update-notice" style="display:none; background:#1e3a5f; border:1px solid #2563eb; color:#93c5fd; border-radius:8px; padding:10px 14px; margin-top:12px; font-size:13px;">
       <a id="update-link" style="color:#93c5fd; text-decoration:underline; cursor:pointer;"></a>
     </div>
-    <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
-      <button id="check-update-btn" style="font-size:12px; padding:5px 12px;">Check for Updates</button>
-      <span id="check-update-status" style="font-size:12px; color:#6c7086;"></span>
-    </div>
 
     <div class="page-credit">
       © <span id="copyright-year"></span> North Panda Labs · Thought Tidy Desktop · <span id="app-version-label"></span> ·
@@ -582,10 +581,12 @@
   <script src="../../lib/text.js"></script>
   <script src="../../lib/prompts.js"></script>
   <script src="models.js"></script>
+  <script src="../../lib/build-flags.js"></script>
   <script src="../../lib/license.js"></script>
   <script src="app-storage.js"></script>
   <script src="../../lib/history-pin.js"></script>
   <script src="../../lib/export-import.js"></script>
+  <script src="../../lib/sanitize.js"></script>
   <script src="../../lib/shared-settings.js"></script>
   <script src="settings.js"></script>
 </body>

@@ -96,8 +96,8 @@ async function save() {
   }
   await cryptoSet({
     customPrompts: getSharedCustomPrompts(), actionSettings: actions,
-    profileName: getVal("profileName"), profileRole: getVal("profileRole"),
-    profileStyle: getVal("profileStyle"), profileContext: getVal("profileContext"),
+    profileName: sanitizeText(getVal("profileName")), profileRole: sanitizeText(getVal("profileRole")),
+    profileStyle: sanitizeText(getVal("profileStyle")), profileContext: sanitizeContent(getVal("profileContext")),
     profileEnabled: document.getElementById("profileEnabled")?.checked || false
   });
   const syncEnabled = document.getElementById("syncEnabled")?.checked !== false;
@@ -110,8 +110,8 @@ async function save() {
 
 async function saveProfile() {
   await cryptoSet({
-    profileName: getVal("profileName"), profileRole: getVal("profileRole"),
-    profileStyle: getVal("profileStyle"), profileContext: getVal("profileContext"),
+    profileName: sanitizeText(getVal("profileName")), profileRole: sanitizeText(getVal("profileRole")),
+    profileStyle: sanitizeText(getVal("profileStyle")), profileContext: sanitizeContent(getVal("profileContext")),
     profileEnabled: document.getElementById("profileEnabled")?.checked || false
   });
   syncWithDesktop().catch(() => {});

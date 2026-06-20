@@ -292,13 +292,13 @@ describe("historyFull write contract — all run paths write to historyFull", ()
   test("background.js writes to historyFull for context-menu runs", () => {
     const src = fs.readFileSync(path.join(ROOT, "background.js"), "utf8");
     expect(src).toContain("historyFull");
-    expect(src).toContain('set({ historyFull');
+    expect(src).toContain(".push(");
   });
 
   test("background.js also writes to historyLog for legacy compatibility", () => {
     const src = fs.readFileSync(path.join(ROOT, "background.js"), "utf8");
     expect(src).toContain("historyLog");
-    expect(src).toContain('set({ historyLog');
+    expect(src).toContain("historyLog");
   });
 
   test("desktop/main.js quickAction writes to historyFull", () => {

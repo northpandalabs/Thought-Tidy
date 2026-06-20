@@ -79,6 +79,7 @@
           <span class="pro-active-badge">⚡ Pro Active</span>
           <span id="pro-active-email" class="pro-active-email" style="margin-left:8px; font-size:13px"></span>
           <span style="color:var(--text-muted); font-size:12px; display:block; margin-top:4px">Key: •••••••••••••••••••••••••••••••••••</span>
+          <span id="pro-device-id-row" style="display:none; color:var(--text-muted); font-size:11px; margin-top:3px">Device ID: <code id="pro-device-id" style="font-family:monospace; user-select:all; font-size:11px"></code></span>
         </div>
         <button id="deactivate-pro-btn" class="revert-btn" style="margin-left:auto">Deactivate</button>
       </div>
@@ -162,7 +163,7 @@
               <a id="wizard-key-link" class="api-link" href="#" target="_blank" rel="noopener">Get key ↗</a>
             </label>
             <div class="key-row">
-              <input type="password" id="wizard-api-key" placeholder="" autocomplete="off">
+              <input type="password" id="wizard-api-key" placeholder="" autocomplete="off" maxlength="512">
               <button id="wizard-show-btn" class="show-btn">Show</button>
               <button id="wizard-test-btn" class="fetch-btn">Test &amp; Load Models</button>
             </div>
@@ -227,11 +228,11 @@
         <h3 id="add-prompt-title">Add New Action</h3>
         <div class="field">
           <label for="new-prompt-name">Name (shown in right-click menu)</label>
-          <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post">
+          <input type="text" id="new-prompt-name" placeholder="e.g. Email Reply, Slack Message, LinkedIn Post" maxlength="64">
         </div>
         <div class="field">
           <label for="new-prompt-text">Instruction sent to the AI</label>
-          <textarea id="new-prompt-text" rows="4" placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:"></textarea>
+          <textarea id="new-prompt-text" rows="4" placeholder="Rewrite as a professional email reply. Keep it concise and friendly. Return ONLY the email body:" maxlength="8000"></textarea>
         </div>
         <div class="field" style="margin-top:10px">
           <label class="checkbox-label" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
@@ -316,11 +317,11 @@
         <div id="add-context-preset-form">
           <div class="field">
             <label for="new-cpreset-name">Audience name</label>
-            <input type="text" id="new-cpreset-name" placeholder="e.g. Firefighter, iOS Developer, Legal Client">
+            <input type="text" id="new-cpreset-name" placeholder="e.g. Firefighter, iOS Developer, Legal Client" maxlength="64">
           </div>
           <div class="field">
             <label for="new-cpreset-text">Their vocabulary &amp; domain</label>
-            <textarea id="new-cpreset-text" rows="3" placeholder="e.g. A firefighter — use terms like incident command, suppression, turnout gear. Avoid medical jargon."></textarea>
+            <textarea id="new-cpreset-text" rows="3" placeholder="e.g. A firefighter — use terms like incident command, suppression, turnout gear. Avoid medical jargon." maxlength="2000"></textarea>
           </div>
           <div class="field" style="margin-bottom:12px">
             <label style="display:block; margin-bottom:6px">Knowledge level for this audience</label>
@@ -362,17 +363,17 @@
       <div class="profile-grid">
         <div class="field">
           <label for="profileName">Your Name</label>
-          <input type="text" id="profileName" placeholder="Your name">
+          <input type="text" id="profileName" placeholder="Your name" maxlength="128">
         </div>
         <div class="field">
           <label for="profileRole">Your Role / Job</label>
-          <input type="text" id="profileRole" placeholder="Software developer, small business owner, student…">
+          <input type="text" id="profileRole" placeholder="Software developer, small business owner, student…" maxlength="128">
         </div>
       </div>
 
       <div class="field">
         <label for="profileStyle">Your Writing Style</label>
-        <input type="text" id="profileStyle" placeholder="Casual and direct. I use short sentences. I say 'gonna' not 'going to'. I like em-dashes.">
+        <input type="text" id="profileStyle" placeholder="Casual and direct. I use short sentences. I say 'gonna' not 'going to'. I like em-dashes." maxlength="256">
       </div>
 
       <div class="field">
@@ -380,7 +381,7 @@
           Personal Context
           <span class="label-hint">Your bio, what you do, who you write to, common topics. The more you give, the less generic the output.</span>
         </label>
-        <textarea id="profileContext" rows="6" placeholder="I run a small roofing company in Texas called Bailey's Roofing. I write quotes, follow-up emails, and job updates to residential customers who aren't technical. I want to sound friendly and trustworthy, not corporate. Common topics: storm damage, insurance claims, timelines, pricing."></textarea>
+        <textarea id="profileContext" rows="6" placeholder="I run a small roofing company in Texas called Bailey's Roofing. I write quotes, follow-up emails, and job updates to residential customers who aren't technical. I want to sound friendly and trustworthy, not corporate. Common topics: storm damage, insurance claims, timelines, pricing." maxlength="4000"></textarea>
         <div class="context-actions">
           <span class="hint">Paste anything: a bio, a company description, writing samples, a list of your common phrases.</span>
           <button id="load-context-url-btn" class="link-btn" title="Load context from a URL you maintain">Load from URL…</button>
@@ -394,7 +395,7 @@
             <span class="label-hint">A public URL that returns plain text (GitHub Gist raw, personal site, etc.)</span>
           </label>
           <div class="key-row">
-            <input type="text" id="contextUrl" placeholder="https://gist.githubusercontent.com/you/abc123/raw/context.txt">
+            <input type="text" id="contextUrl" placeholder="https://gist.githubusercontent.com/you/abc123/raw/context.txt" maxlength="512">
             <button id="fetch-context-btn" class="fetch-btn" style="white-space:nowrap">Fetch & Save</button>
           </div>
           <div class="fetch-status" id="context-url-status"></div>
@@ -502,6 +503,7 @@
   <script src="app-storage.js"></script>
   <script src="../lib/history-pin.js"></script>
   <script src="../lib/export-import.js"></script>
+  <script src="../lib/sanitize.js"></script>
   <script src="../lib/shared-settings.js"></script>
   <script src="options.js"></script>
 </body>

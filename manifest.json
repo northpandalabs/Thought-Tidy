@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Thought Tidy",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "AI writing assistant for fast thinkers. Fix spelling, rewrite, or transform text in seconds. Works with OpenAI, Claude, or Gemini.",
   "icons": {
-    "128": "icons/icon.svg"
+    "128": "icons/icon.png"
   },
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "Thought Tidy",
-    "default_icon": "icons/icon.svg"
+    "default_icon": "icons/icon.png"
   },
   "background": {
     "service_worker": "background.js"
@@ -33,9 +33,9 @@
     "https://generativelanguage.googleapis.com/*"
   ],
   "optional_host_permissions": [
-
     "http://127.0.0.1:47391/*",
-    "http://*/*"
+    "http://127.0.0.1:11434/*",
+    "http://localhost:11434/*"
   ],
   "options_ui": {
     "page": "options/options.html",
