@@ -24,6 +24,8 @@ jobs:
 
       - name: Build Firefox
         run: npm run build:firefox
+        env:
+          LICENSE_CIPHER_KEY: ${{ secrets.LICENSE_CIPHER_KEY }}
 
       - name: Validate Firefox manifest
         run: |
@@ -84,6 +86,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+        env:
+          LICENSE_CIPHER_KEY: ${{ secrets.LICENSE_CIPHER_KEY }}
 
       - name: Zip Chrome
         run: cd dist/chrome && zip -r ../../thought-tidy-chrome.zip . && cd ../..
