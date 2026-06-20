@@ -10,10 +10,10 @@ const manifest = JSON.parse(
   fs.readFileSync(path.join(ROOT, "manifest.json"), "utf8")
 );
 
-// Collect every icon path declared in the manifest.
+// Collect every unique icon path declared in the manifest.
 function collectIconPaths(m) {
   const paths = [];
-  if (m.icons)               paths.push(...Object.values(m.icons));
+  if (m.icons) paths.push(...Object.values(m.icons));
   if (m.action?.default_icon) {
     const icon = m.action.default_icon;
     if (typeof icon === "string") paths.push(icon);
@@ -22,9 +22,28 @@ function collectIconPaths(m) {
   return [...new Set(paths)];
 }
 
+function pngDimensions(filePath) {
+  const buf = fs.readFileSync(filePath);
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}
+
+// All declared size→path pairs across icons and action.default_icon.
+function collectSizePairs(m) {
+  const pairs = [];
+  if (m.icons) {
+    for (const [size, p] of Object.entries(m.icons)) pairs.push({ size: Number(size), p, src: "icons" });
+  }
+  if (m.action?.default_icon && typeof m.action.default_icon === "object") {
+    for (const [size, p] of Object.entries(m.action.default_icon)) pairs.push({ size: Number(size), p, src: "action.default_icon" });
+  }
+  return pairs;
+}
+
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
-describe("manifest.json — Chrome extension icon validity", () => {
+// ── File validity ─────────────────────────────────────────────────────────────
+
+describe("manifest.json — icon file validity (Chrome & Firefox)", () => {
   const iconPaths = collectIconPaths(manifest);
 
   test("at least one icon is declared", () => {
@@ -45,29 +64,26 @@ describe("manifest.json — Chrome extension icon validity", () => {
   });
 });
 
-describe("manifest.json — icon size matches manifest declaration", () => {
-  function pngDimensions(filePath) {
-    const buf = fs.readFileSync(filePath);
-    return {
-      width:  buf.readUInt32BE(16),
-      height: buf.readUInt32BE(20),
-    };
-  }
+// ── Exact size match ──────────────────────────────────────────────────────────
+// Each declared size key must point to a file whose actual pixel dimensions
+// match the key exactly. Use scripts/generate-icons.js to regenerate if the
+// source icon changes.
 
-  // Multiple size keys may point to the same file (one 512px file serves all sizes).
-  // We require the file to be AT LEAST as large as the declared size so a tiny icon
-  // can never be misrepresented as a larger one.
-  if (manifest.icons) {
-    for (const [declaredSize, iconPath] of Object.entries(manifest.icons)) {
-      test(`icons["${declaredSize}"] file is at least ${declaredSize}×${declaredSize} pixels`, () => {
-        const abs = path.join(ROOT, iconPath);
-        const { width, height } = pngDimensions(abs);
-        expect(width).toBeGreaterThanOrEqual(Number(declaredSize));
-        expect(height).toBeGreaterThanOrEqual(Number(declaredSize));
-      });
+describe("manifest.json — declared icon size matches actual file dimensions", () => {
+  const pairs = collectSizePairs(manifest);
+
+  test.each(pairs)(
+    '$src["$size"] file is exactly $size×$size pixels',
+    ({ size, p }) => {
+      const abs = path.join(ROOT, p);
+      const { width, height } = pngDimensions(abs);
+      expect(width).toBe(size);
+      expect(height).toBe(size);
     }
-  }
+  );
 });
+
+// ── Chrome Web Store requirements ─────────────────────────────────────────────
 
 describe("manifest.json — Chrome Web Store upload requirements", () => {
   test("description is present", () => {
@@ -91,5 +107,21 @@ describe("manifest.json — Chrome Web Store upload requirements", () => {
 
   test("manifest_version is 3", () => {
     expect(manifest.manifest_version).toBe(3);
+  });
+
+  test("icons object includes a 128px entry (required by Chrome Web Store)", () => {
+    expect(manifest.icons).toHaveProperty("128");
+  });
+});
+
+// ── Firefox AMO requirements ──────────────────────────────────────────────────
+
+describe("manifest.json — Firefox AMO upload requirements", () => {
+  test("icons object includes a 48px entry (used by Firefox toolbar and AMO)", () => {
+    expect(manifest.icons).toHaveProperty("48");
+  });
+
+  test("icons object includes a 128px entry (used by Firefox AMO listing)", () => {
+    expect(manifest.icons).toHaveProperty("128");
   });
 });

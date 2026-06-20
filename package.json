@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "jimp": "^1.6.1",
     "webextension-polyfill": "^0.12.0"
   },
   "jest": {
