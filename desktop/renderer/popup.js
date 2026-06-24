@@ -22,7 +22,7 @@ window.buildSlotActions = (box) => {
   return [copyBtn, copyCloseBtn];
 };
 
-const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini" };
+const PROVIDER_LABELS = { openai: "OpenAI", claude: "Claude", gemini: "Gemini", copilot: "GitHub Models", ollama: "Ollama" };
 
 const STORAGE_KEYS = [
   "configuredProviders", "geminiModels",

@@ -342,11 +342,13 @@ async function quickAction(action) {
   }
 
   try {
-    const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
+    const { MENU_PROMPTS, buildPromptWithProfile, buildGrammarInstructions } = require("./lib-node/prompts");
     const { callAIWithFallback }                   = require("./lib-node/api");
     const { estimateCost }                         = require("../lib/pricing");
     const s = encStore.store;
-    const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
+    let systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
+    const grammarBlock = buildGrammarInstructions(s.grammarFilters);
+    if (grammarBlock) systemPrompt += "\n\n" + grammarBlock;
     const { result, usedProvider, usedModel } = await callAIWithFallback(
       s.configuredProviders || [], s.geminiModels || [null, null, null], s, systemPrompt, text
     );
@@ -388,13 +390,15 @@ async function quickCustomAction(idx) {
   const text = clipboard.readText().trim();
   if (!text) { new Notification({ title: "Thought Tidy", body: "Clipboard is empty." }).show(); return; }
   try {
-    const { buildPromptWithProfile } = require("./lib-node/prompts");
+    const { buildPromptWithProfile, buildGrammarInstructions } = require("./lib-node/prompts");
     const { callAIWithFallback }     = require("./lib-node/api");
     const { estimateCost }           = require("../lib/pricing");
     const s         = encStore.store;
     const cp        = (s.customPrompts || [])[idx];
     if (!cp) return;
-    const systemPrompt = buildPromptWithProfile(cp.prompt, s);
+    let systemPrompt = buildPromptWithProfile(cp.prompt, s);
+    const grammarBlock = buildGrammarInstructions(s.grammarFilters);
+    if (grammarBlock) systemPrompt += "\n\n" + grammarBlock;
     const { result, usedProvider, usedModel } = await callAIWithFallback(
       s.configuredProviders || [], s.geminiModels || [null, null, null], s, systemPrompt, text
     );
