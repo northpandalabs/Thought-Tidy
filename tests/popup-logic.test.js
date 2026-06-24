@@ -296,6 +296,10 @@ describe("popup/guide.html — content structure", () => {
     expect(html).toContain('data-tab="claude"');
   });
 
+  test("has GitHub Copilot provider tab (data-tab=copilot)", () => {
+    expect(html).toContain('data-tab="copilot"');
+  });
+
   test("mentions AES-256-GCM encryption", () => {
     expect(html).toContain("AES-256-GCM");
   });

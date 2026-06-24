@@ -1,4 +1,4 @@
-const { callOpenAI, callClaude, callGemini, callOllama, callAI, callAIWithFallback, isRetriable } = require("../lib/api");
+const { callOpenAI, callClaude, callGemini, callOllama, callGitHubCopilot, callAI, callAIWithFallback, isRetriable } = require("../lib/api");
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -413,5 +413,114 @@ describe("callAIWithFallback", () => {
     ];
     await expect(callAIWithFallback(p, [], {}, "Fix:", "text")).rejects.toThrow("Ollama: 400 bad request");
     expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("routes to GitHub Copilot provider and returns usedProvider='copilot'", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "from copilot" } }] }) });
+    const p = [{ id: "copilot", apiKey: "ghp_token", model: "gpt-4o" }];
+    const { result, usedProvider, usedModel } = await callAIWithFallback(p, [], {}, "Fix:", "text");
+    expect(result).toBe("from copilot");
+    expect(usedProvider).toBe("copilot");
+    expect(usedModel).toBe("gpt-4o");
+  });
+
+  test("Copilot falls back to next provider on retriable error", async () => {
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({ ok: false, statusText: "Service Unavailable", json: async () => ({ error: { message: "503 overloaded" } }) })
+      .mockResolvedValueOnce({ ok: true,  json: async () => ({ content: [{ text: "from claude" }] }) });
+    const p = [
+      { id: "copilot", apiKey: "ghp_token", model: "gpt-4o" },
+      { id: "claude",  apiKey: "sk-ant-x",  model: "claude-haiku-4-5-20251001" }
+    ];
+    const { result, usedProvider } = await callAIWithFallback(p, [], {}, "Fix:", "text");
+    expect(result).toBe("from claude");
+    expect(usedProvider).toBe("claude");
+  });
+});
+
+// ── callGitHubCopilot ─────────────────────────────────────────────────────────
+
+describe("callGitHubCopilot", () => {
+  test("throws a meaningful error when token is empty", async () => {
+    await expect(callGitHubCopilot("", "gpt-4o", "Fix:", "hello"))
+      .rejects.toThrow("GitHub token not set");
+  });
+
+  test("calls the correct GitHub Copilot endpoint", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "Fixed" } }] }) });
+    await callGitHubCopilot("ghp_token", "gpt-4o", "Fix:", "hello");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://api.githubcopilot.com/chat/completions",
+      expect.any(Object)
+    );
+  });
+
+  test("sends correct Authorization Bearer header", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+    await callGitHubCopilot("ghp_mytoken", "gpt-4o", "Fix:", "hello");
+    const headers = global.fetch.mock.calls[0][1].headers;
+    expect(headers["Authorization"]).toBe("Bearer ghp_mytoken");
+  });
+
+  test("sends required Copilot-Integration-Id and Editor-Version headers", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+    await callGitHubCopilot("ghp_t", "gpt-4o", "Fix:", "hello");
+    const headers = global.fetch.mock.calls[0][1].headers;
+    expect(headers["Copilot-Integration-Id"]).toBe("thought-tidy");
+    expect(headers["Editor-Version"]).toBe("thought-tidy/1.0");
+  });
+
+  test("sends system prompt as first message and text as second", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+    await callGitHubCopilot("ghp_t", "gpt-4o", "Fix this:", "my text");
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.messages[0]).toEqual({ role: "system", content: "Fix this:" });
+    expect(body.messages[1]).toEqual({ role: "user",   content: "my text" });
+  });
+
+  test("sends the specified model in the request body", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+    await callGitHubCopilot("ghp_t", "claude-3.5-sonnet", "Fix:", "text");
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.model).toBe("claude-3.5-sonnet");
+  });
+
+  test("returns trimmed response text", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "  Fixed!  " } }] }) });
+    const result = await callGitHubCopilot("ghp_t", "gpt-4o", "Fix:", "hello");
+    expect(result).toBe("Fixed!");
+  });
+
+  test("throws with the API error message on non-ok response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, statusText: "Unauthorized", json: async () => ({ error: { message: "Bad credentials" } }) });
+    await expect(callGitHubCopilot("ghp_bad", "gpt-4o", "Fix:", "hello"))
+      .rejects.toThrow("GitHub Copilot: Bad credentials");
+  });
+
+  test("falls back to statusText when error body has no message", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, statusText: "Forbidden", json: async () => ({}) });
+    await expect(callGitHubCopilot("ghp_bad", "gpt-4o", "Fix:", "hello"))
+      .rejects.toThrow("GitHub Copilot: Forbidden");
+  });
+});
+
+// ── callAI router ─────────────────────────────────────────────────────────────
+
+describe("callAI", () => {
+  test("routes 'copilot' to the GitHub Copilot endpoint", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+    await callAI("copilot", { copilotKey: "ghp_x", copilotModel: "gpt-4o" }, "Fix:", "text");
+    expect(global.fetch.mock.calls[0][0]).toBe("https://api.githubcopilot.com/chat/completions");
+  });
+
+  test("routes 'ollama' to the Ollama endpoint", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+    await callAI("ollama", { ollamaBaseUrl: "http://localhost:11434", ollamaModel: "llama3" }, "Fix:", "text");
+    expect(global.fetch.mock.calls[0][0]).toContain("localhost:11434");
+  });
+
+  test("throws for unknown provider", async () => {
+    await expect(callAI("unknown-ai", {}, "Fix:", "text"))
+      .rejects.toThrow('Unknown provider "unknown-ai"');
   });
 });
