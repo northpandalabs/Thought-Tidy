@@ -30,7 +30,7 @@ const STORAGE_KEYS = [
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
-  "licenseEmail", "licenseKey", "showContextField", "contextText", "contextLevel", "contextPresets",
+  "licenseEmail", "licenseKey", "demoMode", "corpMode", "showContextField", "contextText", "contextLevel", "contextPresets",
   "lastContextAudience", "contextEnabled", "themeMode", "historyPin", "grammarFilters",
   "clearOnOpen", "showClarityCheckBtn"
 ];
@@ -147,11 +147,11 @@ async function init() {
 }
 
 function _runDailyLicenseCheck(s) {
-  if (!s.licenseEmail || !s.licenseKey) return;
-  checkLicensePeriodically(s.licenseEmail, s.licenseKey).then(r => {
+  if (!s.licenseEmail && !s.licenseKey && !s.demoMode && !s.corpMode) return;
+  checkLicensePeriodically(s.licenseEmail || "", s.licenseKey || "").then(r => {
     if (r?.revoked) {
       window.appSet({ licenseEmail: "", licenseKey: "", deviceActivated: "" });
-      setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "" });
+      setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "", demoMode: false, corpMode: false });
       rebuildVariantsSelect();
     }
   }).catch(() => {});

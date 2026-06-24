@@ -6,7 +6,7 @@ const STORAGE_KEYS = [
   "openaiModel", "claudeModel", "geminiModel",
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
-  "licenseEmail", "licenseKey", "contextPresets", "contextEnabled", "lastContextAudience",
+  "licenseEmail", "licenseKey", "demoMode", "corpMode", "contextPresets", "contextEnabled", "lastContextAudience",
   "themeMode", "historyPin", "grammarFilters", "inputTextDraft", "showClarityCheckBtn"
 ];
 
@@ -125,12 +125,12 @@ async function init() {
   const purged = purgeOldLog(rawLog);
   if (purged.length !== rawLog.length) await browser.storage.local.set({ historyLog: purged });
 
-  // Daily checks — each fires at most once per 24 h.
-  if (s.licenseEmail && s.licenseKey) {
-    checkLicensePeriodically(s.licenseEmail, s.licenseKey).then(r => {
+  // Daily checks — fires for Gumroad, demo, and corp modes (at most once per 24 h each).
+  if (s.licenseEmail || s.licenseKey || s.demoMode || s.corpMode) {
+    checkLicensePeriodically(s.licenseEmail || "", s.licenseKey || "").then(r => {
       if (r?.revoked) {
         browser.storage.local.remove(["licenseEmail", "licenseKey", "deviceActivated"]);
-        setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "" });
+        setPopupSettings({ ...getPopupSettings(), licenseEmail: "", licenseKey: "", demoMode: false, corpMode: false });
         rebuildVariantsSelect();
       }
     }).catch(() => {});
