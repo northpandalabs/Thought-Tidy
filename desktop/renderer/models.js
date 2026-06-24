@@ -95,6 +95,46 @@ async function testGemini(apiKey, modelId) {
   } catch { return false; }
 }
 
+async function fetchGitHubCopilotModels(token) {
+  try {
+    const res = await fetch("https://models.inference.ai.azure.com/models", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const models = (data.data || data.models || [])
+        .filter(m => !m.id || !/(embedding|image|audio|tts|whisper|dall)/i.test(m.id))
+        .map(m => ({ id: m.id, label: m.name || m.display_name || m.id }));
+      if (models.length) return models;
+    }
+  } catch {}
+  return [
+    { id: "gpt-4o",                          label: "GPT-4o" },
+    { id: "gpt-4o-mini",                     label: "GPT-4o Mini" },
+    { id: "claude-3-5-sonnet-20241022",      label: "Claude 3.5 Sonnet" },
+    { id: "Meta-Llama-3.3-70B-Instruct",     label: "Llama 3.3 70B" },
+    { id: "Mistral-large-2411",              label: "Mistral Large" }
+  ];
+}
+
+async function testGitHubCopilot(token, modelId) {
+  try {
+    const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [{ role: "user", content: "Hi" }],
+        max_tokens: 5
+      })
+    });
+    return res.ok;
+  } catch { return false; }
+}
+
 // ── Model list cache helpers ──────────────────────────────────────────────────
 
 const MODEL_CACHE_STALE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -115,8 +155,8 @@ function formatCacheAge(fetchedAt) {
 
 if (typeof module !== "undefined") {
   module.exports = {
-    fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels,
-    testOpenAI, testClaude, testGemini,
+    fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels, fetchGitHubCopilotModels,
+    testOpenAI, testClaude, testGemini, testGitHubCopilot,
     costTier,
     isModelCacheStale, formatCacheAge, MODEL_CACHE_STALE_MS
   };
