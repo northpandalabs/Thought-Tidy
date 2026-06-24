@@ -197,6 +197,17 @@ async function init() {
     const proPanel = document.getElementById("pro-panel");
     if (proPanel) proPanel.style.display = proPanel.style.display === "none" ? "block" : "none";
   });
+  document.getElementById("pro-panel-close")?.addEventListener("click", () => {
+    const p = document.getElementById("pro-panel"); if (p) p.style.display = "none";
+  });
+  document.getElementById("advanced-toggle-btn")?.addEventListener("click", () => {
+    const panel = document.getElementById("advanced-panel");
+    const arrow = document.getElementById("advanced-toggle-arrow");
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    if (arrow) arrow.style.transform = open ? "rotate(90deg)" : "";
+  });
 
   initSharedSettings(s);
   renderProviderCards();
@@ -245,15 +256,6 @@ async function init() {
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
-  });
-
-  document.getElementById("advanced-toggle-btn")?.addEventListener("click", () => {
-    const panel = document.getElementById("advanced-panel");
-    const arrow = document.getElementById("advanced-toggle-arrow");
-    if (!panel) return;
-    const open = panel.style.display === "none";
-    panel.style.display = open ? "block" : "none";
-    if (arrow) arrow.style.transform = open ? "rotate(90deg)" : "";
   });
 
   document.getElementById("clear-all-data-btn")?.addEventListener("click", async () => {

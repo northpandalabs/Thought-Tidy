@@ -203,6 +203,9 @@ async function init() {
     const proPanel = document.getElementById("pro-panel");
     if (proPanel) proPanel.style.display = proPanel.style.display === "none" ? "block" : "none";
   });
+  document.getElementById("pro-panel-close")?.addEventListener("click", () => {
+    const p = document.getElementById("pro-panel"); if (p) p.style.display = "none";
+  });
   initCommonSettingsWiring(s);
   document.getElementById("contextEnabled")?.addEventListener("change", () => {
     browser.storage.local.set({ contextEnabled: document.getElementById("contextEnabled")?.checked !== false });
