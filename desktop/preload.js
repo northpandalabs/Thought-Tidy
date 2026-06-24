@@ -43,6 +43,9 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // Setup guide window
   openGuide: (hash) => ipcRenderer.invoke("open-guide", hash),
 
+  // Factory reset — clears all settings and restarts
+  clearAllData: () => ipcRenderer.invoke("clear-all-data"),
+
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {
     ipcRenderer.on("popup-opened", () => callback());

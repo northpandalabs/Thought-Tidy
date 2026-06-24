@@ -581,6 +581,24 @@ app.whenReady().then(() => {
     }
   });
 
+  ipcMain.handle("clear-all-data", async () => {
+    const { response } = await dialog.showMessageBox({
+      type:      "warning",
+      buttons:   ["Cancel", "Clear Everything"],
+      defaultId: 0,
+      cancelId:  0,
+      title:     "Clear All Data",
+      message:   "Delete all settings, API keys, history, and license info?",
+      detail:    "This cannot be undone. The app will restart with a clean slate.",
+    });
+    if (response !== 1) return { cleared: false };
+    try { require("fs").unlinkSync(startupShortcut()); } catch {}
+    store.clear();
+    app.relaunch();
+    app.exit(0);
+    return { cleared: true };
+  });
+
   // macOS: no dock icon — pure tray app
   if (process.platform === "darwin") app.dock.hide();
 

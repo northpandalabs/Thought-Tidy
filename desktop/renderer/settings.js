@@ -244,6 +244,13 @@ async function init() {
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
   });
+
+  document.getElementById("clear-all-data-btn")?.addEventListener("click", async () => {
+    const statusEl = document.getElementById("clear-all-data-status");
+    if (statusEl) statusEl.textContent = "Waiting for confirmation…";
+    const result = await btcAPI.clearAllData();
+    if (!result?.cleared && statusEl) statusEl.textContent = "Cancelled.";
+  });
   document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
   document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);
   document.getElementById("actions-save-btn")?.addEventListener("click", saveActionOrder);
