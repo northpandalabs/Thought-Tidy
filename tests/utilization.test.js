@@ -692,27 +692,43 @@ function useLiveFetch() {
   afterEach(() => { global.fetch = saved; });
 }
 
+// Wraps a live API test so transient provider errors (rate limits, overload, quota)
+// produce a console warning instead of a CI failure.
+function liveTest(name, fn, timeout) {
+  test(name, async () => {
+    try {
+      await fn();
+    } catch (err) {
+      if (isRetriable(err.message)) {
+        console.warn(`[skipped — transient API error] ${name}: ${err.message}`);
+        return;
+      }
+      throw err;
+    }
+  }, timeout || 20000);
+}
+
 describeIf(!!OPENAI_KEY)("Live API — OpenAI (requires OPENAI_API_KEY env var)", () => {
   useLiveFetch();
-  test("fix-spelling returns non-empty corrected text", async () => {
+  liveTest("fix-spelling returns non-empty corrected text", async () => {
     const result = await callOpenAI(OPENAI_KEY, "gpt-4o-mini", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
     expect(typeof result).toBe("string");
     expect(result.length).toBeGreaterThan(0);
   }, 20000);
 
-  test("improve returns longer or equal text", async () => {
+  liveTest("improve returns longer or equal text", async () => {
     const input  = "Bad writing.";
     const result = await callOpenAI(OPENAI_KEY, "gpt-4o-mini", MENU_PROMPTS["improve"], input);
     expect(result.length).toBeGreaterThan(0);
   }, 20000);
 
-  test("brain-dump returns structured output", async () => {
+  liveTest("brain-dump returns structured output", async () => {
     const input  = "need email thing... remind boss... meeting tues... budget stuff";
     const result = await callOpenAI(OPENAI_KEY, "gpt-4o-mini", MENU_PROMPTS["brain-dump"], input);
     expect(result.length).toBeGreaterThan(input.length);
   }, 20000);
 
-  test("profile-injected prompt reaches the model", async () => {
+  liveTest("profile-injected prompt reaches the model", async () => {
     const settings = { profileEnabled: true, profileName: "Test", profileRole: "QA" };
     const prompt   = buildPromptWithProfile(MENU_PROMPTS["fix-spelling"], settings);
     expect(prompt).toContain("Test");
@@ -720,7 +736,7 @@ describeIf(!!OPENAI_KEY)("Live API — OpenAI (requires OPENAI_API_KEY env var)"
     expect(result.length).toBeGreaterThan(0);
   }, 20000);
 
-  test("callAIWithFallback end-to-end with OpenAI", async () => {
+  liveTest("callAIWithFallback end-to-end with OpenAI", async () => {
     const providers = [{ id: "openai", apiKey: OPENAI_KEY, model: "gpt-4o-mini" }];
     const { result, usedProvider, usedModel } = await callAIWithFallback(
       providers, null, {}, MENU_PROMPTS["fix-spelling"], "ths is wrng"
@@ -733,13 +749,13 @@ describeIf(!!OPENAI_KEY)("Live API — OpenAI (requires OPENAI_API_KEY env var)"
 
 describeIf(!!GOOGLE_KEY)("Live API — Gemini (requires GOOGLE_API_KEY env var)", () => {
   useLiveFetch();
-  test("fix-spelling returns non-empty corrected text", async () => {
+  liveTest("fix-spelling returns non-empty corrected text", async () => {
     const result = await callGemini(GOOGLE_KEY, "gemini-2.5-flash-lite", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
     expect(typeof result).toBe("string");
     expect(result.length).toBeGreaterThan(0);
   }, 20000);
 
-  test("callAIWithFallback end-to-end with Gemini", async () => {
+  liveTest("callAIWithFallback end-to-end with Gemini", async () => {
     const providers = [{ id: "gemini", apiKey: GOOGLE_KEY, model: "gemini-2.5-flash-lite" }];
     const { result, usedProvider } = await callAIWithFallback(
       providers, ["gemini-2.5-flash-lite", null, null], {}, MENU_PROMPTS["improve"], "Bad writing."
@@ -748,7 +764,7 @@ describeIf(!!GOOGLE_KEY)("Live API — Gemini (requires GOOGLE_API_KEY env var)"
     expect(usedProvider).toBe("gemini");
   }, 20000);
 
-  test("shorten prompt returns shorter text", async () => {
+  liveTest("shorten prompt returns shorter text", async () => {
     const input  = "This is a very long piece of text that goes on and on and repeats itself quite a lot with a lot of redundant words.";
     const result = await callGemini(GOOGLE_KEY, "gemini-2.5-flash-lite", MENU_PROMPTS["shorten"], input);
     expect(result.length).toBeGreaterThan(0);
@@ -758,13 +774,13 @@ describeIf(!!GOOGLE_KEY)("Live API — Gemini (requires GOOGLE_API_KEY env var)"
 
 describeIf(!!CLAUDE_KEY)("Live API — Claude (requires CLAUDE_API_KEY env var)", () => {
   useLiveFetch();
-  test("fix-spelling returns non-empty corrected text", async () => {
+  liveTest("fix-spelling returns non-empty corrected text", async () => {
     const result = await callClaude(CLAUDE_KEY, "claude-haiku-4-5-20251001", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
     expect(typeof result).toBe("string");
     expect(result.length).toBeGreaterThan(0);
   }, 20000);
 
-  test("callAIWithFallback end-to-end with Claude", async () => {
+  liveTest("callAIWithFallback end-to-end with Claude", async () => {
     const providers = [{ id: "claude", apiKey: CLAUDE_KEY, model: "claude-haiku-4-5-20251001" }];
     const { result, usedProvider } = await callAIWithFallback(
       providers, null, {}, MENU_PROMPTS["fix-spelling"], "wrng speling"
@@ -776,13 +792,13 @@ describeIf(!!CLAUDE_KEY)("Live API — Claude (requires CLAUDE_API_KEY env var)"
 
 describeIf(!!COPILOT_TOKEN)("Live API — GitHub Models (requires COPILOT_TOKEN env var)", () => {
   useLiveFetch();
-  test("fix-spelling returns non-empty corrected text", async () => {
+  liveTest("fix-spelling returns non-empty corrected text", async () => {
     const result = await callGitHubCopilot(COPILOT_TOKEN, "gpt-4o-mini", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
     expect(typeof result).toBe("string");
     expect(result.length).toBeGreaterThan(0);
   }, 20000);
 
-  test("callAIWithFallback end-to-end with GitHub Models", async () => {
+  liveTest("callAIWithFallback end-to-end with GitHub Models", async () => {
     const providers = [{ id: "copilot", apiKey: COPILOT_TOKEN, model: "gpt-4o-mini" }];
     const { result, usedProvider } = await callAIWithFallback(
       providers, null, {}, MENU_PROMPTS["fix-spelling"], "wrng speling"
@@ -794,7 +810,7 @@ describeIf(!!COPILOT_TOKEN)("Live API — GitHub Models (requires COPILOT_TOKEN 
 
 describeIf(!!(OPENAI_KEY && GOOGLE_KEY))("Live API — fallback chain (requires OPENAI_API_KEY + GOOGLE_API_KEY)", () => {
   useLiveFetch();
-  test("uses OpenAI first when both providers configured", async () => {
+  liveTest("uses OpenAI first when both providers configured", async () => {
     const providers = [
       { id: "openai", apiKey: OPENAI_KEY, model: "gpt-4o-mini" },
       { id: "gemini", apiKey: GOOGLE_KEY, model: "gemini-2.5-flash-lite" },
@@ -809,7 +825,7 @@ describeIf(!!(OPENAI_KEY && GOOGLE_KEY))("Live API — fallback chain (requires 
 describeIf(!!(OPENAI_KEY && GOOGLE_KEY && CLAUDE_KEY && COPILOT_TOKEN))(
   "Live API — all 4 providers in priority order (requires all env vars)", () => {
   useLiveFetch();
-  test("first configured provider wins when all are healthy", async () => {
+  liveTest("first configured provider wins when all are healthy", async () => {
     const providers = [
       { id: "claude",  apiKey: CLAUDE_KEY,    model: "claude-haiku-4-5-20251001" },
       { id: "openai",  apiKey: OPENAI_KEY,    model: "gpt-4o-mini" },
@@ -823,7 +839,7 @@ describeIf(!!(OPENAI_KEY && GOOGLE_KEY && CLAUDE_KEY && COPILOT_TOKEN))(
     expect(usedProvider).toBe("claude"); // first in list wins
   }, 20000);
 
-  test("respects priority order — second provider used when first removed", async () => {
+  liveTest("respects priority order — second provider used when first removed", async () => {
     const providers = [
       { id: "openai",  apiKey: OPENAI_KEY,    model: "gpt-4o-mini" },
       { id: "claude",  apiKey: CLAUDE_KEY,    model: "claude-haiku-4-5-20251001" },
