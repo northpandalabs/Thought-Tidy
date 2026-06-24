@@ -199,6 +199,10 @@ async function init() {
   const syncEl = document.getElementById("syncEnabled");
   if (syncEl) syncEl.checked = syncVal !== false;
 
+  document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
+    const proPanel = document.getElementById("pro-panel");
+    if (proPanel) proPanel.style.display = proPanel.style.display === "none" ? "block" : "none";
+  });
   initCommonSettingsWiring(s);
   document.getElementById("contextEnabled")?.addEventListener("change", () => {
     browser.storage.local.set({ contextEnabled: document.getElementById("contextEnabled")?.checked !== false });

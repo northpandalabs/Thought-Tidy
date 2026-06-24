@@ -194,6 +194,8 @@ async function init() {
   });
   document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
     document.getElementById("display-panel")?.style.setProperty("display","none");
+    const proPanel = document.getElementById("pro-panel");
+    if (proPanel) proPanel.style.display = proPanel.style.display === "none" ? "block" : "none";
   });
 
   initSharedSettings(s);
