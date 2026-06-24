@@ -22,7 +22,11 @@
   "platforms": {
     "chrome": {
       "label": "Chrome Extension",
-      "filename": "thought-tidy-chrome.zip"
+      "store_url": "https://chromewebstore.google.com/detail/thought-tidy/gejcnmfncimofieilfkgachkicencdha",
+      "store_label": "Add to Chrome",
+      "preferred": "store",
+      "filename": "thought-tidy-chrome.zip",
+      "download_label": "Download Build"
     },
     "firefox": {
       "label": "Firefox Extension",
