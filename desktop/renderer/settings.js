@@ -247,11 +247,40 @@ async function init() {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
   });
 
+  document.getElementById("advanced-toggle-btn")?.addEventListener("click", () => {
+    const panel = document.getElementById("advanced-panel");
+    const arrow = document.getElementById("advanced-toggle-arrow");
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    if (arrow) arrow.style.transform = open ? "rotate(90deg)" : "";
+  });
+
   document.getElementById("clear-all-data-btn")?.addEventListener("click", async () => {
     const statusEl = document.getElementById("clear-all-data-status");
     if (statusEl) statusEl.textContent = "Waiting for confirmation…";
     const result = await btcAPI.clearAllData();
     if (!result?.cleared && statusEl) statusEl.textContent = "Cancelled.";
+  });
+
+  document.getElementById("check-update-btn")?.addEventListener("click", async () => {
+    const btn    = document.getElementById("check-update-btn");
+    const status = document.getElementById("check-update-status");
+    btn.disabled = true; btn.textContent = "Checking…";
+    const upd = await btcAPI.checkForUpdate().catch(() => null);
+    btn.disabled = false; btn.textContent = "Check for Updates";
+    if (upd?.version) {
+      status.textContent = `Version ${upd.version} available — `;
+      const link = document.createElement("a");
+      link.textContent = "Download from GitHub ↗";
+      link.style.cssText = "color:var(--accent); cursor:pointer; text-decoration:underline;";
+      link.onclick = () => btcAPI.openURL(upd.url);
+      status.appendChild(link);
+      status.style.color = "var(--accent)";
+    } else {
+      status.textContent = "You're on the latest version.";
+      status.style.color = "var(--text-muted)";
+    }
   });
   document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
   document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);
