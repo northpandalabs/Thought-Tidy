@@ -135,8 +135,8 @@ describe("manifest.json — host_permissions include all AI provider APIs", () =
     expect(hosts.some(h => h.includes("googleapis.com"))).toBe(true);
   });
 
-  test("includes api.githubcopilot.com (GitHub Copilot)", () => {
-    expect(hosts.some(h => h.includes("githubcopilot.com"))).toBe(true);
+  test("includes models.inference.ai.azure.com (GitHub Models)", () => {
+    expect(hosts.some(h => h.includes("inference.ai.azure.com"))).toBe(true);
   });
 });
 

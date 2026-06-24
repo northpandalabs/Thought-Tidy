@@ -40,7 +40,7 @@
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
     "https://generativelanguage.googleapis.com/*",
-    "https://api.githubcopilot.com/*"
+    "https://models.inference.ai.azure.com/*"
   ],
   "optional_host_permissions": [
     "http://127.0.0.1:47391/*",

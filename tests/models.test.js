@@ -362,7 +362,7 @@ describe("fetchGitHubCopilotModels", () => {
       ok: true, json: async () => ({ data: [{ id: "gpt-4o" }] })
     });
     await fetchGitHubCopilotModels("ghp_test");
-    expect(global.fetch.mock.calls[0][0]).toBe("https://api.githubcopilot.com/models");
+    expect(global.fetch.mock.calls[0][0]).toBe("https://models.inference.ai.azure.com/models");
   });
 });
 
@@ -387,7 +387,7 @@ describe("testGitHubCopilot", () => {
   test("calls the GitHub Copilot chat completions endpoint", async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: true });
     await testGitHubCopilot("ghp_test", "gpt-4o");
-    expect(global.fetch.mock.calls[0][0]).toBe("https://api.githubcopilot.com/chat/completions");
+    expect(global.fetch.mock.calls[0][0]).toBe("https://models.inference.ai.azure.com/chat/completions");
   });
 
   test("sends max_tokens: 5 to minimise cost", async () => {

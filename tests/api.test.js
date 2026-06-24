@@ -450,7 +450,7 @@ describe("callGitHubCopilot", () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "Fixed" } }] }) });
     await callGitHubCopilot("ghp_token", "gpt-4o", "Fix:", "hello");
     expect(global.fetch).toHaveBeenCalledWith(
-      "https://api.githubcopilot.com/chat/completions",
+      "https://models.inference.ai.azure.com/chat/completions",
       expect.any(Object)
     );
   });
@@ -462,12 +462,13 @@ describe("callGitHubCopilot", () => {
     expect(headers["Authorization"]).toBe("Bearer ghp_mytoken");
   });
 
-  test("sends required Copilot-Integration-Id and Editor-Version headers", async () => {
+  test("does not send proprietary Copilot headers (uses standard Bearer auth only)", async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
     await callGitHubCopilot("ghp_t", "gpt-4o", "Fix:", "hello");
     const headers = global.fetch.mock.calls[0][1].headers;
-    expect(headers["Copilot-Integration-Id"]).toBe("thought-tidy");
-    expect(headers["Editor-Version"]).toBe("thought-tidy/1.0");
+    expect(headers["Copilot-Integration-Id"]).toBeUndefined();
+    expect(headers["Editor-Version"]).toBeUndefined();
+    expect(headers["Authorization"]).toBe("Bearer ghp_t");
   });
 
   test("sends system prompt as first message and text as second", async () => {
@@ -494,13 +495,13 @@ describe("callGitHubCopilot", () => {
   test("throws with the API error message on non-ok response", async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, statusText: "Unauthorized", json: async () => ({ error: { message: "Bad credentials" } }) });
     await expect(callGitHubCopilot("ghp_bad", "gpt-4o", "Fix:", "hello"))
-      .rejects.toThrow("GitHub Copilot: Bad credentials");
+      .rejects.toThrow("GitHub Models: Bad credentials");
   });
 
   test("falls back to statusText when error body has no message", async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, statusText: "Forbidden", json: async () => ({}) });
     await expect(callGitHubCopilot("ghp_bad", "gpt-4o", "Fix:", "hello"))
-      .rejects.toThrow("GitHub Copilot: Forbidden");
+      .rejects.toThrow("GitHub Models: Forbidden");
   });
 });
 
@@ -510,7 +511,7 @@ describe("callAI", () => {
   test("routes 'copilot' to the GitHub Copilot endpoint", async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
     await callAI("copilot", { copilotKey: "ghp_x", copilotModel: "gpt-4o" }, "Fix:", "text");
-    expect(global.fetch.mock.calls[0][0]).toBe("https://api.githubcopilot.com/chat/completions");
+    expect(global.fetch.mock.calls[0][0]).toBe("https://models.inference.ai.azure.com/chat/completions");
   });
 
   test("routes 'ollama' to the Ollama endpoint", async () => {

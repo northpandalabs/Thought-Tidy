@@ -5,7 +5,7 @@
 const { isProUnlocked, verifyWithGumroad } = require("../lib/license");
 const { resolveActionSettings, LOCKED_ACTIONS, DEFAULT_ACTION_SETTINGS, MENU_PROMPTS, buildPromptWithProfile } = require("../lib/prompts");
 const { wordCount, wordDiff, esc, escHtml, uid, todayDate, purgeOldLog } = require("../lib/text");
-const { callOpenAI, callClaude, callGemini, callAIWithFallback, isRetriable } = require("../lib/api");
+const { callOpenAI, callClaude, callGemini, callGitHubCopilot, callAIWithFallback, isRetriable } = require("../lib/api");
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. PROVIDER MANAGEMENT
@@ -669,14 +669,16 @@ describe("Custom prompt ID resolution (dyn-N ↔ custom-N)", () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 10. LIVE API TESTS
 // Set these env vars in CI secrets to enable (tests are skipped when absent):
-//   OPENAI_API_KEY  — OpenAI live calls
-//   GOOGLE_API_KEY  — Gemini live calls
-//   CLAUDE_API_KEY  — Claude live calls
+//   OPENAI_API_KEY        — OpenAI live calls
+//   GOOGLE_API_KEY        — Gemini live calls
+//   CLAUDE_API_KEY        — Claude live calls
+//   GITHUB_COPILOT_TOKEN  — GitHub Copilot live calls (requires active Copilot subscription)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const OPENAI_KEY = process.env.OPENAI_API_KEY;
-const GOOGLE_KEY = process.env.GOOGLE_API_KEY;
-const CLAUDE_KEY = process.env.CLAUDE_API_KEY;
+const OPENAI_KEY    = process.env.OPENAI_API_KEY;
+const GOOGLE_KEY    = process.env.GOOGLE_API_KEY;
+const CLAUDE_KEY    = process.env.CLAUDE_API_KEY;
+const COPILOT_TOKEN = process.env.GITHUB_COPILOT_TOKEN;
 
 const describeIf = (cond) => cond ? describe : describe.skip;
 
@@ -772,6 +774,24 @@ describeIf(!!CLAUDE_KEY)("Live API — Claude (requires CLAUDE_API_KEY env var)"
   }, 20000);
 });
 
+describeIf(!!COPILOT_TOKEN)("Live API — GitHub Models (requires GITHUB_COPILOT_TOKEN env var)", () => {
+  useLiveFetch();
+  test("fix-spelling returns non-empty corrected text", async () => {
+    const result = await callGitHubCopilot(COPILOT_TOKEN, "gpt-4o-mini", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
+  }, 20000);
+
+  test("callAIWithFallback end-to-end with GitHub Models", async () => {
+    const providers = [{ id: "copilot", apiKey: COPILOT_TOKEN, model: "gpt-4o-mini" }];
+    const { result, usedProvider } = await callAIWithFallback(
+      providers, null, {}, MENU_PROMPTS["fix-spelling"], "wrng speling"
+    );
+    expect(result.length).toBeGreaterThan(0);
+    expect(usedProvider).toBe("copilot");
+  }, 20000);
+});
+
 describeIf(!!(OPENAI_KEY && GOOGLE_KEY))("Live API — fallback chain (requires OPENAI_API_KEY + GOOGLE_API_KEY)", () => {
   useLiveFetch();
   test("uses OpenAI first when both providers configured", async () => {
@@ -783,5 +803,34 @@ describeIf(!!(OPENAI_KEY && GOOGLE_KEY))("Live API — fallback chain (requires 
       providers, ["gemini-2.5-flash-lite", null, null], {}, MENU_PROMPTS["fix-spelling"], "tst input"
     );
     expect(usedProvider).toBe("openai");
+  }, 20000);
+});
+
+describeIf(!!(OPENAI_KEY && GOOGLE_KEY && CLAUDE_KEY && COPILOT_TOKEN))(
+  "Live API — all 4 providers in priority order (requires all env vars)", () => {
+  useLiveFetch();
+  test("first configured provider wins when all are healthy", async () => {
+    const providers = [
+      { id: "claude",  apiKey: CLAUDE_KEY,    model: "claude-haiku-4-5-20251001" },
+      { id: "openai",  apiKey: OPENAI_KEY,    model: "gpt-4o-mini" },
+      { id: "gemini",  apiKey: GOOGLE_KEY,    model: "gemini-2.5-flash-lite" },
+      { id: "copilot", apiKey: COPILOT_TOKEN, model: "gpt-4o-mini" },
+    ];
+    const { result, usedProvider } = await callAIWithFallback(
+      providers, ["gemini-2.5-flash-lite", null, null], {}, MENU_PROMPTS["fix-spelling"], "tst input"
+    );
+    expect(result.length).toBeGreaterThan(0);
+    expect(usedProvider).toBe("claude"); // first in list wins
+  }, 20000);
+
+  test("respects priority order — second provider used when first removed", async () => {
+    const providers = [
+      { id: "openai",  apiKey: OPENAI_KEY,    model: "gpt-4o-mini" },
+      { id: "claude",  apiKey: CLAUDE_KEY,    model: "claude-haiku-4-5-20251001" },
+    ];
+    const { usedProvider } = await callAIWithFallback(
+      providers, null, {}, MENU_PROMPTS["improve"], "Bad writing."
+    );
+    expect(usedProvider).toBe("openai"); // first in list wins
   }, 20000);
 });
