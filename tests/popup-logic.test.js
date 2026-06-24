@@ -278,10 +278,10 @@ describe("popup/guide.html — content structure", () => {
     html = fs.readFileSync(path.join(ROOT, "popup/guide.html"), "utf8");
   });
 
-  test("has exactly 3 provider tab buttons", () => {
+  test("has exactly 4 provider tab buttons", () => {
     // count by data-tab= attribute — each tab button has exactly one
     const tabs = (html.match(/data-tab="/g) || []).length;
-    expect(tabs).toBe(3);
+    expect(tabs).toBe(4);
   });
 
   test("has Gemini provider tab (data-tab=gemini)", () => {

@@ -41,7 +41,7 @@
         <div class="security-card">
           <div class="sec-icon">🚫</div>
           <h3>API calls don't train AI models</h3>
-          <p>All three providers (Gemini, OpenAI, Claude) contractually guarantee that <strong>API traffic is not used to train or improve their AI models</strong>. This is different from using their free consumer apps.</p>
+          <p>All providers (Gemini, OpenAI, Claude, GitHub Copilot) contractually guarantee that <strong>API traffic is not used to train or improve their AI models</strong>. This is different from using their free consumer apps.</p>
         </div>
 
         <div class="security-card">
@@ -95,6 +95,10 @@
         <button class="ptab" data-tab="claude" role="tab" aria-selected="false">
           <span class="ptab-name">Claude</span>
           <span class="ptab-sub">Anthropic</span>
+        </button>
+        <button class="ptab" data-tab="copilot" role="tab" aria-selected="false">
+          <span class="ptab-name">Copilot</span>
+          <span class="ptab-sub">GitHub</span>
         </button>
       </div>
 
@@ -339,6 +343,79 @@
         </div>
       </div>
 
+      <!-- ── GitHub Copilot Panel ─────────────────────────────── -->
+      <div class="provider-panel hidden" id="tab-copilot" role="tabpanel">
+
+        <div class="provider-intro">
+          <div class="provider-logo" style="background:#1b1f23;color:#fff;font-size:18px;">⬡</div>
+          <div>
+            <h3>GitHub Copilot</h3>
+            <p>Already pay for GitHub Copilot? Use that same subscription here. Access GPT-4o, Claude, o1, and more with no extra API cost. Token looks like: <code>ghp_…</code></p>
+          </div>
+        </div>
+
+        <div class="privacy-badge" style="background:rgba(27,31,35,0.3);border-color:rgba(139,148,158,0.3);">
+          💡 Included in your Copilot subscription · <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub Privacy ↗</a>
+        </div>
+
+        <div class="info-box warn" style="margin-top:12px">
+          <span>⚠️</span>
+          <div><strong>Experimental</strong> — requires an active GitHub Copilot Individual ($10/mo), Business, or Enterprise subscription. Business and Enterprise plans do not use your prompts to train models by default.</div>
+        </div>
+
+        <div class="steps">
+
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Confirm your Copilot subscription is active</h4>
+              <p>Go to <a href="https://github.com/settings/copilot" target="_blank" rel="noopener">github.com/settings/copilot ↗</a> and verify your plan is active. Individual, Business, or Enterprise all work.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Create a Personal Access Token</h4>
+              <p>Go to <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens ↗</a> and click <strong>Generate new token (classic)</strong>.</p>
+              <div class="screen-mock compact">
+                <div class="mock-bar">
+                  <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+                  <span class="mock-url">github.com/settings/tokens</span>
+                </div>
+                <div class="mock-body col">
+                  <div class="mock-page-title">Personal access tokens (classic)</div>
+                  <div class="mock-hint-text">Tokens grant access on behalf of your account.</div>
+                  <div class="mock-btn-blue">Generate new token (classic)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Name it and select the <code>copilot</code> scope</h4>
+              <p>Give it a name like "Thought Tidy", set an expiration, then scroll to find <strong>GitHub Copilot</strong> in the scope list and check the <code>copilot</code> box. Click <strong>Generate token</strong>.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Copy your token — shown only once</h4>
+              <p>Copy it immediately. It looks like this:</p>
+              <div class="key-preview">
+                <span class="key-prefix">ghp_</span><span class="key-body">••••••••••••••••••••••••••••••••••</span>
+                <span class="key-copy">copy</span>
+              </div>
+              <p class="hint-text">Keep this token private. Anyone who has it can use your Copilot quota.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </section>
 
     <!-- ── Add to Extension ────────────────────────────────────── -->
@@ -379,7 +456,7 @@
           <div class="step-num">3</div>
           <div class="step-body">
             <h4>Select your provider</h4>
-            <p>A wizard appears. Click the provider you just got a key from (Gemini / ChatGPT / Claude).</p>
+            <p>A wizard appears. Click the provider you just got a key from (Gemini / ChatGPT / Claude / GitHub Copilot).</p>
             <div class="screen-mock compact">
               <div class="mock-bar">
                 <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
@@ -390,6 +467,7 @@
                   <div class="mock-wbtn">Claude</div>
                   <div class="mock-wbtn">ChatGPT</div>
                   <div class="mock-wbtn highlight">Gemini ← click</div>
+                  <div class="mock-wbtn">Copilot</div>
                 </div>
               </div>
             </div>
@@ -455,7 +533,7 @@
         <div class="flow-node highlight-node">
           <div class="flow-icon">🤖</div>
           <div class="flow-label">AI Provider API</div>
-          <div class="flow-sub">Gemini / OpenAI / Claude</div>
+          <div class="flow-sub">Gemini / OpenAI / Claude / Copilot</div>
         </div>
         <div class="flow-arrow">→</div>
         <div class="flow-node">
@@ -478,6 +556,13 @@
           <div>
             <strong>Pay-per-use, not subscription</strong>
             <p>API billing is based on tokens (roughly 1 token = ¾ of a word). Fixing a 200-word paragraph costs fractions of a cent. You only pay for what you actually use.</p>
+          </div>
+        </div>
+        <div class="principle">
+          <span class="p-icon">🐙</span>
+          <div>
+            <strong>Already have GitHub Copilot? Use it here</strong>
+            <p>If you already pay for GitHub Copilot, you can plug it into Thought Tidy with a Personal Access Token — no additional API costs. You get access to GPT-4o, Claude, o1, and the other models in your plan.</p>
           </div>
         </div>
         <div class="principle">
