@@ -672,13 +672,13 @@ describe("Custom prompt ID resolution (dyn-N ↔ custom-N)", () => {
 //   OPENAI_API_KEY        — OpenAI live calls
 //   GOOGLE_API_KEY        — Gemini live calls
 //   CLAUDE_API_KEY        — Claude live calls
-//   GITHUB_COPILOT_TOKEN  — GitHub Copilot live calls (requires active Copilot subscription)
+//   COPILOT_TOKEN  — GitHub Copilot live calls (requires active Copilot subscription)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const OPENAI_KEY    = process.env.OPENAI_API_KEY;
 const GOOGLE_KEY    = process.env.GOOGLE_API_KEY;
 const CLAUDE_KEY    = process.env.CLAUDE_API_KEY;
-const COPILOT_TOKEN = process.env.GITHUB_COPILOT_TOKEN;
+const COPILOT_TOKEN = process.env.COPILOT_TOKEN;
 
 const describeIf = (cond) => cond ? describe : describe.skip;
 
@@ -774,7 +774,7 @@ describeIf(!!CLAUDE_KEY)("Live API — Claude (requires CLAUDE_API_KEY env var)"
   }, 20000);
 });
 
-describeIf(!!COPILOT_TOKEN)("Live API — GitHub Models (requires GITHUB_COPILOT_TOKEN env var)", () => {
+describeIf(!!COPILOT_TOKEN)("Live API — GitHub Models (requires COPILOT_TOKEN env var)", () => {
   useLiveFetch();
   test("fix-spelling returns non-empty corrected text", async () => {
     const result = await callGitHubCopilot(COPILOT_TOKEN, "gpt-4o-mini", MENU_PROMPTS["fix-spelling"], "teh quikc brwon fox");
