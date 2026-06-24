@@ -16,6 +16,8 @@ files:
   - lib-node/**
   - renderer/**
 
+afterPack: scripts/after-pack.js
+
 extraResources:
   - from: ../lib
     to: lib
