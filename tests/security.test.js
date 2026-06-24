@@ -138,6 +138,7 @@ describe("browser extension security principles", () => {
       "api.openai.com",
       "api.anthropic.com",
       "generativelanguage.googleapis.com",
+      "api.githubcopilot.com",
       "api.gumroad.com",
       "127.0.0.1",
       "localhost",
