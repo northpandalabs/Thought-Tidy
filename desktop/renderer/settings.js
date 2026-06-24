@@ -213,7 +213,9 @@ async function init() {
     initSharedSettings(s);
     renderProviderCards();
     renderActionEditor();
+  } catch (e) { console.error("[settings render]", e); }
 
+  try {
     document.getElementById("add-provider-btn")?.addEventListener("click", showWizard);
     wireDevModeEasterEgg("add-provider-btn");
     document.getElementById("wizard-cancel-1")?.addEventListener("click", hideWizard);
@@ -242,7 +244,7 @@ async function init() {
     document.getElementById("contextEnabled")?.addEventListener("change", async () => {
       await browser.storage.local.set({ contextEnabled: document.getElementById("contextEnabled")?.checked !== false });
     });
-  } catch (e) { console.error("[settings late-init]", e); }
+  } catch (e) { console.error("[settings wiring]", e); }
 
   initProSection();
   initExportImportSection(s);
