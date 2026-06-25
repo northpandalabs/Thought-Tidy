@@ -15,8 +15,10 @@ window.proActiveBtnText   = "✓ Activated";
 window.platformSaveBackup = (content, filename) => btcAPI.saveBackup(content, filename);
 window.platformOpenBackup = () => btcAPI.openBackup();
 window.applyProGateExtras = (isPro) => {
-  const btn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
-  if (btn) { btn.disabled = !isPro; btn.title = isPro ? "" : "Pro feature. Unlock Pro to use Ollama."; }
+  ["ollama", "lmstudio", "jan"].forEach(id => {
+    const btn = document.querySelector(`.wizard-provider-btn[data-provider="${id}"]`);
+    if (btn) { btn.disabled = !isPro; btn.title = isPro ? "" : "Pro feature. Unlock Pro to use local AI."; }
+  });
 };
 
 function wireLinks() {

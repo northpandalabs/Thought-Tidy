@@ -135,6 +135,27 @@ async function testGitHubCopilot(token, modelId) {
   } catch { return false; }
 }
 
+// ── Local AI providers (Ollama, LM Studio, Jan AI) ───────────────────────────
+
+async function fetchOllamaModels(baseUrl) {
+  const url = `${(baseUrl || "http://localhost:11434").replace(/\/$/, "")}/api/tags`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Ollama /api/tags returned ${res.status}. Is Ollama running?`);
+  const data = await res.json();
+  if (!(data.models || []).length) throw new Error("No models found. Run `ollama pull <model>` first.");
+  return (data.models || []).map(m => ({ id: m.name, label: m.name }));
+}
+
+async function fetchLocalOpenAIModels(baseUrl) {
+  const url = `${baseUrl.replace(/\/$/, "")}/v1/models`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Server returned ${res.status}. Is it running?`);
+  const data = await res.json();
+  const models = (data.data || []).map(m => ({ id: m.id, label: m.id }));
+  if (!models.length) throw new Error("No models found. Load a model first.");
+  return models;
+}
+
 // ── Model list cache helpers ──────────────────────────────────────────────────
 
 const MODEL_CACHE_STALE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
