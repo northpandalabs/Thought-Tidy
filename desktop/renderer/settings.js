@@ -12,6 +12,7 @@ const STORAGE_KEYS = [
 
 window.platformOpenURL    = url => btcAPI.openURL(url);
 window.proActiveBtnText   = "✓ Activated";
+window.onProActivated     = () => btcAPI.rebuildTray?.();
 window.platformSaveBackup = (content, filename) => btcAPI.saveBackup(content, filename);
 window.platformOpenBackup = () => btcAPI.openBackup();
 window.applyProGateExtras = (isPro) => {
@@ -209,6 +210,12 @@ async function init() {
     const open = panel.style.display === "none";
     panel.style.display = open ? "block" : "none";
     if (arrow) arrow.style.transform = open ? "rotate(90deg)" : "";
+  });
+  window.addEventListener("keydown", e => {
+    if (e.key === "F12") {
+      const sec = document.getElementById("advanced-section");
+      if (sec) sec.style.display = "block";
+    }
   });
 
   try {

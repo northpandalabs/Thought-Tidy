@@ -7,7 +7,7 @@ const STORAGE_KEYS = [
   "variants", "customPrompts", "actionSettings", "lastAction",
   "profileName", "profileRole", "profileStyle", "profileContext", "profileEnabled", "profileVocab",
   "licenseEmail", "licenseKey", "demoMode", "corpMode", "contextPresets", "contextEnabled", "lastContextAudience",
-  "themeMode", "historyPin", "grammarFilters", "inputTextDraft", "showClarityCheckBtn"
+  "themeMode", "historyPin", "grammarFilters", "showClarityCheckBtn"
 ];
 
 window.RUN_BTN_ID   = "process-btn";
@@ -33,34 +33,6 @@ window.buildSlotActions = (box) => {
 };
 
 
-async function runFromSelection() {
-  const btn    = document.getElementById("run-selection-btn");
-  const status = document.getElementById("run-selection-status");
-  status.style.display = "none";
-  btn.disabled = true;
-  try {
-    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id) throw new Error("No active tab.");
-    const [{ result: selectedText }] = await browser.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => window.getSelection()?.toString()?.trim() || ""
-    });
-    if (!selectedText) {
-      status.textContent = "No text selected on the page. Highlight text first.";
-      status.style.display = "block";
-      return;
-    }
-    const actionVal = document.getElementById("action-select").value;
-    await browser.runtime.sendMessage({ type: "run-from-popup", tabId: tab.id, actionVal, selectedText });
-    await browser.storage.local.set({ lastAction: actionVal });
-    window.close();
-  } catch (err) {
-    status.textContent = err.message;
-    status.style.display = "block";
-  } finally {
-    btn.disabled = false;
-  }
-}
 
 async function init() {
   const s = await window.appGet(STORAGE_KEYS);
@@ -77,12 +49,23 @@ async function init() {
   ta?.focus();
   initTextareaAutogrow();
 
-  if (ta && s.inputTextDraft) { ta.value = s.inputTextDraft; ta.dispatchEvent(new Event("input")); }
-  let _draftTimer;
+  // On open: if last session showed a result, start fresh; otherwise restore typed text
+  const { _pendingInput, _resultShown } = await browser.storage.local.get(["_pendingInput", "_resultShown"]);
+  if (_resultShown) {
+    browser.storage.local.remove(["_pendingInput", "_resultShown"]).catch(() => {});
+  } else if (_pendingInput && ta) {
+    ta.value = _pendingInput;
+    ta.dispatchEvent(new Event("input"));
+  }
+
+  // Save text as user types so it survives closing without running
   ta?.addEventListener("input", () => {
-    clearTimeout(_draftTimer);
-    _draftTimer = setTimeout(() => browser.storage.local.set({ inputTextDraft: ta.value }), 400);
+    browser.storage.local.set({ _pendingInput: ta.value || "" }).catch(() => {});
   });
+
+  // After result is shown, mark it — cleared on next open
+  window.onRunComplete = () => browser.storage.local.set({ _resultShown: true }).catch(() => {});
+
   ta?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -97,6 +80,15 @@ async function init() {
   const hasLegacyKey = s.openaiKey || s.claudeKey || s.geminiKey;
   const ctaEl = document.getElementById("setup-cta");
   if (ctaEl) ctaEl.style.display = (hasProvider || hasLegacyKey) ? "none" : "block";
+
+  browser.storage.local.remove("inputTextDraft").catch(() => {});
+
+  document.getElementById("paste-btn")?.addEventListener("click", async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (ta) { ta.value = text; ta.dispatchEvent(new Event("input")); ta.focus(); }
+    } catch {}
+  });
 
   document.getElementById("variants-select")?.addEventListener("change", (e) => {
     window.appSet({ variants: e.target.value });
@@ -119,7 +111,6 @@ async function init() {
     browser.tabs.create({ url: browser.runtime.getURL("popup/guide.html") });
   });
   document.getElementById("process-btn").addEventListener("click", runProcess);
-  document.getElementById("run-selection-btn").addEventListener("click", runFromSelection);
 
   const { historyLog: rawLog = [] } = await browser.storage.local.get("historyLog");
   const purged = purgeOldLog(rawLog);

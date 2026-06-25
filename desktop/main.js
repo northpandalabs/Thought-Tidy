@@ -328,11 +328,16 @@ function openSettings() {
 
 // ── Tray ───────────────────────────────────────────────────────────────────────
 
+const _TRAY_PRO_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand", "clarity-check"]);
+
 function buildTrayMenu() {
   const { DEFAULT_ACTION_SETTINGS, resolveActionSettings } = require("../lib/prompts");
+  const { isProUnlocked } = require("../lib/license");
+  const s              = encStore ? encStore.store : store.store;
+  const isPro          = isProUnlocked(s);
   const storedActions  = resolveActionSettings(store.get("actionSettings") || []);
-  const enabledActions = storedActions.filter(a => a.enabled);
-  const customPrompts  = store.get("customPrompts") || [];
+  const enabledActions = storedActions.filter(a => a.enabled && (isPro || !_TRAY_PRO_IDS.has(a.id)));
+  const customPrompts  = isPro ? (store.get("customPrompts") || []) : [];
 
   const quickItems = enabledActions.map(a => ({
     label: a.label,
@@ -468,6 +473,7 @@ function updateTrayTooltip() {
   if (!tray) return;
   const count = purgeOldLog(store.get("historyLog") || []).length;
   tray.setToolTip(count > 0 ? `Thought Tidy · ${count} fix${count === 1 ? "" : "es"} today` : "Thought Tidy");
+  tray.setContextMenu(buildTrayMenu());
 }
 
 function createTray() {
@@ -546,6 +552,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle("open-guide",      (_, hash) => openGuide(hash));
   ipcMain.handle("get-cipher-key",  ()        => _readCipherKey());
+  ipcMain.handle("rebuild-tray",    ()        => updateTrayTooltip());
 
   const backupHandlers = makeBackupHandlers(dialog, fs);
   ipcMain.handle("save-backup", backupHandlers.saveBackup);

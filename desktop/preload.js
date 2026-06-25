@@ -48,6 +48,7 @@ contextBridge.exposeInMainWorld("btcAPI", {
 
   // Runtime cipher key fallback for dev builds where afterPack didn't inject it
   getCipherKey: () => ipcRenderer.invoke("get-cipher-key"),
+  rebuildTray:  () => ipcRenderer.invoke("rebuild-tray"),
 
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {
