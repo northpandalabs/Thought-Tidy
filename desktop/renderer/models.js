@@ -138,8 +138,15 @@ async function testGitHubCopilot(token, modelId) {
 // ── Local AI providers (Ollama, LM Studio, Jan AI) ───────────────────────────
 
 async function fetchOllamaModels(baseUrl) {
-  const url = `${(baseUrl || "http://localhost:11434").replace(/\/$/, "")}/api/tags`;
-  const res = await fetch(url);
+  const resolved = (baseUrl || "http://localhost:11434").replace(/\/$/, "");
+  const url = `${resolved}/api/tags`;
+  let res;
+  try { res = await fetch(url); } catch {
+    const isLocal = /localhost|127\.0\.0\.1/.test(resolved);
+    throw new Error(isLocal
+      ? "Cannot reach Ollama. Is it running? Try: ollama serve"
+      : `Cannot reach Ollama at ${resolved}. Set OLLAMA_HOST=0.0.0.0 on the remote machine and ensure the port is reachable.`);
+  }
   if (!res.ok) throw new Error(`Ollama /api/tags returned ${res.status}. Is Ollama running?`);
   const data = await res.json();
   if (!(data.models || []).length) throw new Error("No models found. Run `ollama pull <model>` first.");
