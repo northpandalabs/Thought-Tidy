@@ -83,13 +83,6 @@ async function init() {
 
   browser.storage.local.remove("inputTextDraft").catch(() => {});
 
-  document.getElementById("paste-btn")?.addEventListener("click", async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (ta && text) { ta.value = text; ta.dispatchEvent(new Event("input")); ta.focus(); }
-    } catch {}
-  });
-
   document.getElementById("variants-select")?.addEventListener("change", (e) => {
     window.appSet({ variants: e.target.value });
   });
