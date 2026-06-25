@@ -125,6 +125,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: npm run dist:test
         working-directory: desktop
+        env:
+          LICENSE_CIPHER_KEY: ${{ secrets.LICENSE_CIPHER_KEY }}
 
       - name: Zip TEST ONLY EXE
         if: github.ref == 'refs/heads/main'
@@ -149,6 +151,8 @@ jobs:
         if: github.ref != 'refs/heads/main'
         run: npm run dist:win
         working-directory: desktop
+        env:
+          LICENSE_CIPHER_KEY: ${{ secrets.LICENSE_CIPHER_KEY }}
 
       - name: Upload production installer
         if: github.ref != 'refs/heads/main'
