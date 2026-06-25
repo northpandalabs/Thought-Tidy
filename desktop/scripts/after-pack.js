@@ -25,7 +25,7 @@ module.exports = async function afterPack({ appOutDir }) {
   }
 
   if (!key) {
-    console.error("[after-pack] ERROR: LICENSE_CIPHER_KEY not set and ETC/brainfix-ai.env not found.");
+    console.error("[after-pack] ERROR: LICENSE_CIPHER_KEY env var not set.");
     console.error("             Corp/demo license activation will fail in the built app.");
     return;
   }
