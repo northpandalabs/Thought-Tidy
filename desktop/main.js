@@ -167,7 +167,11 @@ function createPopup() {
 
   popupWin.on("closed", () => { popupWin = null; });
 
-  if (isDev || IS_TEST_BUILD) popupWin.webContents.openDevTools({ mode: "detach" });
+  if (isDev || IS_TEST_BUILD || store.get("devMode")) popupWin.webContents.openDevTools({ mode: "detach" });
+  popupWin.webContents.on("before-input-event", (_, input) => {
+    if (input.type === "keyDown" && input.key === "F12")
+      popupWin.webContents.isDevToolsOpened() ? popupWin.webContents.closeDevTools() : popupWin.webContents.openDevTools({ mode: "detach" });
+  });
 }
 
 function openPopup() {
@@ -214,7 +218,11 @@ function openResults() {
   resultsWin.setMenu(null);
   resultsWin.loadFile(resultsHtml);
   resultsWin.webContents.on("did-finish-load", () => applyZoomToWindow(resultsWin));
-  if (isDev || IS_TEST_BUILD) resultsWin.webContents.openDevTools({ mode: "detach" });
+  if (isDev || IS_TEST_BUILD || store.get("devMode")) resultsWin.webContents.openDevTools({ mode: "detach" });
+  resultsWin.webContents.on("before-input-event", (_, input) => {
+    if (input.type === "keyDown" && input.key === "F12")
+      resultsWin.webContents.isDevToolsOpened() ? resultsWin.webContents.closeDevTools() : resultsWin.webContents.openDevTools({ mode: "detach" });
+  });
   resultsWin.on("closed", () => { resultsWin = null; });
 }
 
@@ -293,7 +301,11 @@ function openSettings() {
   settingsWin.webContents.on("did-finish-load", () => applyZoomToWindow(settingsWin));
   settingsWin.on("closed", () => { settingsWin = null; });
 
-  if (isDev || IS_TEST_BUILD) settingsWin.webContents.openDevTools({ mode: "right" });
+  if (isDev || IS_TEST_BUILD || store.get("devMode")) settingsWin.webContents.openDevTools({ mode: "right" });
+  settingsWin.webContents.on("before-input-event", (_, input) => {
+    if (input.type === "keyDown" && input.key === "F12")
+      settingsWin.webContents.isDevToolsOpened() ? settingsWin.webContents.closeDevTools() : settingsWin.webContents.openDevTools({ mode: "right" });
+  });
 }
 
 // ── Tray ───────────────────────────────────────────────────────────────────────
