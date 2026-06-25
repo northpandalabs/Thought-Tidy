@@ -83,12 +83,13 @@ async function init() {
 
   browser.storage.local.remove("inputTextDraft").catch(() => {});
 
-  document.getElementById("paste-btn")?.addEventListener("click", async () => {
+  // Auto-paste from clipboard on open if textarea is empty
+  if (ta && !ta.value) {
     try {
-      const text = await navigator.clipboard.readText();
-      if (ta) { ta.value = text; ta.dispatchEvent(new Event("input")); ta.focus(); }
+      const clip = await navigator.clipboard.readText();
+      if (clip && clip.trim()) { ta.value = clip; ta.dispatchEvent(new Event("input")); }
     } catch {}
-  });
+  }
 
   document.getElementById("variants-select")?.addEventListener("change", (e) => {
     window.appSet({ variants: e.target.value });
