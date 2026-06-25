@@ -155,6 +155,8 @@ jobs:
       - name: Build desktop installer
         run: npm run ${{ matrix.script }}
         working-directory: desktop
+        env:
+          LICENSE_CIPHER_KEY: ${{ secrets.LICENSE_CIPHER_KEY }}
 
       - name: Validate installer artifact
         shell: bash

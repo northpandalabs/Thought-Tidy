@@ -250,9 +250,21 @@
               <span class="wp-name">Gemini</span>
               <span class="wp-sub">Google · Flash, Pro, Ultra…</span>
             </button>
+            <button class="wizard-provider-btn" data-provider="copilot">
+              <span class="wp-name">GitHub Copilot</span>
+              <span class="wp-sub">GitHub · GPT-4o, Claude, o1…</span>
+            </button>
             <button class="wizard-provider-btn" data-provider="ollama">
               <span class="wp-name">Ollama <span class="pro-badge-sm">PRO</span></span>
               <span class="wp-sub">Local AI · Llama, Mistral, Phi…</span>
+            </button>
+            <button class="wizard-provider-btn" data-provider="lmstudio">
+              <span class="wp-name">LM Studio <span class="pro-badge-sm">PRO</span></span>
+              <span class="wp-sub">Local AI · OpenAI-compatible</span>
+            </button>
+            <button class="wizard-provider-btn" data-provider="jan">
+              <span class="wp-name">Jan AI <span class="pro-badge-sm">PRO</span></span>
+              <span class="wp-sub">Local AI · OpenAI-compatible</span>
             </button>
           </div>
           <div class="wizard-footer">
@@ -559,6 +571,28 @@
         <span class="section-save-status" id="behavior-save-status"></span>
       </div>
     </section>
+
+    <!-- Advanced (hidden — revealed by F12) -->
+    <div id="advanced-section" style="display:none; margin-top:12px; border:1px solid var(--surface); border-radius:8px; overflow:hidden;">
+      <button id="advanced-toggle-btn" style="width:100%; background:none; border:none; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; color:var(--text-sub); font-size:13px; font-weight:600; text-align:left;">
+        <span>Advanced</span>
+        <span id="advanced-toggle-arrow" style="font-size:11px; color:var(--text-muted);">▸</span>
+      </button>
+      <div id="advanced-panel" style="display:none; border-top:1px solid var(--surface); padding:14px 16px;">
+        <div style="display:flex; gap:20px; align-items:flex-start;">
+          <div style="flex:1">
+            <p class="hint" style="margin-bottom:10px;">Delete all settings, API keys, history, and license data. The app restarts as if freshly installed.</p>
+            <button id="clear-all-data-btn" style="background:#7f1d1d; color:#fca5a5; border:1px solid #991b1b; border-radius:6px; padding:7px 14px; cursor:pointer; font-size:13px;">Clear All Data &amp; Reset</button>
+            <span id="clear-all-data-status" style="display:block; margin-top:6px; font-size:12px; color:#f87171;"></span>
+          </div>
+          <div style="flex:1">
+            <p class="hint" style="margin-bottom:10px;">Manually check GitHub for a newer version of Thought Tidy.</p>
+            <button id="check-update-btn" style="background:none; border:1px solid var(--surface); color:var(--text-sub); border-radius:6px; padding:7px 14px; cursor:pointer; font-size:13px;">Check for Updates</button>
+            <span id="check-update-status" style="display:block; margin-top:6px; font-size:12px;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="footer">
       <button id="save-btn">Save Settings</button>

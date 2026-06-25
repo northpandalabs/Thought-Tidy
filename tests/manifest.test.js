@@ -114,6 +114,32 @@ describe("manifest.json — Chrome Web Store upload requirements", () => {
   });
 });
 
+// ── host_permissions — required for direct browser → API calls ────────────────
+
+describe("manifest.json — host_permissions include all AI provider APIs", () => {
+  const hosts = manifest.host_permissions || [];
+
+  test("host_permissions is present and non-empty", () => {
+    expect(hosts.length).toBeGreaterThan(0);
+  });
+
+  test("includes api.openai.com", () => {
+    expect(hosts.some(h => h.includes("openai.com"))).toBe(true);
+  });
+
+  test("includes api.anthropic.com", () => {
+    expect(hosts.some(h => h.includes("anthropic.com"))).toBe(true);
+  });
+
+  test("includes generativelanguage.googleapis.com (Gemini)", () => {
+    expect(hosts.some(h => h.includes("googleapis.com"))).toBe(true);
+  });
+
+  test("includes models.inference.ai.azure.com (GitHub Models)", () => {
+    expect(hosts.some(h => h.includes("inference.ai.azure.com"))).toBe(true);
+  });
+});
+
 // ── Firefox AMO requirements ──────────────────────────────────────────────────
 
 describe("manifest.json — Firefox AMO upload requirements", () => {

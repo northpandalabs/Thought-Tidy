@@ -12,11 +12,14 @@ const STORAGE_KEYS = [
 
 window.platformOpenURL    = url => btcAPI.openURL(url);
 window.proActiveBtnText   = "✓ Activated";
+window.onProActivated     = () => btcAPI.rebuildTray?.();
 window.platformSaveBackup = (content, filename) => btcAPI.saveBackup(content, filename);
 window.platformOpenBackup = () => btcAPI.openBackup();
 window.applyProGateExtras = (isPro) => {
-  const btn = document.querySelector('.wizard-provider-btn[data-provider="ollama"]');
-  if (btn) { btn.disabled = !isPro; btn.title = isPro ? "" : "Pro feature. Unlock Pro to use Ollama."; }
+  ["ollama", "lmstudio", "jan"].forEach(id => {
+    const btn = document.querySelector(`.wizard-provider-btn[data-provider="${id}"]`);
+    if (btn) { btn.disabled = !isPro; btn.title = isPro ? "" : "Pro feature. Unlock Pro to use local AI."; }
+  });
 };
 
 function wireLinks() {
@@ -194,40 +197,63 @@ async function init() {
   });
   document.getElementById("activate-pro-link-btn")?.addEventListener("click", () => {
     document.getElementById("display-panel")?.style.setProperty("display","none");
+    const proPanel = document.getElementById("pro-panel");
+    if (proPanel) proPanel.style.display = proPanel.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("pro-panel-close")?.addEventListener("click", () => {
+    const p = document.getElementById("pro-panel"); if (p) p.style.display = "none";
+  });
+  document.getElementById("advanced-toggle-btn")?.addEventListener("click", () => {
+    const panel = document.getElementById("advanced-panel");
+    const arrow = document.getElementById("advanced-toggle-arrow");
+    if (!panel) return;
+    const open = panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    if (arrow) arrow.style.transform = open ? "rotate(90deg)" : "";
+  });
+  window.addEventListener("keydown", e => {
+    if (e.key === "F12") {
+      const sec = document.getElementById("advanced-section");
+      if (sec) sec.style.display = "block";
+    }
   });
 
-  initSharedSettings(s);
-  renderProviderCards();
-  renderActionEditor();
+  try {
+    initSharedSettings(s);
+    renderProviderCards();
+    renderActionEditor();
+  } catch (e) { console.error("[settings render]", e); }
 
-  document.getElementById("add-provider-btn").addEventListener("click", showWizard);
-  wireDevModeEasterEgg("add-provider-btn");
-  document.getElementById("wizard-cancel-1").addEventListener("click", hideWizard);
-  document.getElementById("wizard-back").addEventListener("click", () => {
-    document.getElementById("wizard-step-2").style.display = "none";
-    document.getElementById("wizard-step-1").style.display = "block";
-    clearWizardStep2();
-  });
-  document.getElementById("wizard-test-btn").addEventListener("click", wizardTestAndLoad);
-  document.getElementById("wizard-save").addEventListener("click", saveWizardProvider);
-  document.querySelectorAll(".wizard-provider-btn").forEach(btn => {
-    btn.addEventListener("click", () => showWizardStep2(btn.dataset.provider));
-  });
-  const wzKey = document.getElementById("wizard-api-key");
-  const wzShow = document.getElementById("wizard-show-btn");
-  wzShow.addEventListener("click", () => {
-    wzKey.type = wzKey.type==="password"?"text":"password"; wzShow.textContent = wzKey.type==="password"?"Show":"Hide";
-  });
+  try {
+    document.getElementById("add-provider-btn")?.addEventListener("click", showWizard);
+    wireDevModeEasterEgg("add-provider-btn");
+    document.getElementById("wizard-cancel-1")?.addEventListener("click", hideWizard);
+    document.getElementById("wizard-back")?.addEventListener("click", () => {
+      document.getElementById("wizard-step-2").style.display = "none";
+      document.getElementById("wizard-step-1").style.display = "block";
+      clearWizardStep2();
+    });
+    document.getElementById("wizard-test-btn")?.addEventListener("click", wizardTestAndLoad);
+    document.getElementById("wizard-save")?.addEventListener("click", saveWizardProvider);
+    document.querySelectorAll(".wizard-provider-btn").forEach(btn => {
+      btn.addEventListener("click", () => showWizardStep2(btn.dataset.provider));
+    });
+    const wzKey  = document.getElementById("wizard-api-key");
+    const wzShow = document.getElementById("wizard-show-btn");
+    wzShow?.addEventListener("click", () => {
+      wzKey.type = wzKey.type==="password"?"text":"password"; wzShow.textContent = wzKey.type==="password"?"Show":"Hide";
+    });
 
-  setVal("profileName", s.profileName||""); setVal("profileRole", s.profileRole||"");
-  setVal("profileStyle", s.profileStyle||""); setVal("profileContext", s.profileContext||"");
-  const profEl = document.getElementById("profileEnabled");
-  if (profEl) profEl.checked = s.profileEnabled || false;
+    setVal("profileName", s.profileName||""); setVal("profileRole", s.profileRole||"");
+    setVal("profileStyle", s.profileStyle||""); setVal("profileContext", s.profileContext||"");
+    const profEl = document.getElementById("profileEnabled");
+    if (profEl) profEl.checked = s.profileEnabled || false;
 
-  initCommonSettingsWiring(s);
-  document.getElementById("contextEnabled")?.addEventListener("change", async () => {
-    await browser.storage.local.set({ contextEnabled: document.getElementById("contextEnabled")?.checked !== false });
-  });
+    initCommonSettingsWiring(s);
+    document.getElementById("contextEnabled")?.addEventListener("change", async () => {
+      await browser.storage.local.set({ contextEnabled: document.getElementById("contextEnabled")?.checked !== false });
+    });
+  } catch (e) { console.error("[settings wiring]", e); }
 
   initProSection();
   initExportImportSection(s);
@@ -243,6 +269,33 @@ async function init() {
   document.getElementById("save-btn").addEventListener("click", save);
   document.getElementById("revert-btn").addEventListener("click", () => {
     if (confirm("Discard unsaved changes and reload settings?")) location.reload();
+  });
+
+  document.getElementById("clear-all-data-btn")?.addEventListener("click", async () => {
+    const statusEl = document.getElementById("clear-all-data-status");
+    if (statusEl) statusEl.textContent = "Waiting for confirmation…";
+    const result = await btcAPI.clearAllData();
+    if (!result?.cleared && statusEl) statusEl.textContent = "Cancelled.";
+  });
+
+  document.getElementById("check-update-btn")?.addEventListener("click", async () => {
+    const btn    = document.getElementById("check-update-btn");
+    const status = document.getElementById("check-update-status");
+    btn.disabled = true; btn.textContent = "Checking…";
+    const upd = await btcAPI.checkForUpdate().catch(() => null);
+    btn.disabled = false; btn.textContent = "Check for Updates";
+    if (upd?.version) {
+      status.textContent = `Version ${upd.version} available — `;
+      const link = document.createElement("a");
+      link.textContent = "Download from GitHub ↗";
+      link.style.cssText = "color:var(--accent); cursor:pointer; text-decoration:underline;";
+      link.onclick = () => btcAPI.openURL(upd.url);
+      status.appendChild(link);
+      status.style.color = "var(--accent)";
+    } else {
+      status.textContent = "You're on the latest version.";
+      status.style.color = "var(--text-muted)";
+    }
   });
   document.getElementById("profile-save-btn")?.addEventListener("click", saveProfile);
   document.getElementById("behavior-save-btn")?.addEventListener("click", saveBehavior);

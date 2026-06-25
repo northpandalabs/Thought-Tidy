@@ -43,6 +43,13 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // Setup guide window
   openGuide: (hash) => ipcRenderer.invoke("open-guide", hash),
 
+  // Factory reset — clears all settings and restarts
+  clearAllData: () => ipcRenderer.invoke("clear-all-data"),
+
+  // Runtime cipher key fallback for dev builds where afterPack didn't inject it
+  getCipherKey: () => ipcRenderer.invoke("get-cipher-key"),
+  rebuildTray:  () => ipcRenderer.invoke("rebuild-tray"),
+
   // Event: main process signals the popup was just shown
   onPopupOpened:  (callback) => {
     ipcRenderer.on("popup-opened", () => callback());

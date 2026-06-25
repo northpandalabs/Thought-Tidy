@@ -278,10 +278,10 @@ describe("popup/guide.html — content structure", () => {
     html = fs.readFileSync(path.join(ROOT, "popup/guide.html"), "utf8");
   });
 
-  test("has exactly 3 provider tab buttons", () => {
+  test("has exactly 4 provider tab buttons", () => {
     // count by data-tab= attribute — each tab button has exactly one
     const tabs = (html.match(/data-tab="/g) || []).length;
-    expect(tabs).toBe(3);
+    expect(tabs).toBe(4);
   });
 
   test("has Gemini provider tab (data-tab=gemini)", () => {
@@ -294,6 +294,10 @@ describe("popup/guide.html — content structure", () => {
 
   test("has Claude provider tab (data-tab=claude)", () => {
     expect(html).toContain('data-tab="claude"');
+  });
+
+  test("has GitHub Copilot provider tab (data-tab=copilot)", () => {
+    expect(html).toContain('data-tab="copilot"');
   });
 
   test("mentions AES-256-GCM encryption", () => {

@@ -49,48 +49,50 @@ describe("shouldRestoreDraft — textarea draft restore predicate", () => {
   });
 });
 
-// ── popup/popup.js — textarea draft persistence ───────────────────────────────
+// ── popup/popup.js — textarea text persistence ───────────────────────────────
 
-describe("popup/popup.js — inputTextDraft storage key", () => {
+describe("popup/popup.js — _pendingInput / _resultShown persistence", () => {
   let src;
   beforeAll(() => {
     src = fs.readFileSync(path.join(ROOT, "popup/popup.js"), "utf8");
   });
 
-  test("'inputTextDraft' is in the STORAGE_KEYS list", () => {
-    const keysBlock = src.slice(
-      src.indexOf("STORAGE_KEYS"),
-      src.indexOf("STORAGE_KEYS") + 600
-    );
-    expect(keysBlock).toContain("inputTextDraft");
+  test("_pendingInput is read from storage on init", () => {
+    const initFn = src.slice(src.indexOf("async function init()"));
+    expect(initFn).toContain("_pendingInput");
   });
 
-  test("draft is restored on init when storage value exists", () => {
+  test("_resultShown is read from storage on init", () => {
     const initFn = src.slice(src.indexOf("async function init()"));
-    expect(initFn).toContain("inputTextDraft");
+    expect(initFn).toContain("_resultShown");
+  });
+
+  test("pending input is restored to ta.value when _resultShown is falsy", () => {
+    const initFn = src.slice(src.indexOf("async function init()"));
+    expect(initFn).toContain("_pendingInput");
     expect(initFn).toContain("ta.value");
   });
 
-  test("draft save is debounced with clearTimeout + setTimeout", () => {
-    expect(src).toContain("clearTimeout(_draftTimer)");
-    expect(src).toContain("setTimeout(");
+  test("text is saved to _pendingInput on every input event", () => {
+    expect(src).toContain("_pendingInput");
+    expect(src).toContain('addEventListener("input"');
   });
 
-  test("draft save writes to storage using 'inputTextDraft' key", () => {
-    expect(src).toContain("{ inputTextDraft:");
-  });
-
-  test("draft save captures ta.value", () => {
-    expect(src).toContain("inputTextDraft: ta.value");
-  });
-
-  test("restoring the draft dispatches an input event (triggers height recalc)", () => {
+  test("_pendingInput and _resultShown are removed when _resultShown is true on open", () => {
     const initFn = src.slice(src.indexOf("async function init()"));
-    const draftBlock = initFn.slice(
-      initFn.indexOf("inputTextDraft"),
-      initFn.indexOf("inputTextDraft") + 200
-    );
-    expect(draftBlock).toContain('new Event("input")');
+    expect(initFn).toContain('"_pendingInput"');
+    expect(initFn).toContain('"_resultShown"');
+    expect(initFn).toContain("remove(");
+  });
+
+  test("onRunComplete sets _resultShown to true", () => {
+    expect(src).toContain("onRunComplete");
+    expect(src).toContain("_resultShown");
+  });
+
+  test("restoring pending input dispatches an input event (triggers height recalc)", () => {
+    const initFn = src.slice(src.indexOf("async function init()"));
+    expect(initFn).toContain('new Event("input")');
   });
 });
 

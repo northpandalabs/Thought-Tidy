@@ -105,6 +105,24 @@ function migrateToEncryptedKeys(raw) {
 let encStore = null;
 const isDev = process.argv.includes("--dev");
 
+// Runtime cipher key — read from env var or (dev only) ETC/brainfix-ai.env.
+// afterPack injects this into lib/license.js at build time; this is a fallback
+// for dev builds where the env var wasn't set during the build.
+function _readCipherKey() {
+  if (process.env.LICENSE_CIPHER_KEY) return process.env.LICENSE_CIPHER_KEY;
+  if (app.isPackaged) return null; // installed build must rely on afterPack injection
+  try {
+    const etcFile = path.join(__dirname, "..", "ETC", "brainfix-ai.env");
+    if (!fs.existsSync(etcFile)) return null;
+    for (const line of fs.readFileSync(etcFile, "utf8").split("\n")) {
+      const eq = line.indexOf("=");
+      if (eq > 0 && line.slice(0, eq).trim() === "LICENSE_CIPHER_KEY")
+        return line.slice(eq + 1).trim();
+    }
+  } catch {}
+  return null;
+}
+
 // True when built with testBuild:true injected via electron-builder-test.yml.
 // Drives TEST ONLY banners in settings UI and tray menu label.
 const IS_TEST_BUILD = (() => {
@@ -167,7 +185,11 @@ function createPopup() {
 
   popupWin.on("closed", () => { popupWin = null; });
 
-  if (isDev || IS_TEST_BUILD) popupWin.webContents.openDevTools({ mode: "detach" });
+  if (isDev || IS_TEST_BUILD || store.get("devMode")) popupWin.webContents.openDevTools({ mode: "detach" });
+  popupWin.webContents.on("before-input-event", (_, input) => {
+    if (input.type === "keyDown" && input.key === "F12")
+      popupWin.webContents.isDevToolsOpened() ? popupWin.webContents.closeDevTools() : popupWin.webContents.openDevTools({ mode: "detach" });
+  });
 }
 
 function openPopup() {
@@ -214,7 +236,11 @@ function openResults() {
   resultsWin.setMenu(null);
   resultsWin.loadFile(resultsHtml);
   resultsWin.webContents.on("did-finish-load", () => applyZoomToWindow(resultsWin));
-  if (isDev || IS_TEST_BUILD) resultsWin.webContents.openDevTools({ mode: "detach" });
+  if (isDev || IS_TEST_BUILD || store.get("devMode")) resultsWin.webContents.openDevTools({ mode: "detach" });
+  resultsWin.webContents.on("before-input-event", (_, input) => {
+    if (input.type === "keyDown" && input.key === "F12")
+      resultsWin.webContents.isDevToolsOpened() ? resultsWin.webContents.closeDevTools() : resultsWin.webContents.openDevTools({ mode: "detach" });
+  });
   resultsWin.on("closed", () => { resultsWin = null; });
 }
 
@@ -293,16 +319,25 @@ function openSettings() {
   settingsWin.webContents.on("did-finish-load", () => applyZoomToWindow(settingsWin));
   settingsWin.on("closed", () => { settingsWin = null; });
 
-  if (isDev || IS_TEST_BUILD) settingsWin.webContents.openDevTools({ mode: "right" });
+  if (isDev || IS_TEST_BUILD || store.get("devMode")) settingsWin.webContents.openDevTools({ mode: "right" });
+  settingsWin.webContents.on("before-input-event", (_, input) => {
+    if (input.type === "keyDown" && input.key === "F12")
+      settingsWin.webContents.isDevToolsOpened() ? settingsWin.webContents.closeDevTools() : settingsWin.webContents.openDevTools({ mode: "right" });
+  });
 }
 
 // ── Tray ───────────────────────────────────────────────────────────────────────
 
+const _TRAY_PRO_IDS = new Set(["sound-like-me", "sound-human", "formal", "casual", "shorten", "expand", "clarity-check"]);
+
 function buildTrayMenu() {
   const { DEFAULT_ACTION_SETTINGS, resolveActionSettings } = require("../lib/prompts");
+  const { isProUnlocked } = require("../lib/license");
+  const s              = encStore ? encStore.store : store.store;
+  const isPro          = isProUnlocked(s);
   const storedActions  = resolveActionSettings(store.get("actionSettings") || []);
-  const enabledActions = storedActions.filter(a => a.enabled);
-  const customPrompts  = store.get("customPrompts") || [];
+  const enabledActions = storedActions.filter(a => a.enabled && (isPro || !_TRAY_PRO_IDS.has(a.id)));
+  const customPrompts  = isPro ? (store.get("customPrompts") || []) : [];
 
   const quickItems = enabledActions.map(a => ({
     label: a.label,
@@ -342,11 +377,13 @@ async function quickAction(action) {
   }
 
   try {
-    const { MENU_PROMPTS, buildPromptWithProfile } = require("./lib-node/prompts");
+    const { MENU_PROMPTS, buildPromptWithProfile, buildGrammarInstructions } = require("./lib-node/prompts");
     const { callAIWithFallback }                   = require("./lib-node/api");
     const { estimateCost }                         = require("../lib/pricing");
     const s = encStore.store;
-    const systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
+    let systemPrompt = buildPromptWithProfile(MENU_PROMPTS[action] || MENU_PROMPTS["fix-spelling"], s);
+    const grammarBlock = buildGrammarInstructions(s.grammarFilters);
+    if (grammarBlock) systemPrompt += "\n\n" + grammarBlock;
     const { result, usedProvider, usedModel } = await callAIWithFallback(
       s.configuredProviders || [], s.geminiModels || [null, null, null], s, systemPrompt, text
     );
@@ -388,13 +425,15 @@ async function quickCustomAction(idx) {
   const text = clipboard.readText().trim();
   if (!text) { new Notification({ title: "Thought Tidy", body: "Clipboard is empty." }).show(); return; }
   try {
-    const { buildPromptWithProfile } = require("./lib-node/prompts");
+    const { buildPromptWithProfile, buildGrammarInstructions } = require("./lib-node/prompts");
     const { callAIWithFallback }     = require("./lib-node/api");
     const { estimateCost }           = require("../lib/pricing");
     const s         = encStore.store;
     const cp        = (s.customPrompts || [])[idx];
     if (!cp) return;
-    const systemPrompt = buildPromptWithProfile(cp.prompt, s);
+    let systemPrompt = buildPromptWithProfile(cp.prompt, s);
+    const grammarBlock = buildGrammarInstructions(s.grammarFilters);
+    if (grammarBlock) systemPrompt += "\n\n" + grammarBlock;
     const { result, usedProvider, usedModel } = await callAIWithFallback(
       s.configuredProviders || [], s.geminiModels || [null, null, null], s, systemPrompt, text
     );
@@ -434,6 +473,7 @@ function updateTrayTooltip() {
   if (!tray) return;
   const count = purgeOldLog(store.get("historyLog") || []).length;
   tray.setToolTip(count > 0 ? `Thought Tidy · ${count} fix${count === 1 ? "" : "es"} today` : "Thought Tidy");
+  tray.setContextMenu(buildTrayMenu());
 }
 
 function createTray() {
@@ -510,7 +550,9 @@ app.whenReady().then(() => {
     openURL:    (url) => shell.openExternal(url)
   });
 
-  ipcMain.handle("open-guide", (_, hash) => openGuide(hash));
+  ipcMain.handle("open-guide",      (_, hash) => openGuide(hash));
+  ipcMain.handle("get-cipher-key",  ()        => _readCipherKey());
+  ipcMain.handle("rebuild-tray",    ()        => updateTrayTooltip());
 
   const backupHandlers = makeBackupHandlers(dialog, fs);
   ipcMain.handle("save-backup", backupHandlers.saveBackup);
@@ -575,6 +617,24 @@ app.whenReady().then(() => {
     } else {
       try { require("fs").unlinkSync(lnk); } catch {}
     }
+  });
+
+  ipcMain.handle("clear-all-data", async () => {
+    const { response } = await dialog.showMessageBox({
+      type:      "warning",
+      buttons:   ["Cancel", "Clear Everything"],
+      defaultId: 0,
+      cancelId:  0,
+      title:     "Clear All Data",
+      message:   "Delete all settings, API keys, history, and license info?",
+      detail:    "This cannot be undone. The app will restart with a clean slate.",
+    });
+    if (response !== 1) return { cleared: false };
+    try { require("fs").unlinkSync(startupShortcut()); } catch {}
+    store.clear();
+    app.relaunch();
+    app.exit(0);
+    return { cleared: true };
   });
 
   // macOS: no dock icon — pure tray app

@@ -162,7 +162,9 @@ FunctionEnd
 
 !endif ; BUILD_UNINSTALLER
 
-; Remove startup shortcut on uninstall.
+; Remove startup shortcut and all user data on uninstall so a fresh reinstall
+; starts completely clean (no leftover API keys, demoMode, dev settings, etc.).
 !macro customUnInstall
   Delete "$APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Thought Tidy.lnk"
+  RMDir /r "$APPDATA\thought-tidy-desktop"
 !macroend

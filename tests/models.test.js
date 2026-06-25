@@ -1,6 +1,6 @@
 const {
-  fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels, fetchOllamaModels,
-  testOpenAI, testClaude, testGemini, testOllama,
+  fetchOpenAIModels, fetchClaudeModels, fetchGeminiModels, fetchOllamaModels, fetchGitHubCopilotModels,
+  testOpenAI, testClaude, testGemini, testOllama, testGitHubCopilot,
   isModelCacheStale, formatCacheAge, MODEL_CACHE_STALE_MS,
   costTier,
 } = require("../lib/models");
@@ -288,6 +288,113 @@ describe("testGemini", () => {
     await testGemini("AIza-test", "gemini-2.0-flash");
     const body = JSON.parse(global.fetch.mock.calls[0][1].body);
     expect(body.generationConfig.maxOutputTokens).toBe(5);
+  });
+});
+
+// ── fetchGitHubCopilotModels ──────────────────────────────────────────────────
+
+describe("fetchGitHubCopilotModels", () => {
+  const COPILOT_MODELS_DATA = [
+    { id: "gpt-4o" },
+    { id: "gpt-4o-mini" },
+    { id: "claude-3.5-sonnet" },
+    { id: "text-embedding-ada-002" }, // should be filtered (embedding)
+    { id: "whisper-1" },              // should be filtered (audio)
+  ];
+
+  test("returns models from data.data field when API succeeds", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: COPILOT_MODELS_DATA })
+    });
+    const result = await fetchGitHubCopilotModels("ghp_test");
+    const ids = result.map(m => m.id);
+    expect(ids).toContain("gpt-4o");
+    expect(ids).toContain("gpt-4o-mini");
+    expect(ids).toContain("claude-3.5-sonnet");
+  });
+
+  test("returns models from data.models field as alternative shape", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ models: [{ id: "gpt-4o" }, { id: "o1-mini" }] })
+    });
+    const result = await fetchGitHubCopilotModels("ghp_test");
+    expect(result.map(m => m.id)).toContain("gpt-4o");
+  });
+
+  test("filters out embedding, image, audio, tts, whisper, dall models", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: COPILOT_MODELS_DATA })
+    });
+    const result = await fetchGitHubCopilotModels("ghp_test");
+    const ids = result.map(m => m.id);
+    expect(ids).not.toContain("text-embedding-ada-002");
+    expect(ids).not.toContain("whisper-1");
+  });
+
+  test("falls back to hardcoded list when API returns non-ok status", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    const result = await fetchGitHubCopilotModels("ghp_test");
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.map(m => m.id)).toContain("gpt-4o");
+  });
+
+  test("falls back to hardcoded list when API returns empty model list", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, json: async () => ({ data: [] })
+    });
+    const result = await fetchGitHubCopilotModels("ghp_test");
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.map(m => m.id)).toContain("gpt-4o");
+  });
+
+  test("falls back to hardcoded list on network error", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Network failure"));
+    const result = await fetchGitHubCopilotModels("ghp_test");
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.map(m => m.id)).toContain("gpt-4o");
+  });
+
+  test("calls the GitHub Copilot models endpoint", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, json: async () => ({ data: [{ id: "gpt-4o" }] })
+    });
+    await fetchGitHubCopilotModels("ghp_test");
+    expect(global.fetch.mock.calls[0][0]).toBe("https://models.inference.ai.azure.com/models");
+  });
+});
+
+// ── testGitHubCopilot ─────────────────────────────────────────────────────────
+
+describe("testGitHubCopilot", () => {
+  test("returns true when model responds successfully", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    expect(await testGitHubCopilot("ghp_test", "gpt-4o")).toBe(true);
+  });
+
+  test("returns false on error response", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    expect(await testGitHubCopilot("ghp_test", "bad-model")).toBe(false);
+  });
+
+  test("returns false on network error", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Network failure"));
+    expect(await testGitHubCopilot("ghp_test", "gpt-4o")).toBe(false);
+  });
+
+  test("calls the GitHub Copilot chat completions endpoint", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    await testGitHubCopilot("ghp_test", "gpt-4o");
+    expect(global.fetch.mock.calls[0][0]).toBe("https://models.inference.ai.azure.com/chat/completions");
+  });
+
+  test("sends max_tokens: 5 to minimise cost", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    await testGitHubCopilot("ghp_test", "gpt-4o");
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.max_tokens).toBe(5);
   });
 });
 
