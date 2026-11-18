@@ -15,6 +15,10 @@ window.proActiveBtnText   = "✓ Activated";
 window.onProActivated     = () => btcAPI.rebuildTray?.();
 window.platformSaveBackup = (content, filename) => btcAPI.saveBackup(content, filename);
 window.platformOpenBackup = () => btcAPI.openBackup();
+window.platformProviderSignIn = (providerId) => btcAPI.providerSignIn(providerId).catch(err => {
+  // ipcRenderer.invoke prefixes "Error invoking remote method '…': Error: " — show only the cause
+  throw new Error(String(err?.message || err).replace(/^Error invoking remote method '[^']+': (Error: )?/, ""));
+});
 window.applyProGateExtras = (isPro) => {
   ["ollama", "lmstudio", "jan"].forEach(id => {
     const btn = document.querySelector(`.wizard-provider-btn[data-provider="${id}"]`);

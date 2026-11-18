@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Thought Tidy",
   "version": "1.6.0",
-  "description": "AI writing assistant. Fix, rewrite, or transform text in seconds. Works with OpenAI, Claude, Gemini, GitHub Copilot, or Ollama.",
+  "description": "AI writing assistant. Fix, rewrite, or transform text in seconds. Works with OpenAI, Claude, Gemini, Copilot, OpenRouter, or Ollama.",
   "icons": {
     "16":  "icons/icon-16.png",
     "32":  "icons/icon-32.png",
@@ -33,13 +33,15 @@
   "permissions": [
     "contextMenus",
     "storage",
-    "activeTab"
+    "activeTab",
+    "identity"
   ],
   "host_permissions": [
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
     "https://generativelanguage.googleapis.com/*",
-    "https://models.inference.ai.azure.com/*"
+    "https://models.inference.ai.azure.com/*",
+    "https://openrouter.ai/*"
   ],
   "optional_host_permissions": [
     "http://127.0.0.1:47391/*"
@@ -49,6 +51,6 @@
     "open_in_tab": true
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; connect-src https://api.northpandalabs.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://models.inference.ai.azure.com http://localhost:* http://127.0.0.1:*;"
+    "extension_pages": "script-src 'self'; object-src 'none'; connect-src https://api.northpandalabs.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://models.inference.ai.azure.com https://openrouter.ai http://localhost:* http://127.0.0.1:*;"
   }
 }

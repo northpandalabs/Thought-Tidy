@@ -1,5 +1,5 @@
 // Extension settings shell — delegates shared logic to lib/shared-settings.js
-/* global browser, cryptoGet, cryptoSet, syncWithDesktop, purgeOldLog, todayDate, isProUnlocked */
+/* global browser, createOpenRouterPkce, buildOpenRouterAuthUrl, parseOpenRouterCallback, exchangeOpenRouterCode, cryptoGet, cryptoSet, syncWithDesktop, purgeOldLog, todayDate, isProUnlocked */
 
 const STORAGE_KEYS = [
   "configuredProviders", "geminiModels",
@@ -16,6 +16,25 @@ window.platformOpenURL = url => browser.tabs.create({ url });
 window.onProvidersSaved = () => syncWithDesktop().catch(() => {});
 window.onProActivated   = () => syncWithDesktop().catch(() => {});
 window.proActiveBtnText = "⚡ Pro Active — Manage ↓";
+
+// "Sign in with OpenRouter" — launchWebAuthFlow opens the consent page and captures the
+// redirect to https://<extension-id>.chromiumapp.org/ (Chrome) or .extensions.allizom.org (Firefox).
+window.platformProviderSignIn = async (providerId) => {
+  if (providerId !== "openrouter") throw new Error("Sign-in is not available for this provider.");
+  if (!browser.identity?.launchWebAuthFlow) throw new Error("This browser does not support sign-in. Paste an API key instead.");
+  const callbackUrl = browser.identity.getRedirectURL("openrouter");
+  const { verifier, challenge, state } = await createOpenRouterPkce();
+  let redirectedTo;
+  try {
+    redirectedTo = await browser.identity.launchWebAuthFlow({
+      url: buildOpenRouterAuthUrl(callbackUrl, challenge, state),
+      interactive: true
+    });
+  } catch {
+    throw new Error("OpenRouter sign-in was cancelled.");
+  }
+  return exchangeOpenRouterCode(parseOpenRouterCallback(redirectedTo, state), verifier);
+};
 
 function triggerDownload(content, filename) {
   const blob = new Blob([content], { type: "application/json" });

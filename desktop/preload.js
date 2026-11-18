@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld("btcAPI", {
   // External links
   openURL:        (url)      => ipcRenderer.invoke("open-url", url),
 
+  // OAuth sign-in (OpenRouter) — resolves with the issued API key
+  providerSignIn: (providerId) => ipcRenderer.invoke("provider-sign-in", providerId),
+
   // App meta: { isTestBuild, updateAvailable }
   getAppConfig:    ()         => ipcRenderer.invoke("get-app-config"),
   checkForUpdate:  ()         => ipcRenderer.invoke("check-for-update"),

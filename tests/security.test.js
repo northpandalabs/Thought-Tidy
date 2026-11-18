@@ -139,6 +139,7 @@ describe("browser extension security principles", () => {
       "api.anthropic.com",
       "generativelanguage.googleapis.com",
       "models.inference.ai.azure.com",
+      "openrouter.ai",                   // OpenRouter chat/models + OAuth key check
       "api.gumroad.com",
       "127.0.0.1",
       "localhost",

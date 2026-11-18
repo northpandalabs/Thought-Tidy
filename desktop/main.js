@@ -600,6 +600,8 @@ app.whenReady().then(() => {
   const { startSyncServer } = require("./lib-node/sync-server");
   startSyncServer(encStore);
 
+  const openExternal = (url) => shell.openExternal(url);
+
   registerAll(ipcMain, {
     store:       encStore,
     clipboard,
@@ -607,12 +609,18 @@ app.whenReady().then(() => {
     openHistory,
     openResults,
     closePopup: () => { if (popupWin) popupWin.hide(); },
-    openURL:    (url) => shell.openExternal(url)
+    openURL:    openExternal
   });
 
   ipcMain.handle("open-guide",      (_, hash) => openGuide(hash));
   ipcMain.handle("get-cipher-key",  ()        => _readCipherKey());
   ipcMain.handle("rebuild-tray",    ()        => updateTrayTooltip());
+  ipcMain.handle("provider-sign-in", (_, providerId) => {
+    if (providerId !== "openrouter") throw new Error("Sign-in is not available for this provider.");
+    return require("./lib-node/openrouter-oauth").signInWithOpenRouter({
+      openExternal: (url) => { if (url.startsWith("https://openrouter.ai/")) return openExternal(url); }
+    });
+  });
 
   const backupHandlers = makeBackupHandlers(dialog, fs, path);
   ipcMain.handle("save-backup", backupHandlers.saveBackup);
